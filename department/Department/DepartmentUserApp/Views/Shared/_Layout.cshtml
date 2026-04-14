@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - Портал кафедры</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <style>
+        :root {
+            --galaxy: #0B1F5C;
+            --planetary: #334EAC;
+            --sky: #D0E3FF;
+        }
+
+        .app-navbar {
+            background-color: var(--galaxy);
+        }
+
+            .app-navbar .navbar-brand,
+            .app-navbar .nav-link {
+                color: #ffffff;
+            }
+
+                .app-navbar .nav-link:hover,
+                .app-navbar .nav-link:focus {
+                    color: var(--sky);
+                }
+
+            .app-navbar .dropdown-menu {
+                background-color: #ffffff;
+            }
+
+            .app-navbar .dropdown-item:hover {
+                background-color: var(--planetary);
+                color: #ffffff;
+            }
+
+        .app-card {
+            border: 1px solid var(--sky);
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0,0,0,.06);
+            background: #fff;
+        }
+
+        .app-card-header {
+            background: var(--galaxy);
+            color: #fff;
+            padding: 12px 16px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .app-card-title {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .btn-app-primary {
+            background: var(--galaxy);
+            border-color: var(--galaxy);
+            color: #fff;
+        }
+
+            .btn-app-primary:hover,
+            .btn-app-primary:focus {
+                background: var(--planetary);
+                border-color: var(--planetary);
+                color: #fff;
+            }
+
+        .btn-app-outline {
+            background: transparent;
+            border-color: var(--galaxy);
+            color: var(--galaxy);
+        }
+
+            .btn-app-outline:hover,
+            .btn-app-outline:focus {
+                background: var(--galaxy);
+                border-color: var(--galaxy);
+                color: #fff;
+            }
+
+        .btn-app-link {
+            color: var(--galaxy);
+            text-decoration: none;
+        }
+
+            .btn-app-link:hover {
+                color: var(--planetary);
+                text-decoration: underline;
+            }
+
+        .table-app thead th {
+            background: var(--sky);
+            color: var(--galaxy);
+            border-bottom: 1px solid var(--sky);
+        }
+
+        .badge-app {
+            background: var(--sky);
+            color: var(--galaxy);
+            border: 1px solid var(--sky);
+            font-weight: 600;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--sky);
+            box-shadow: 0 0 0 .2rem rgba(208, 227, 255, 0.6);
+        }
+
+        .list-shell {
+            border: 1px solid var(--sky);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 6px 16px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+
+        .list-head {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--sky);
+        }
+
+        .list-title {
+            margin: 0;
+            font-weight: 700;
+            color: var(--galaxy);
+        }
+
+        .list-sub {
+            color: #6c757d;
+            font-size: .9rem;
+        }
+
+        .entity-row {
+            display: grid;
+            grid-template-columns: 8px 1fr auto;
+            gap: 0;
+            border-top: 1px solid var(--sky);
+        }
+
+            .entity-row:first-of-type {
+                border-top: none;
+            }
+
+        .entity-accent {
+            background: var(--galaxy);
+        }
+
+        .entity-content {
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .entity-main {
+            min-width: 0;
+        }
+
+        .entity-title {
+            margin: 0;
+            font-weight: 700;
+            color: var(--galaxy);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .entity-meta {
+            margin-top: 4px;
+            font-size: .9rem;
+            color: #6c757d;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--sky);
+            color: var(--galaxy);
+            font-weight: 600;
+            border: 1px solid var(--sky);
+            white-space: nowrap;
+        }
+
+        .entity-actions {
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 1px solid var(--sky);
+            background: rgba(208,227,255,.18);
+        }
+
+        .actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-shell {
+            border: 1px solid var(--sky);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 6px 16px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+
+        .form-shell__header {
+            background: var(--galaxy);
+            color: #fff;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .form-shell__title {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .accordion-button:not(.collapsed) {
+            color: var(--galaxy);
+            background-color: rgba(208, 227, 255, .55);
+            box-shadow: none;
+        }
+
+        .accordion-button:focus {
+            border-color: var(--sky);
+            box-shadow: 0 0 0 .2rem rgba(208, 227, 255, 0.6);
+        }
+
+        .hint {
+            font-size: .9rem;
+            color: var(--galaxy);
+            opacity: .75;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar mb-3">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                Портал кафедры
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                    aria-expanded="false" aria-label="Переключатель навигации">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">
+                            Главная
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Учебный процесс
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="EducationDirections" asp-action="List">
+                                    Направления
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="AcademicPlans" asp-action="List">
+                                    Учебные планы
+                                </a>
+                            </li>
+                            @*<li>
+                                <a class="dropdown-item" asp-controller="AcademicPlanRecords" asp-action="List">
+                                    Записи учебных планов
+                                </a>
+                            </li>*@
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Disciplines" asp-action="List">
+                                    Дисциплины
+                                </a>
+                            </li>
+                            @*<li>
+                                <a class="dropdown-item" asp-controller="DisciplineBlocks" asp-action="List">
+                                    Блоки дисциплин
+                                </a>
+                            </li>*@
+                            <li>
+                                <a class="dropdown-item" asp-controller="DisciplineStudentRecords" asp-action="List">
+                                    Успеваемость
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Classrooms" asp-action="List">
+                                    Аудитории
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Преподаватели
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Lecturers" asp-action="List">
+                                    Преподаватели
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="LecturerStudyPosts" asp-action="List">
+                                    Учебные должности
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="LecturerDepartmentPosts" asp-action="List">
+                                    Кафедральные должности
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Студенты
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="StudentGroups" asp-action="List">
+                                    Группы
+                                </a>
+                            </li>
+                            @*<li>
+                                <a class="dropdown-item" asp-controller="Students" asp-action="List">
+                                    Студенты
+                                </a>
+                            </li>*@
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="StudentOrders" asp-action="List">
+                                    Приказы
+                                </a>
+                            </li>
+                            @*<li>
+                                <a class="dropdown-item" asp-controller="StudentOrderBlocks" asp-action="List">
+                                    Блоки приказов
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="StudentOrderBlockStudents" asp-action="List">
+                                    Студенты в блоках приказов
+                                </a>
+                            </li>*@
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        @RenderBody()
+    </div>
+
+    @RenderSection("Styles", required: false)
+    @RenderSection("Scripts", required: false)
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

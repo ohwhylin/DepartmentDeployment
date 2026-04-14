@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "StudentOrderBlocks";
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список StudentOrderBlocks</h2>
+            <div class="list-sub">Управление сущностью StudentOrderBlock</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-primary" asp-controller="StudentOrderBlocks" asp-action="Create">Добавить</a>
+        </div>
+    </div>
+
+    @if (ViewBag.StudentOrderBlocksList != null)
+    {
+        @foreach (var item in ViewBag.StudentOrderBlocksList)
+        {
+            <div class="entity-row">
+                <div class="entity-accent"></div>
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">@item.Id</h5>
+                        <div class="entity-meta">
+                            <span class="meta-chip">Id: @item.Id</span>
+                            <span class="meta-chip">@item.StudentOrder</span>
+                            <span class="meta-chip">@item.EducationDirection</span>
+                            <span class="meta-chip">@item.StudentOrderType</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline" asp-controller="StudentOrderBlocks" asp-action="Details" asp-route-id="@item.Id">Подробнее</a>
+                        <a class="btn btn-sm btn-app-outline" asp-controller="StudentOrderBlocks" asp-action="Update">Изменить</a>
+                        <a class="btn btn-sm btn-app-outline" asp-controller="StudentOrderBlocks" asp-action="Delete">Удалить</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

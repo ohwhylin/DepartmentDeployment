@@ -1,0 +1,81 @@
+@model DepartmentContracts.BindingModels.EducationDirectionBindingModel
+@using DepartmentDataModels.Enums
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Добавление направления обучения";
+
+    var qualificationItems = Enum.GetValues(typeof(EducationDirectionQualification))
+        .Cast<EducationDirectionQualification>()
+        .Select(x => new SelectListItem
+                {
+                    Value = ((int)x).ToString(),
+                    Text = x.ToString(),
+                    Selected = Model != null && EqualityComparer<EducationDirectionQualification>.Default.Equals(Model.Qualification, x)
+                })
+        .ToList();
+}
+
+<div class="form-shell">
+    <div class="form-shell__header">
+        <h2 class="form-shell__title">Добавление направления обучения</h2>
+        <a class="btn btn-sm btn-light" asp-controller="EducationDirections" asp-action="List">К списку</a>
+    </div>
+
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post">
+            <div class="mb-3">
+                <label asp-for="Cipher" class="form-label">Шифр</label>
+                <input asp-for="Cipher" class="form-control" />
+                <span asp-validation-for="Cipher" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ShortName" class="form-label">Краткое наименование</label>
+                <input asp-for="ShortName" class="form-control" />
+                <span asp-validation-for="ShortName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Полное наименование</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Qualification" class="form-label">Квалификация</label>
+                <select asp-for="Qualification" class="form-select" asp-items="qualificationItems">
+                    <option value="">Выберите квалификацию</option>
+                </select>
+                <span asp-validation-for="Qualification" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Profile" class="form-label">Профиль</label>
+                <input asp-for="Profile" class="form-control" />
+                <span asp-validation-for="Profile" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Описание</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-app-primary">Сохранить</button>
+                <a class="btn btn-app-outline" asp-controller="EducationDirections" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+    {
+    <partial name="_ValidationScriptsPartial" />
+}

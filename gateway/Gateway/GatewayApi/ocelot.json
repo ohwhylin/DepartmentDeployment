@@ -1,0 +1,31 @@
+﻿{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/core/{everything}",
+      "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "core-api",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/core/{everything}",
+      "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "core-web",
+          "Port": 8080
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://gateway:8080"
+  }
+}

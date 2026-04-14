@@ -1,0 +1,44 @@
+@model DepartmentContracts.ViewModels.AcademicPlanViewModel
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Подробнее о учебном плане";
+
+    string GetCourseName(AcademicCourse course) => course switch
+    {
+        AcademicCourse.Course_1 => "Первый курс",
+        AcademicCourse.Course_2 => "Второй курс",
+        AcademicCourse.Course_3 => "Третий курс",
+        AcademicCourse.Course_4 => "Четвёртый курс",
+        _ => course.ToString()
+    };
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о учебном плане</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light"
+               asp-controller="AcademicPlans"
+               asp-action="List">
+                К списку
+            </a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Направление</dt>
+            <dd class="col-sm-8">@Model.EducationDirection</dd>
+
+            <dt class="col-sm-4 text-muted">Курс</dt>
+            <dd class="col-sm-8">@GetCourseName(Model.AcademicCourses)</dd>
+
+            <dt class="col-sm-4 text-muted">Форма обучения</dt>
+            <dd class="col-sm-8">@Model.EducationForm</dd>
+
+            <dt class="col-sm-4 text-muted">Год</dt>
+            <dd class="col-sm-8">@Model.Year</dd>
+        </dl>
+    </div>
+</div>

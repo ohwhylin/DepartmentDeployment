@@ -1,0 +1,17 @@
+﻿entity:
+  name: StudentOrder
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: orderNumber
+    type: string
+    required: true
+
+  - name: studentOrderType
+    type: StudentOrderType
+    required: true
+    enum: true

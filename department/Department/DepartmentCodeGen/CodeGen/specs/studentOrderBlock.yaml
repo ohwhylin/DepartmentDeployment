@@ -1,0 +1,23 @@
+﻿entity:
+  name: StudentOrderBlock
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: studentOrderId
+    type: int
+    required: true
+    reference: StudentOrder
+
+  - name: educationDirectionId
+    type: int
+    required: true
+    reference: EducationDirection
+
+  - name: studentOrderType
+    type: StudentOrderType
+    required: true
+    enum: true

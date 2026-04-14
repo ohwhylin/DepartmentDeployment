@@ -1,0 +1,169 @@
+@using System.Linq
+@using DepartmentContracts.ViewModels
+
+@{
+    ViewData["Title"] = "Classrooms";
+
+    var classrooms = ViewBag.ClassroomsList as List<ClassroomViewModel> ?? new List<ClassroomViewModel>();
+    var classroomTypes = classrooms
+        .Select(x => x.Type.ToString())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список аудиторий</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-primary" asp-controller="Classrooms" asp-action="Create">Добавить</a>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="p-3 pb-0">
+            <div class="alert alert-danger mb-0">@TempData["Error"]</div>
+        </div>
+    }
+
+    <div class="p-3 pb-0">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <input id="classroomSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по номеру аудитории" />
+            </div>
+
+            <div class="col-md-3">
+                <select id="classroomTypeFilter" class="form-select">
+                    <option value="">Все типы аудиторий</option>
+                    @foreach (var type in classroomTypes)
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select id="classroomProjectorFilter" class="form-select">
+                    <option value="">Проектор: все</option>
+                    <option value="true">Только с проектором</option>
+                    <option value="false">Только без проектора</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select id="classroomScheduleFilter" class="form-select">
+                    <option value="">Расписание: все</option>
+                    <option value="true">Только участвующие в расписании</option>
+                    <option value="false">Только не участвующие в расписании</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (classrooms.Count > 0)
+    {
+        @foreach (var item in classrooms)
+        {
+            <div class="entity-row classroom-row"
+         data-number="@item.Number.ToString().ToLowerInvariant()"
+         data-type="@item.Type.ToString().ToLowerInvariant()"
+         data-projector="@(item.HasProjector.ToString().ToLowerInvariant())"
+         data-inschedule="@((!item.NotUseInSchedule).ToString().ToLowerInvariant())">
+                <div class="entity-accent"></div>
+
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">Аудитория @item.Number</h5>
+
+                        <div class="entity-meta d-flex flex-column gap-1">
+                            <div><strong>Номер аудитории:</strong> @item.Number</div>
+                            <div><strong>Тип аудитории:</strong> @item.Type</div>
+                            <div><strong>Вместимость:</strong> @item.Capacity</div>
+                            <div><strong>Проектор:</strong> @(item.HasProjector ? "Имеется проектор" : "Нет проектора")</div>
+                            <div><strong>Использование в расписании:</strong> @(item.NotUseInSchedule ? "Не участвует в расписании" : "Участвует в расписании")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Classrooms"
+                   asp-action="Details"
+                   asp-route-id="@item.Id">
+                            Подробнее
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Classrooms"
+                   asp-action="Update"
+                   asp-route-id="@item.Id">
+                            Изменить
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Classrooms"
+                   asp-action="Delete"
+                   asp-route-id="@item.Id">
+                            Удалить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            Аудитории отсутствуют.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('classroomSearchInput');
+            const typeFilter = document.getElementById('classroomTypeFilter');
+            const projectorFilter = document.getElementById('classroomProjectorFilter');
+            const scheduleFilter = document.getElementById('classroomScheduleFilter');
+            const rows = document.querySelectorAll('.classroom-row');
+
+            function applyClassroomFilters() {
+                const search = (searchInput?.value || '').trim().toLowerCase();
+                const type = (typeFilter?.value || '').trim().toLowerCase();
+                const projector = (projectorFilter?.value || '').trim().toLowerCase();
+                const inSchedule = (scheduleFilter?.value || '').trim().toLowerCase();
+
+                rows.forEach(row => {
+                    const rowNumber = row.dataset.number || '';
+                    const rowType = row.dataset.type || '';
+                    const rowProjector = row.dataset.projector || '';
+                    const rowInSchedule = row.dataset.inschedule || '';
+
+                    const matchesSearch = !search || rowNumber.includes(search);
+                    const matchesType = !type || rowType === type;
+                    const matchesProjector = !projector || rowProjector === projector;
+                    const matchesSchedule = !inSchedule || rowInSchedule === inSchedule;
+
+                    const visible = matchesSearch && matchesType && matchesProjector && matchesSchedule;
+                    row.style.display = visible ? '' : 'none';
+                });
+            }
+
+            [searchInput, typeFilter, projectorFilter, scheduleFilter].forEach(control => {
+                if (control) {
+                    control.addEventListener('input', applyClassroomFilters);
+                    control.addEventListener('change', applyClassroomFilters);
+                }
+            });
+        });
+    </script>
+}

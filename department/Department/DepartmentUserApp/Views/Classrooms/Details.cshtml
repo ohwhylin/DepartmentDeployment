@@ -1,0 +1,65 @@
+@model DepartmentContracts.ViewModels.ClassroomViewModel
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Подробнее об аудитории";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее об аудитории</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light"
+               asp-controller="Classrooms"
+               asp-action="Update"
+               asp-route-id="@Model.Id">
+                Изменить
+            </a>
+
+            <a class="btn btn-sm btn-light"
+               asp-controller="Classrooms"
+               asp-action="List">
+                К списку
+            </a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">
+                Номер
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Number
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Тип аудитории
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Type
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Вместимость
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Capacity
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Использование в расписании
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.NotUseInSchedule ? "Не участвует в расписании" : "Участвует в расписании")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Проектор
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.HasProjector ? "Имеется проектор" : "Проектор отсутствует")
+            </dd>
+        </dl>
+    </div>
+</div>

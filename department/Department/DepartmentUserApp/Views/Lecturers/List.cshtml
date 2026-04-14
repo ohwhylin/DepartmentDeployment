@@ -1,0 +1,119 @@
+@using System.Linq
+@using DepartmentContracts.ViewModels
+
+@{
+    ViewData["Title"] = "Lecturers";
+
+    var lecturers = ViewBag.LecturersList as List<LecturerViewModel> ?? new List<LecturerViewModel>();
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список преподавателей</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-primary" asp-controller="Lecturers" asp-action="Create">Добавить</a>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="p-3 pb-0">
+            <div class="alert alert-danger mb-0">@TempData["Error"]</div>
+        </div>
+    }
+
+    <div class="p-3 pb-0">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input id="lecturerSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по фамилии, имени или отчеству" />
+            </div>
+        </div>
+    </div>
+
+    @if (lecturers.Count > 0)
+    {
+        @foreach (var item in lecturers)
+        {
+            var searchValue = $"{item.LastName} {item.FirstName} {item.Patronymic}".ToLowerInvariant();
+
+            <div class="entity-row lecturer-row"
+         data-name="@searchValue">
+                <div class="entity-accent"></div>
+
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">@item.LastName @item.FirstName @item.Patronymic</h5>
+
+                        <div class="entity-meta d-flex flex-column gap-1">
+                            <div><strong>Учебная должность:</strong> @(string.IsNullOrWhiteSpace(item.LecturerStudyPost) ? "-" : item.LecturerStudyPost)</div>
+                            <div><strong>Кафедральная должность:</strong> @item.LecturerDepartmentPost</div>
+                            <div><strong>Сокращение:</strong> @(string.IsNullOrWhiteSpace(item.Abbreviation) ? "-" : item.Abbreviation)</div>
+                            <div><strong>Электронная почта:</strong> @(string.IsNullOrWhiteSpace(item.Email) ? "-" : item.Email)</div>
+                            <div><strong>Мобильный номер:</strong> @(string.IsNullOrWhiteSpace(item.MobileNumber) ? "-" : item.MobileNumber)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Lecturers"
+                   asp-action="Details"
+                   asp-route-id="@item.Id">
+                            Подробнее
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Lecturers"
+                   asp-action="Update"
+                   asp-route-id="@item.Id">
+                            Изменить
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Lecturers"
+                   asp-action="Delete"
+                   asp-route-id="@item.Id">
+                            Удалить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            Преподаватели отсутствуют.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('lecturerSearchInput');
+            const lecturerRows = document.querySelectorAll('.lecturer-row');
+
+            function filterLecturers() {
+                const search = (searchInput?.value || '').trim().toLowerCase();
+
+                lecturerRows.forEach(row => {
+                    const name = row.dataset.name || '';
+                    const matches = !search || name.includes(search);
+
+                    row.style.display = matches ? '' : 'none';
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterLecturers);
+            }
+        });
+    </script>
+}

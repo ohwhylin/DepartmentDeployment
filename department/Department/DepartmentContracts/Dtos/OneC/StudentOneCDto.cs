@@ -1,0 +1,29 @@
+﻿using DepartmentDataModels.Enums;
+
+namespace DepartmentContracts.Dtos.OneC
+{
+    public class StudentOneCDto
+    {
+        public int Id { get; set; }
+
+        public int? StudentGroupId { get; set; }
+
+        public string NumberOfBook { get; set; } = string.Empty;
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string Patronymic { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public StudentState StudentState { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+
+        public byte[] Photo { get; set; } = Array.Empty<byte>();
+
+        public bool IsSteward { get; set; }
+    }
+}

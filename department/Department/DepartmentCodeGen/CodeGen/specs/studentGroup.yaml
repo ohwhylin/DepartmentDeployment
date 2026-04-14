@@ -1,0 +1,28 @@
+﻿entity:
+  name: StudentGroup
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: educationDirectionId
+    type: int
+    required: true
+    reference: EducationDirection
+
+  - name: curatorId
+    type: int
+    required: false
+    reference: Lecturer
+
+  - name: groupName
+    type: string
+    required: true
+    maxLength: 20
+
+  - name: course
+    type: AcademicCourse
+    required: true
+    enum: true

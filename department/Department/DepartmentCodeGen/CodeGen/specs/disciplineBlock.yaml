@@ -1,0 +1,25 @@
+﻿entity:
+  name: DisciplineBlock
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: title
+    type: string
+    required: true
+
+  - name: disciplineBlockBlueAsteriskName
+    type: string
+    required: true
+    maxLength: 20
+
+  - name: disciplineBlockUseForGrouping
+    type: bool
+    required: true
+
+  - name: disciplineBlockOrder
+    type: int
+    required: true

@@ -1,0 +1,27 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Удаление Discipline";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Удаление Discipline</h2>
+        <a class="btn btn-sm btn-light" asp-controller="Disciplines" asp-action="List">К списку</a>
+    </div>
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        <form method="post">
+            <div class="mb-3">
+                <label for="id" class="form-label">Выберите запись</label>
+                <select id="id" name="id" class="form-select" asp-items='@(new SelectList(ViewBag.DisciplinesList, "Id", "Id"))'></select>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Удалить</button>
+                <a class="btn btn-app-outline" asp-controller="Disciplines" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>

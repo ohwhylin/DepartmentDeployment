@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="CodeGen\GenerateApiControllers.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateApiControllers.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateBindingModels.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateBindingModels.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateBusinessLogic.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateBusinessLogic.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateBusinessLogicContracts.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateBusinessLogicContracts.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateDataModels.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateDataModels.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateMvcControllers.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateMvcControllers.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateMvcControllers2.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateMvcControllers2.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateMvcViews.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateMvcViews.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateMvcViews2.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateMvcViews2.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateSearchModels.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateSearchModels.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateStorageModels.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateStorageModels.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateStoragesContracts.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateStoragesContracts.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateStoragesImplements.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateStoragesImplements.generated.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\GenerateViewModels.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GenerateViewModels.generated.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+</Project>

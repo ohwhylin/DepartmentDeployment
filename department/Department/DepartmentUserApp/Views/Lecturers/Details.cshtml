@@ -1,0 +1,115 @@
+@model DepartmentContracts.ViewModels.LecturerViewModel
+@using DepartmentDataModels.Enums
+@{
+    ViewData["Title"] = "Подробнее о Lecturer";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о преподавателе</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light" asp-controller="Lecturers" asp-action="Update">Изменить</a>
+            <a class="btn btn-sm btn-light" asp-controller="Lecturers" asp-action="List">К списку</a>
+        </div>
+    </div>
+    <div class="p-3">
+        <dl class="row mb-0">
+            @*<dt class="col-sm-4 text-muted">
+                Id
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Id
+            </dd>*@
+            <dt class="col-sm-4 text-muted">
+                Учебная должность
+            </dt>
+            <dd class="col-sm-8">
+                @Model.LecturerStudyPost
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Кафедральная должность
+            </dt>
+            <dd class="col-sm-8">
+                @Model.LecturerDepartmentPost
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Имя
+            </dt>
+            <dd class="col-sm-8">
+                @Model.FirstName
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Фамилия
+            </dt>
+            <dd class="col-sm-8">
+                @Model.LastName
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Отчество
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Patronymic
+            </dd>
+            @*<dt class="col-sm-4 text-muted">
+                Abbreviation
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Abbreviation
+            </dd>*@
+            <dt class="col-sm-4 text-muted">
+                Дата рождения
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DateBirth
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Адрес
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Address
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Электронная почта
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Email
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Номер телефона
+            </dt>
+            <dd class="col-sm-8">
+                @Model.MobileNumber
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Домашний номер телефона
+            </dt>
+            <dd class="col-sm-8">
+                @Model.HomeNumber
+            </dd>
+            @*<dt class="col-sm-4 text-muted">
+                Rank
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Rank
+            </dd>*@
+            <dt class="col-sm-4 text-muted">
+                Ученая степень
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Rank2
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Описание
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Description
+            </dd>
+            @*<dt class="col-sm-4 text-muted">
+                Only For Private
+            </dt>
+            <dd class="col-sm-8">
+                @Model.OnlyForPrivate
+            </dd>*@
+        </dl>
+    </div>
+</div>

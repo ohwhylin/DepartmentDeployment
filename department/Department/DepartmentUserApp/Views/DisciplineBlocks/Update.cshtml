@@ -1,0 +1,96 @@
+@model DepartmentContracts.BindingModels.DisciplineBlockBindingModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using DepartmentDataModels.Enums
+@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Изменение DisciplineBlock";
+}
+
+<div class="form-shell">
+    <div class="form-shell__header">
+        <h2 class="form-shell__title">Изменение DisciplineBlock</h2>
+        <a class="btn btn-sm btn-light" asp-controller="DisciplineBlocks" asp-action="List">К списку</a>
+    </div>
+
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post">
+            <div class="mb-3">
+                <label asp-for="Id" class="form-label">Запись</label>
+                <select asp-for="Id" class="form-select" asp-items='@(new SelectList(ViewBag.DisciplineBlocksList, "Id", "Id"))'></select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Title</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineBlockBlueAsteriskName" class="form-label">Discipline Block Blue Asterisk Name</label>
+                <input asp-for="DisciplineBlockBlueAsteriskName" class="form-control" />
+                <span asp-validation-for="DisciplineBlockBlueAsteriskName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineBlockUseForGrouping" class="form-label">Discipline Block Use For Grouping</label>
+                <div class="form-check">
+                    <input asp-for="DisciplineBlockUseForGrouping" class="form-check-input" />
+                </div>
+                <span asp-validation-for="DisciplineBlockUseForGrouping" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineBlockOrder" class="form-label">Discipline Block Order</label>
+                <input asp-for="DisciplineBlockOrder" class="form-control" />
+                <span asp-validation-for="DisciplineBlockOrder" class="text-danger"></span>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-app-primary">Сохранить</button>
+                <a class="btn btn-app-outline" asp-controller="DisciplineBlocks" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const entities = @Html.Raw(JsonConvert.SerializeObject(ViewBag.DisciplineBlocksList));
+        const idSelect = document.getElementById('Id');
+        function fillFields() {
+            const selected = entities.find(x => x.Id == idSelect.value);
+            if (!selected) return;
+            const elTitle = document.getElementById('Title');
+            if (elTitle) elTitle.value = selected.Title ?? '';
+            const elDisciplineBlockBlueAsteriskName = document.getElementById('DisciplineBlockBlueAsteriskName');
+            if (elDisciplineBlockBlueAsteriskName) elDisciplineBlockBlueAsteriskName.value = selected.DisciplineBlockBlueAsteriskName ?? '';
+            const elDisciplineBlockUseForGrouping = document.getElementById('DisciplineBlockUseForGrouping');
+            if (elDisciplineBlockUseForGrouping) elDisciplineBlockUseForGrouping.value = selected.DisciplineBlockUseForGrouping ?? '';
+            const elDisciplineBlockOrder = document.getElementById('DisciplineBlockOrder');
+            if (elDisciplineBlockOrder) elDisciplineBlockOrder.value = selected.DisciplineBlockOrder ?? '';
+        }
+        if (idSelect) {
+            idSelect.addEventListener('change', fillFields);
+            fillFields();
+        }
+    });
+</script>
+
+@functions {
+    public string GetDisplayValue(object item)
+    {
+        var type = item.GetType();
+        foreach (var propName in new[] { "Name", "Title", "GroupName", "DisciplineName", "OrderNumber", "DepartmentPostTitle", "StudyPostTitle", "Cipher", "ShortName" })
+        {
+            var prop = type.GetProperty(propName);
+            var value = prop?.GetValue(item)?.ToString();
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+        }
+        var firstName = type.GetProperty("FirstName")?.GetValue(item)?.ToString();
+        var lastName = type.GetProperty("LastName")?.GetValue(item)?.ToString();
+        if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
+            return ($"{lastName} {firstName}").Trim();
+        return type.GetProperty("Id")?.GetValue(item)?.ToString() ?? string.Empty;
+    }
+}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

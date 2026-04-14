@@ -1,0 +1,47 @@
+@model DepartmentContracts.ViewModels.EducationDirectionViewModel
+
+@{
+    ViewData["Title"] = "Подробнее о направлении обучения";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о направлении обучения</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light"
+               asp-controller="EducationDirections"
+               asp-action="Update"
+               asp-route-id="@Model.Id">
+                Изменить
+            </a>
+
+            <a class="btn btn-sm btn-light"
+               asp-controller="EducationDirections"
+               asp-action="List">
+                К списку
+            </a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Шифр</dt>
+            <dd class="col-sm-8">@Model.Cipher</dd>
+
+            <dt class="col-sm-4 text-muted">Краткое наименование</dt>
+            <dd class="col-sm-8">@Model.ShortName</dd>
+
+            <dt class="col-sm-4 text-muted">Полное наименование</dt>
+            <dd class="col-sm-8">@Model.Title</dd>
+
+            <dt class="col-sm-4 text-muted">Квалификация</dt>
+            <dd class="col-sm-8">@Model.Qualification</dd>
+
+            <dt class="col-sm-4 text-muted">Профиль</dt>
+            <dd class="col-sm-8">@Model.Profile</dd>
+
+            <dt class="col-sm-4 text-muted">Описание</dt>
+            <dd class="col-sm-8">@Model.Description</dd>
+        </dl>
+    </div>
+</div>

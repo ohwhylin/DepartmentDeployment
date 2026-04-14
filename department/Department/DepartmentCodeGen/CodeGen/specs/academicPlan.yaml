@@ -1,0 +1,22 @@
+﻿entity:
+  name: AcademicPlan
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: educationDirectionId
+    type: int
+    required: false
+    reference: EducationDirection
+
+  - name: academicCourses
+    type: AcademicCourse
+    required: true
+    enum: true
+
+  - name: year
+    type: int
+    required: true

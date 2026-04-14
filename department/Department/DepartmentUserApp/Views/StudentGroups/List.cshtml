@@ -1,0 +1,250 @@
+@using DepartmentContracts.ViewModels
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "StudentGroups";
+
+    var groups = ViewBag.StudentGroupsList as List<StudentGroupViewModel> ?? new List<StudentGroupViewModel>();
+    var students = ViewBag.StudentsList as List<StudentViewModel> ?? new List<StudentViewModel>();
+
+    string GetCourseName(AcademicCourse course) => course switch
+    {
+        AcademicCourse.Course_1 => "Первый курс",
+        AcademicCourse.Course_2 => "Второй курс",
+        AcademicCourse.Course_3 => "Третий курс",
+        AcademicCourse.Course_4 => "Четвёртый курс",
+        _ => course.ToString()
+    };
+
+    string GetStudentStateName(StudentState state) => state switch
+    {
+        StudentState.Учится => "Обучается",
+        StudentState.Академ => "Академический отпуск",
+        StudentState.Отчислен => "Отчислен",
+        StudentState.Завершил => "Выпустился",
+        _ => state.ToString()
+    };
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список учебных групп</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-controller="StudentGroups" asp-action="Sync" method="post" class="d-inline">
+                <button type="submit" class="btn btn-app-primary">Синхронизировать данные</button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success m-3">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger m-3">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (groups.Count > 0)
+    {
+        @foreach (var item in groups)
+        {
+            var groupStudents = students
+            .Where(x => x.StudentGroupId == item.Id)
+            .OrderBy(x => x.LastName)
+            .ThenBy(x => x.FirstName)
+            .ThenBy(x => x.Patronymic)
+            .ToList();
+
+            var collapseId = $"groupStudents_{item.Id}";
+            var buttonId = $"toggleBtn_{item.Id}";
+
+            <div class="group-block">
+                <div class="entity-row">
+                    <div class="entity-accent"></div>
+
+                    <div class="entity-content">
+                        <div class="entity-main">
+                            <h5 class="entity-title">@item.GroupName</h5>
+
+                            <div class="entity-meta d-flex flex-column gap-1">
+                                <div><strong>Направление:</strong> @item.EducationDirection</div>
+                                <div><strong>Курс:</strong> @GetCourseName(item.Course)</div>
+                                <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
+
+                                @if (!string.IsNullOrWhiteSpace(item.Curator))
+                                {
+                                    <div><strong>Куратор:</strong> @item.Curator</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entity-actions">
+                        <div class="actions-stack">
+                            <a class="btn btn-sm btn-app-outline"
+                       asp-controller="StudentGroups"
+                       asp-action="Details"
+                       asp-route-id="@item.Id">
+                                Подробнее
+                            </a>
+
+                            <button id="@buttonId"
+                            class="btn btn-sm btn-app-outline"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                                Показать студентов
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapse" id="@collapseId">
+                    <div class="group-students-wrap">
+                        @if (groupStudents.Count > 0)
+                        {
+                            @foreach (var student in groupStudents)
+                            {
+                                <div class="group-student-item">
+                                    <div class="group-student-info">
+                                        <div class="group-student-title">
+                                            @student.LastName @student.FirstName @student.Patronymic
+                                        </div>
+
+                                        <div class="entity-meta d-flex flex-column gap-1">
+                                            <div><strong>Номер зачётной книжки:</strong> @student.NumberOfBook</div>
+                                            <div><strong>Статус:</strong> @GetStudentStateName(student.StudentState)</div>
+
+                                            @if (!string.IsNullOrWhiteSpace(student.Email))
+                                            {
+                                                <div><strong>Электронная почта:</strong> @student.Email</div>
+                                            }
+
+                                            @if (student.IsSteward)
+                                            {
+                                                <div><strong>Роль:</strong> Староста группы</div>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(student.Description))
+                                            {
+                                                <div><strong>Примечание:</strong> @student.Description</div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="group-student-actions">
+                                        <a class="btn btn-sm btn-app-outline"
+                           asp-controller="Students"
+                           asp-action="Details"
+                           asp-route-id="@student.Id">
+                                            Подробнее
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">
+                                В данной группе студенты отсутствуют.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            Данные отсутствуют. Выполните синхронизацию.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .group-block {
+            border-top: 1px solid var(--sky);
+        }
+
+            .group-block:first-of-type {
+                border-top: none;
+            }
+
+            .group-block .entity-row {
+                border-top: none;
+            }
+
+        .group-students-wrap {
+            margin-left: 8px;
+            border-top: 1px solid var(--sky);
+            background: #f8fbff;
+            padding: 12px 14px 12px 22px;
+        }
+
+        .group-student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e3eefb;
+        }
+
+            .group-student-item:last-child {
+                border-bottom: none;
+            }
+
+        .group-student-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .group-student-title {
+            margin: 0 0 6px 0;
+            font-weight: 700;
+            color: var(--galaxy);
+            line-height: 1.2;
+        }
+
+        .group-student-actions {
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+    </style>
+}
+
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapseElements = document.querySelectorAll('.collapse');
+
+            collapseElements.forEach(function (collapseElement) {
+                collapseElement.addEventListener('shown.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button && collapseElement.id.startsWith('groupStudents_')) {
+                        button.textContent = 'Скрыть студентов';
+                    }
+                });
+
+                collapseElement.addEventListener('hidden.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button && collapseElement.id.startsWith('groupStudents_')) {
+                        button.textContent = 'Показать студентов';
+                    }
+                });
+            });
+        });
+    </script>
+}

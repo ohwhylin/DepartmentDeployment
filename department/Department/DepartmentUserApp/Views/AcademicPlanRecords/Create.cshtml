@@ -1,0 +1,143 @@
+@model DepartmentContracts.BindingModels.AcademicPlanRecordBindingModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using DepartmentDataModels.Enums
+@{
+    ViewData["Title"] = "Создание AcademicPlanRecord";
+}
+
+<div class="form-shell">
+    <div class="form-shell__header">
+        <h2 class="form-shell__title">Добавление AcademicPlanRecord</h2>
+        <a class="btn btn-sm btn-light" asp-controller="AcademicPlanRecords" asp-action="List">К списку</a>
+    </div>
+
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post">
+            <div class="accordion" id="createAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#createMainBlock">
+                            Основные данные
+                        </button>
+                    </h2>
+                    <div id="createMainBlock" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label asp-for="AcademicPlanId" class="form-label">Academic Plan Id</label>
+                                <select asp-for="AcademicPlanId" class="form-select">
+                                    <option value="">Выберите значение</option>
+                                    @foreach (var item in ViewBag.AcademicPlansList)
+                                    {
+                                        <option value="@item.Id">@GetDisplayValue(item)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AcademicPlanId" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Index" class="form-label">Индекс</label>
+                                <input asp-for="Index" class="form-control" />
+                                <span asp-validation-for="Index" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">Название</label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Semester" class="form-label">Семестр</label>
+                                <input asp-for="Semester" class="form-control" type="number" />
+                                <span asp-validation-for="Semester" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Zet" class="form-label">ZET</label>
+                                <input asp-for="Zet" class="form-control" type="number" />
+                                <span asp-validation-for="Zet" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="AcademicHours" class="form-label">Академические часы</label>
+                                <input asp-for="AcademicHours" class="form-control" type="number" />
+                                <span asp-validation-for="AcademicHours" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Exam" class="form-label">Экзамен</label>
+                                <input asp-for="Exam" class="form-control" type="number" />
+                                <span asp-validation-for="Exam" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Pass" class="form-label">Зачет</label>
+                                <input asp-for="Pass" class="form-control" type="number" />
+                                <span asp-validation-for="Pass" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="GradedPass" class="form-label">Дифференцированный зачет</label>
+                                <input asp-for="GradedPass" class="form-control" type="number" />
+                                <span asp-validation-for="GradedPass" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="CourseWork" class="form-label">Курсовая работа</label>
+                                <input asp-for="CourseWork" class="form-control" type="number" />
+                                <span asp-validation-for="CourseWork" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="CourseProject" class="form-label">Курсовой проект</label>
+                                <input asp-for="CourseProject" class="form-control" type="number" />
+                                <span asp-validation-for="CourseProject" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Rgr" class="form-label">РГР</label>
+                                <input asp-for="Rgr" class="form-control" type="number" />
+                                <span asp-validation-for="Rgr" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Lectures" class="form-label">Лекции</label>
+                                <input asp-for="Lectures" class="form-control" type="number" />
+                                <span asp-validation-for="Lectures" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="LaboratoryHours" class="form-label">Лабораторные часы</label>
+                                <input asp-for="LaboratoryHours" class="form-control" type="number" />
+                                <span asp-validation-for="LaboratoryHours" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="PracticalHours" class="form-label">Практические часы</label>
+                                <input asp-for="PracticalHours" class="form-control" type="number" />
+                                <span asp-validation-for="PracticalHours" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-app-primary">Сохранить</button>
+                <a class="btn btn-app-outline" asp-controller="AcademicPlanRecords" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@functions {
+    public string GetDisplayValue(object item)
+    {
+        var type = item.GetType();
+        foreach (var propName in new[] { "Name", "Title", "GroupName", "DisciplineName", "OrderNumber", "DepartmentPostTitle", "StudyPostTitle", "Cipher", "ShortName" })
+        {
+            var prop = type.GetProperty(propName);
+            var value = prop?.GetValue(item)?.ToString();
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+        }
+        var firstName = type.GetProperty("FirstName")?.GetValue(item)?.ToString();
+        var lastName = type.GetProperty("LastName")?.GetValue(item)?.ToString();
+        if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
+            return ($"{lastName} {firstName}").Trim();
+        return type.GetProperty("Id")?.GetValue(item)?.ToString() ?? string.Empty;
+    }
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+ }

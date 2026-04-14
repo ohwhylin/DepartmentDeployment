@@ -1,0 +1,145 @@
+@model DepartmentContracts.ViewModels.AcademicPlanRecordViewModel
+
+@{
+    ViewData["Title"] = "Подробнее о записи учебного плана";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о записи учебного плана</h2>
+        <div class="d-flex gap-2">
+            @* Если понадобится редактирование *@
+            @*
+            <a class="btn btn-sm btn-light"
+            asp-controller="AcademicPlanRecords"
+            asp-action="Update"
+            asp-route-id="@Model.Id">
+            Изменить
+            </a>
+            *@
+
+            <a class="btn btn-sm btn-light"
+               asp-controller="AcademicPlans"
+               asp-action="List">
+                К списку
+            </a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+
+            <dt class="col-sm-4 text-muted">
+                Учебный план
+            </dt>
+            <dd class="col-sm-8">
+                @Model.AcademicPlan
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Индекс дисциплины
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Index
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Название дисциплины
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Name
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Семестр
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Semester
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                ЗЕТ
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Zet
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Академические часы
+            </dt>
+            <dd class="col-sm-8">
+                @Model.AcademicHours
+            </dd>
+
+            <hr class="my-3" />
+
+            <dt class="col-sm-4 text-muted">
+                Экзамен
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.Exam.HasValue ? Model.Exam.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Зачёт
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.Pass.HasValue ? Model.Pass.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Дифференцированный зачёт
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.GradedPass.HasValue ? Model.GradedPass.ToString() : "—")
+            </dd>
+
+            <hr class="my-3" />
+
+            <dt class="col-sm-4 text-muted">
+                Курсовая работа
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.CourseWork.HasValue ? Model.CourseWork.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Курсовой проект
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.CourseProject.HasValue ? Model.CourseProject.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                РГР
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.Rgr.HasValue ? Model.Rgr.ToString() : "—")
+            </dd>
+
+            <hr class="my-3" />
+
+            <dt class="col-sm-4 text-muted">
+                Лекции
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.Lectures.HasValue ? Model.Lectures.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Лабораторные часы
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.LaboratoryHours.HasValue ? Model.LaboratoryHours.ToString() : "—")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Практические часы
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.PracticalHours.HasValue ? Model.PracticalHours.ToString() : "—")
+            </dd>
+
+        </dl>
+    </div>
+</div>

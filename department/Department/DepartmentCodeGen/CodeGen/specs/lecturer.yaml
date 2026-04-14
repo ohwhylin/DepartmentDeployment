@@ -1,0 +1,84 @@
+﻿entity:
+  name: Lecturer
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: lecturerStudyPostId
+    type: int
+    required: false
+    reference: LecturerStudyPost
+
+  - name: lecturerDepartmentPostId
+    type: int
+    required: true
+    reference: LecturerDepartmentPost
+
+  - name: firstName
+    type: string
+    required: true
+    maxLength: 50
+
+  - name: lastName
+    type: string
+    required: true
+    maxLength: 50
+
+  - name: patronymic
+    type: string
+    required: true
+    maxLength: 50
+
+  - name: abbreviation
+    type: string
+    required: true
+    maxLength: 10
+
+  - name: dateBirth
+    type: date
+    required: true
+
+  - name: address
+    type: string
+    required: true
+    maxLength: 250
+
+  - name: email
+    type: string
+    required: true
+    maxLength: 150
+
+  - name: mobileNumber
+    type: string
+    required: true
+    maxLength: 50
+
+  - name: homeNumber
+    type: string
+    required: true
+    maxLength: 50
+
+  - name: rank
+    type: Rank
+    required: true
+    enum: true
+
+  - name: rank2
+    type: Rank2
+    required: true
+    enum: true
+
+  - name: description
+    type: string
+    required: true
+
+  - name: photo
+    type: bytes
+    required: false
+
+  - name: onlyForPrivate
+    type: bool
+    required: true

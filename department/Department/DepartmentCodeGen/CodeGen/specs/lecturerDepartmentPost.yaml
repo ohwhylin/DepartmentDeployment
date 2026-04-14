@@ -1,0 +1,16 @@
+﻿entity:
+  name: LecturerDepartmentPost
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: departmentPostTitle
+    type: string
+    required: true
+
+  - name: order
+    type: int
+    required: true

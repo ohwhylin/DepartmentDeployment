@@ -1,0 +1,32 @@
+﻿entity:
+  name: Discipline
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: disciplineBlockId
+    type: int
+    required: true
+    reference: DisciplineBlock
+
+  - name: disciplineName
+    type: string
+    required: true
+    maxLength: 200
+
+  - name: disciplineShortName
+    type: string
+    required: true
+    maxLength: 20
+
+  - name: disciplineDescription
+    type: string
+    required: true
+
+  - name: disciplineBlockBlueAsteriskName
+    type: string
+    required: true
+    maxLength: 200

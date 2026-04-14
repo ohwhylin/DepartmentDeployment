@@ -1,0 +1,28 @@
+﻿entity:
+  name: StudentOrderBlockStudent
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: studentOrderBlockId
+    type: int
+    required: true
+    reference: StudentOrderBlock
+
+  - name: studentId
+    type: int
+    required: true
+    reference: Student
+
+  - name: studentGroupFromId
+    type: int
+    required: true
+    reference: StudentGroup
+
+  - name: studentGroupToId
+    type: int
+    required: true
+    reference: StudentGroup

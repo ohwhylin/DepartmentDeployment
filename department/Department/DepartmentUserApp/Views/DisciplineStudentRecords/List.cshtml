@@ -1,0 +1,410 @@
+@using System.Linq
+@using DepartmentContracts.ViewModels
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Сведения об успеваемости";
+
+    var records = ViewBag.DisciplineStudentRecordsList as List<DisciplineStudentRecordViewModel> ?? new List<DisciplineStudentRecordViewModel>();
+    var disciplines = ViewBag.DisciplinesList as List<DisciplineViewModel> ?? new List<DisciplineViewModel>();
+    var students = ViewBag.StudentsList as List<StudentViewModel> ?? new List<StudentViewModel>();
+    var groups = ViewBag.StudentGroupsList as List<StudentGroupViewModel> ?? new List<StudentGroupViewModel>();
+
+    string GetCourseName(AcademicCourse course) => course switch
+    {
+        AcademicCourse.Course_1 => "Первый курс",
+        AcademicCourse.Course_2 => "Второй курс",
+        AcademicCourse.Course_3 => "Третий курс",
+        AcademicCourse.Course_4 => "Четвёртый курс",
+        _ => course.ToString()
+    };
+
+    string GetStudentStateName(StudentState state) => state switch
+    {
+        StudentState.Учится => "Обучается",
+        StudentState.Академ => "Академический отпуск",
+        StudentState.Отчислен => "Отчислен",
+        StudentState.Завершил => "Выпустился",
+        _ => state.ToString()
+    };
+
+    string GetMarkName(MarkType mark) => mark switch
+    {
+        MarkType.Отлично => "Отлично",
+        MarkType.Хорошо => "Хорошо",
+        MarkType.Удовлетворительно => "Удовлетворительно",
+        MarkType.Неудовлетворительно => "Неудовлетворительно",
+        MarkType.Неявка => "Неявка",
+        _ => mark.ToString()
+    };
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Сведения об успеваемости</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-controller="DisciplineStudentRecords" asp-action="Sync" method="post" class="d-inline">
+                <button type="submit" class="btn btn-app-primary">Синхронизировать данные</button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success m-3">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger m-3">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="p-3 pb-0">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input id="groupSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по названию группы, например ПИбд-31" />
+            </div>
+        </div>
+    </div>
+
+    @if (groups.Count > 0)
+    {
+        @foreach (var group in groups)
+        {
+            var groupStudents = students
+            .Where(x => x.StudentGroupId == group.Id)
+            .OrderBy(x => x.LastName)
+            .ThenBy(x => x.FirstName)
+            .ThenBy(x => x.Patronymic)
+            .ToList();
+
+            var groupStudentIds = groupStudents.Select(x => x.Id).ToHashSet();
+
+            var groupRecords = records
+            .Where(x => groupStudentIds.Contains(x.StudentId))
+            .ToList();
+
+            var groupDisciplineIds = groupRecords
+            .Select(x => x.DisciplineId)
+            .Distinct()
+            .ToHashSet();
+
+            var groupDisciplines = disciplines
+            .Where(x => groupDisciplineIds.Contains(x.Id))
+            .OrderBy(x => x.DisciplineName)
+            .ToList();
+
+            var collapseId = $"groupMarks_{group.Id}";
+            var buttonId = $"toggleBtn_{group.Id}";
+
+            <div class="group-block"
+         data-group-name="@group.GroupName.ToLowerInvariant()">
+                <div class="entity-row">
+                    <div class="entity-accent"></div>
+
+                    <div class="entity-content">
+                        <div class="entity-main">
+                            <h5 class="entity-title">@group.GroupName</h5>
+                            <div class="entity-meta d-flex flex-column gap-1">
+                                <div><strong>Направление:</strong> @group.EducationDirection</div>
+                                <div><strong>Курс:</strong> @GetCourseName(group.Course)</div>
+                                <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
+                                <div><strong>Количество дисциплин:</strong> @groupDisciplines.Count</div>
+                                @if (!string.IsNullOrWhiteSpace(group.Curator))
+                                {
+                                    <div><strong>Куратор:</strong> @group.Curator</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entity-actions">
+                        <div class="actions-stack">
+                            <a class="btn btn-sm btn-app-outline"
+                       asp-controller="StudentGroups"
+                       asp-action="Details"
+                       asp-route-id="@group.Id">
+                                Подробнее
+                            </a>
+
+                            <button id="@buttonId"
+                            class="btn btn-sm btn-app-outline"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                                Показать таблицу
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapse" id="@collapseId">
+                    <div class="group-marks-wrap">
+                        @if (groupStudents.Count == 0)
+                        {
+                            <div class="text-muted">
+                                В данной группе студенты отсутствуют.
+                            </div>
+                        }
+                        else if (groupDisciplines.Count == 0)
+                        {
+                            <div class="text-muted">
+                                Для студентов данной группы записи успеваемости отсутствуют.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive marks-table-wrap">
+                                <table class="table table-bordered table-app marks-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="student-col">Студент</th>
+                                            @foreach (var discipline in groupDisciplines)
+                                            {
+                                                <th class="discipline-col" title="@discipline.DisciplineName">
+                                                    @discipline.DisciplineShortName
+                                                </th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var student in groupStudents)
+                                        {
+                                            <tr>
+                                                <td class="student-col">
+                                                    <div class="student-cell">
+                                                        <div class="student-name">
+                                                            @student.LastName @student.FirstName @student.Patronymic
+                                                        </div>
+                                                        <div class="student-meta">
+                                                            <span>Зачётная книжка: @student.NumberOfBook</span>
+                                                            <span>Статус: @GetStudentStateName(student.StudentState)</span>
+                                                            @if (student.IsSteward)
+                                                            {
+                                                                <span>Староста группы</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                @foreach (var discipline in groupDisciplines)
+                                                {
+                                                    var cellRecords = groupRecords
+                                                    .Where(x => x.StudentId == student.Id && x.DisciplineId == discipline.Id)
+                                                    .OrderBy(x => x.Semester)
+                                                    .ThenBy(x => x.Variant)
+                                                    .ToList();
+
+                                                    <td>
+                                                        @if (cellRecords.Count > 0)
+                                                        {
+                                                            <div class="mark-list">
+                                                                @foreach (var record in cellRecords)
+                                                                {
+                                                                    <a class="mark-link"
+                                           asp-controller="DisciplineStudentRecords"
+                                           asp-action="Details"
+                                           asp-route-id="@record.Id"
+                                           title="Семестр: @record.Semester | Вариант: @record.Variant | Подгруппа: @record.SubGroup">
+                                                                        @GetMarkName(record.MarkType)
+                                                                    </a>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="empty-mark">—</span>
+                                                        }
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="table-hint">
+                                Нажмите на оценку, чтобы открыть подробную запись.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            Данные отсутствуют. Выполните синхронизацию.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .group-block {
+            border-top: 1px solid var(--sky);
+        }
+
+            .group-block:first-of-type {
+                border-top: none;
+            }
+
+            .group-block .entity-row {
+                border-top: none;
+            }
+
+        .group-marks-wrap {
+            margin-left: 8px;
+            border-top: 1px solid var(--sky);
+            background: #f8fbff;
+            padding: 12px 14px 12px 22px;
+        }
+
+        .marks-table-wrap {
+            background: #fff;
+            border: 1px solid #e3eefb;
+            border-radius: 10px;
+            overflow: auto;
+        }
+
+        .marks-table {
+            min-width: 900px;
+            margin-bottom: 0;
+        }
+
+            .marks-table th,
+            .marks-table td {
+                vertical-align: top;
+            }
+
+        .student-col {
+            min-width: 260px;
+            max-width: 260px;
+            position: sticky;
+            left: 0;
+            background: #fff;
+            z-index: 1;
+        }
+
+        .marks-table thead .student-col {
+            background: var(--sky);
+            z-index: 3;
+        }
+
+        .discipline-col {
+            min-width: 150px;
+            max-width: 180px;
+            word-break: break-word;
+        }
+
+        .student-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: var(--galaxy);
+            line-height: 1.2;
+        }
+
+        .student-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: .85rem;
+            color: #6c757d;
+        }
+
+        .mark-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mark-link {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: var(--sky);
+            color: var(--galaxy);
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid var(--sky);
+            text-align: center;
+        }
+
+            .mark-link:hover,
+            .mark-link:focus {
+                background: var(--galaxy);
+                border-color: var(--galaxy);
+                color: #fff;
+            }
+
+        .empty-mark {
+            color: #9aa4b2;
+            font-size: 1.1rem;
+        }
+
+        .table-hint {
+            margin-top: 10px;
+            font-size: .9rem;
+            color: #6c757d;
+        }
+    </style>
+}
+
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapseElements = document.querySelectorAll('.collapse');
+
+            collapseElements.forEach(function (collapseElement) {
+                collapseElement.addEventListener('shown.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button && collapseElement.id.startsWith('groupMarks_')) {
+                        button.textContent = 'Скрыть таблицу';
+                    }
+                });
+
+                collapseElement.addEventListener('hidden.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button && collapseElement.id.startsWith('groupMarks_')) {
+                        button.textContent = 'Показать таблицу';
+                    }
+                });
+            });
+
+            const groupSearchInput = document.getElementById('groupSearchInput');
+            const groupBlocks = document.querySelectorAll('.group-block');
+
+            function filterGroups() {
+                const search = (groupSearchInput?.value || '').trim().toLowerCase();
+
+                groupBlocks.forEach(block => {
+                    const groupName = block.dataset.groupName || '';
+                    const matches = !search || groupName.includes(search);
+
+                    block.style.display = matches ? '' : 'none';
+                });
+            }
+
+            if (groupSearchInput) {
+                groupSearchInput.addEventListener('input', filterGroups);
+            }
+        });
+    </script>
+}

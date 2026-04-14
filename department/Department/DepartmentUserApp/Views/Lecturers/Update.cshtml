@@ -1,0 +1,172 @@
+@model DepartmentContracts.BindingModels.LecturerBindingModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Редактирование преподавателя";
+
+    var studyPosts = ViewBag.LecturerStudyPostsList as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var departmentPosts = ViewBag.LecturerDepartmentPostsList as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+
+    string GetDisplayValue(object item)
+    {
+        var type = item.GetType();
+
+        foreach (var propName in new[] { "Name", "Title", "GroupName", "DisciplineName", "OrderNumber", "DepartmentPostTitle", "StudyPostTitle", "Cipher", "ShortName" })
+        {
+            var prop = type.GetProperty(propName);
+            var value = prop?.GetValue(item)?.ToString();
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+
+        var firstName = type.GetProperty("FirstName")?.GetValue(item)?.ToString();
+        var lastName = type.GetProperty("LastName")?.GetValue(item)?.ToString();
+        var patronymic = type.GetProperty("Patronymic")?.GetValue(item)?.ToString();
+
+        var fio = $"{lastName} {firstName} {patronymic}".Trim();
+        if (!string.IsNullOrWhiteSpace(fio))
+            return fio;
+
+        return type.GetProperty("Id")?.GetValue(item)?.ToString() ?? string.Empty;
+    }
+
+    string GetRankName(Rank value) => value.ToString();
+    string GetRank2Name(Rank2 value) => value.ToString();
+}
+
+<div class="form-shell">
+    <div class="form-shell__header">
+        <h2 class="form-shell__title">Редактирование преподавателя</h2>
+        <a class="btn btn-sm btn-light" asp-controller="Lecturers" asp-action="List">К списку</a>
+    </div>
+
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-3">
+                <label asp-for="LecturerStudyPostId" class="form-label">Учебная должность</label>
+                <select asp-for="LecturerStudyPostId" class="form-select">
+                    <option value="">Выберите значение</option>
+                    @foreach (var item in studyPosts)
+                    {
+                        <option value="@item.Id" selected="@(Model.LecturerStudyPostId == item.Id)">
+                            @GetDisplayValue(item)
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="LecturerStudyPostId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LecturerDepartmentPostId" class="form-label">Кафедральная должность</label>
+                <select asp-for="LecturerDepartmentPostId" class="form-select">
+                    <option value="">Выберите значение</option>
+                    @foreach (var item in departmentPosts)
+                    {
+                        <option value="@item.Id" selected="@(Model.LecturerDepartmentPostId == item.Id)">
+                            @GetDisplayValue(item)
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="LecturerDepartmentPostId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label">Фамилия</label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label">Имя</label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Patronymic" class="form-label">Отчество</label>
+                <input asp-for="Patronymic" class="form-control" />
+                <span asp-validation-for="Patronymic" class="text-danger"></span>
+            </div>
+
+            @*<div class="mb-3">
+                <label asp-for="Abbreviation" class="form-label">Сокращение</label>
+                <input asp-for="Abbreviation" class="form-control" />
+                <span asp-validation-for="Abbreviation" class="text-danger"></span>
+            </div>*@
+
+            <div class="mb-3">
+                <label asp-for="DateBirth" class="form-label">Дата рождения</label>
+                <input asp-for="DateBirth" type="date" class="form-control" />
+                <span asp-validation-for="DateBirth" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Address" class="form-label">Адрес</label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Электронная почта</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MobileNumber" class="form-label">Мобильный телефон</label>
+                <input asp-for="MobileNumber" class="form-control" />
+                <span asp-validation-for="MobileNumber" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HomeNumber" class="form-label">Домашний телефон</label>
+                <input asp-for="HomeNumber" class="form-control" />
+                <span asp-validation-for="HomeNumber" class="text-danger"></span>
+            </div>
+
+            @*<div class="mb-3">
+                <label asp-for="Rank" class="form-label">Учёная степень / звание</label>
+                <select asp-for="Rank" class="form-select" asp-items="Html.GetEnumSelectList<Rank>()"></select>
+                <span asp-validation-for="Rank" class="text-danger"></span>
+            </div>*@
+
+            <div class="mb-3">
+                <label asp-for="Rank2" class="form-label">Учёная степень</label>
+                <select asp-for="Rank2" class="form-select" asp-items="Html.GetEnumSelectList<Rank2>()"></select>
+                <span asp-validation-for="Rank2" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Описание</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="OnlyForPrivate" class="form-label">Только для внутреннего использования</label>
+                <div class="form-check">
+                    <input asp-for="OnlyForPrivate" class="form-check-input" />
+                </div>
+                <span asp-validation-for="OnlyForPrivate" class="text-danger"></span>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-app-primary">Сохранить</button>
+                <a class="btn btn-app-outline" asp-controller="Lecturers" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+    {
+    <partial name="_ValidationScriptsPartial" />
+}

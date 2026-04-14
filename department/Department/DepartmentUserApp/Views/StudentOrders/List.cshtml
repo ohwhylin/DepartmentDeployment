@@ -1,0 +1,287 @@
+@using DepartmentContracts.ViewModels
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Сведения о приказах";
+
+    var studentOrders = ViewBag.StudentOrdersList as List<StudentOrderViewModel> ?? new List<StudentOrderViewModel>();
+    var studentOrderBlocks = ViewBag.StudentOrderBlocksList as List<StudentOrderBlockViewModel> ?? new List<StudentOrderBlockViewModel>();
+    var blockStudents = ViewBag.StudentOrderBlockStudentsList as List<StudentOrderBlockStudentViewModel> ?? new List<StudentOrderBlockStudentViewModel>();
+
+    string GetOrderTypeName(StudentOrderType type) => type switch
+    {
+        StudentOrderType.Зачисление => "Зачисление",
+        StudentOrderType.Распределение => "Распределение",
+        StudentOrderType.Движение => "Движение",
+        StudentOrderType.ПереводНаКурс => "Перевод на курс",
+        StudentOrderType.ПереводВГруппу => "Перевод в группу",
+        StudentOrderType.ИзАкадема => "Выход из академического отпуска",
+        StudentOrderType.ВАкадем => "Академический отпуск",
+        StudentOrderType.ОтчислитьЗаНеуспевамость => "Отчисление за неуспеваемость",
+        StudentOrderType.ОтчислитьВСвязиСПереводом => "Отчисление в связи с переводом",
+        StudentOrderType.ОтчислитьПоСобственному => "Отчисление по собственному желанию",
+        StudentOrderType.ЗачислитьПоПереводу => "Зачисление переводом",
+        StudentOrderType.Восстановить => "Восстановление",
+        StudentOrderType.ОтчислитьПоЗавершению => "Отчисление в связи с завершением обучения",
+        StudentOrderType.ПродлАкадем => "Продление академического отпуска",
+        StudentOrderType.ОтчислитьЗаНевыходСАкадема => "Отчисление за невыход из академического отпуска",
+        _ => type.ToString()
+    };
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список приказов</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-controller="StudentOrders" asp-action="Sync" method="post" class="d-inline">
+                <button type="submit" class="btn btn-app-primary">Синхронизировать данные</button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success m-3">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger m-3">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (studentOrders.Count > 0)
+    {
+        @foreach (var order in studentOrders)
+        {
+            var orderBlocks = studentOrderBlocks.Where(x => x.StudentOrderId == order.Id).ToList();
+            var collapseId = $"orderBlocks_{order.Id}";
+
+            <div class="plan-block">
+                <div class="entity-row">
+                    <div class="entity-accent"></div>
+
+                    <div class="entity-content">
+                        <div class="entity-main">
+                            <h5 class="entity-title">Приказ №@order.OrderNumber</h5>
+
+                            <div class="entity-meta d-flex flex-column gap-1">
+                                <div><strong>Тип приказа:</strong> @GetOrderTypeName(order.StudentOrderType)</div>
+                                <div><strong>Количество блоков:</strong> @orderBlocks.Count</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entity-actions">
+                        <div class="actions-stack">
+                            <a class="btn btn-sm btn-app-outline"
+                       asp-controller="StudentOrders"
+                       asp-action="Details"
+                       asp-route-id="@order.Id">
+                                Подробнее
+                            </a>
+
+                            <button class="btn btn-sm btn-app-outline"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                                Показать блоки
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapse" id="@collapseId">
+                    <div class="plan-records-wrap">
+                        @if (orderBlocks.Count > 0)
+                        {
+                            @foreach (var block in orderBlocks)
+                            {
+                                var currentBlockStudents = blockStudents
+                                .Where(x => x.StudentOrderBlockId == block.Id)
+                                .ToList();
+
+                                <div class="order-block-card">
+                                    <div class="order-block-head">
+                                        <div class="order-block-info">
+                                            <div class="plan-record-title">Блок приказа</div>
+
+                                            <div class="entity-meta d-flex flex-column gap-1">
+                                                <div><strong>Тип блока:</strong> @GetOrderTypeName(block.StudentOrderType)</div>
+                                                <div><strong>Направление:</strong> @(string.IsNullOrWhiteSpace(block.EducationDirection) ? "—" : block.EducationDirection)</div>
+                                                <div><strong>Количество студентов:</strong> @currentBlockStudents.Count</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="plan-record-actions">
+                                            <a class="btn btn-sm btn-app-outline"
+                               asp-controller="StudentOrderBlocks"
+                               asp-action="Details"
+                               asp-route-id="@block.Id">
+                                                Подробнее
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive mt-3">
+                                        <table class="table table-app align-middle order-students-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Студент</th>
+                                                    <th>Из группы</th>
+                                                    <th>В группу</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (currentBlockStudents.Count > 0)
+                                                {
+                                                    @foreach (var blockStudent in currentBlockStudents)
+                                                    {
+                                                        <tr>
+                                                            <td>@(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)</td>
+                                                            <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupFrom) ? "—" : blockStudent.StudentGroupFrom)</td>
+                                                            <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupTo) ? "—" : blockStudent.StudentGroupTo)</td>
+                                                            <td class="text-end">
+                                                                <a class="btn btn-sm btn-app-outline"
+                                           asp-controller="StudentOrderBlockStudents"
+                                           asp-action="Details"
+                                           asp-route-id="@blockStudent.Id">
+                                                                    Подробнее
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="4" class="text-muted">
+                                                            Для данного блока студенты отсутствуют.
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">
+                                Для данного приказа блоки отсутствуют.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            Данные отсутствуют. Выполните синхронизацию.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .plan-block {
+            border-top: 1px solid var(--sky);
+        }
+
+            .plan-block:first-of-type {
+                border-top: none;
+            }
+
+            .plan-block .entity-row {
+                border-top: none;
+            }
+
+        .plan-records-wrap {
+            margin-left: 8px;
+            border-top: 1px solid var(--sky);
+            background: #f8fbff;
+            padding: 12px 14px 12px 22px;
+        }
+
+        .order-block-card {
+            padding: 14px 0;
+            border-bottom: 1px solid #e3eefb;
+        }
+
+            .order-block-card:last-child {
+                border-bottom: none;
+            }
+
+        .order-block-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .order-block-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .plan-record-title {
+            margin: 0 0 6px 0;
+            font-weight: 700;
+            color: var(--galaxy);
+            line-height: 1.2;
+        }
+
+        .plan-record-actions {
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .order-students-table {
+            margin-bottom: 0;
+        }
+
+            .order-students-table thead th {
+                white-space: nowrap;
+                vertical-align: middle;
+            }
+
+            .order-students-table td {
+                vertical-align: middle;
+            }
+    </style>
+}
+
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapseElements = document.querySelectorAll('.collapse');
+
+            collapseElements.forEach(function (collapseElement) {
+                collapseElement.addEventListener('shown.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button) {
+                        button.textContent = 'Скрыть блоки';
+                    }
+                });
+
+                collapseElement.addEventListener('hidden.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button) {
+                        button.textContent = 'Показать блоки';
+                    }
+                });
+            });
+        });
+    </script>
+}

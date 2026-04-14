@@ -1,0 +1,56 @@
+﻿entity:
+  name: AcademicPlanRecord
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: academicPlanId
+    type: int
+    required: true
+    reference: AcademicPlan
+
+  - name: disciplineId
+    type: int
+    required: true
+    reference: Discipline
+
+  - name: academicPlanRecordParentId
+    type: int
+    required: false
+    reference: AcademicPlanRecord
+
+  - name: inDepartment
+    type: bool
+    required: true
+
+  - name: semester
+    type: Semesters
+    required: true
+    enum: true
+
+  - name: zet
+    type: int
+    required: true
+
+  - name: isParent
+    type: bool
+    required: true
+
+  - name: isChild
+    type: bool
+    required: true
+
+  - name: isFacultative
+    type: bool
+    required: true
+
+  - name: isUseInWorkload
+    type: bool
+    required: true
+
+  - name: isActiveSemester
+    type: bool
+    required: true

@@ -1,0 +1,31 @@
+﻿entity:
+  name: DisciplineStudentRecord
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: disciplineId
+    type: int
+    required: true
+    reference: Discipline
+
+  - name: studentId
+    type: int
+    required: true
+    reference: Student
+
+  - name: semester
+    type: Semesters
+    required: true
+    enum: true
+
+  - name: variant
+    type: string
+    required: true
+
+  - name: subGroup
+    type: int
+    required: true

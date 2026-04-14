@@ -1,0 +1,16 @@
+﻿entity:
+  name: LecturerStudyPost
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: studyPostTitle
+    type: string
+    required: true
+
+  - name: hours
+    type: int
+    required: true

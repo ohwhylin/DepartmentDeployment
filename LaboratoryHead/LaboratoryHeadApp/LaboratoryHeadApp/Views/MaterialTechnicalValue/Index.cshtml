@@ -1,0 +1,354 @@
+﻿@model List<MolServiceContracts.ViewModels.MaterialTechnicalValueViewModel>
+
+@{
+    ViewData["Title"] = "Материально-технические ценности";
+    Layout = "_Layout";
+
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 10;
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --danger-soft: #dc3545;
+        --line: rgba(11, 31, 92, .15);
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .btn-outline-danger-soft {
+        color: var(--danger-soft);
+        border-color: var(--danger-soft);
+    }
+
+        .btn-outline-danger-soft:hover,
+        .btn-outline-danger-soft:focus {
+            background-color: var(--danger-soft);
+            color: #fff;
+        }
+
+    .table thead {
+        background-color: var(--galaxy);
+        color: white;
+    }
+
+    .actions-cell {
+        white-space: nowrap;
+        width: 1%;
+    }
+
+    .pagination .page-link {
+        color: var(--galaxy);
+        border-color: var(--line);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
+
+    .page-size-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+        .page-size-form .form-select {
+            width: auto;
+            min-width: 90px;
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .status-active {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-writtenoff {
+        background-color: #fdeaea;
+        color: #b42318;
+    }
+
+    .row-writtenoff {
+        background-color: #fff8f8;
+    }
+
+        .row-writtenoff td {
+            color: #6c757d;
+        }
+
+    .modal-content {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--line);
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--line);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Материально-технические ценности</h2>
+        <div class="d-flex gap-2">
+            <a asp-controller="MOL" asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
+
+            <button type="button"
+                    class="btn btn-outline-galaxy"
+                    data-bs-toggle="modal"
+                    data-bs-target="#importInventoryModal">
+                Синхронизировать с 1С
+            </button>
+
+            <a asp-controller="MaterialTechnicalValue" asp-action="Create" class="btn btn-galaxy">
+                Добавить МТЦ
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="alert alert-light border mb-0">
+                    Список МТЦ пока пуст.
+                </div>
+            }
+            else
+            {
+                @*<form method="get" asp-action="Index" class="page-size-form">
+            <label for="pageSize" class="form-label mb-0">Показывать по:</label>
+            <select id="pageSize" name="pageSize" class="form-select" onchange="this.form.submit()">
+            <option value="5" selected="@(pageSize == 5)">5</option>
+            <option value="10" selected="@(pageSize == 10)">10</option>
+            <option value="20" selected="@(pageSize == 20)">20</option>
+            <option value="50" selected="@(pageSize == 50)">50</option>
+            </select>
+            <input type="hidden" name="page" value="1" />
+            </form>*@
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th>Наименование</th>
+                                <th>Количество</th>
+                                <th>Аудитория</th>
+                                <th>МОЛ</th>
+                                <th>Местоположение</th>
+                                <th class="actions-cell">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="@(item.Quantity == 0 ? "row-writtenoff" : "")">
+                                    <td>@item.InventoryNumber</td>
+                                    <td>@item.FullName</td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            <span>@item.Quantity</span>
+                                            @if (item.Quantity == 0)
+                                            {
+                                                <span class="status-badge status-writtenoff">Списано</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-active">В эксплуатации</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (item.Quantity == 0)
+                                        {
+                                            <span class="text-muted">Списано</span>
+                                        }
+                                        else
+                                        {
+                                            @(string.IsNullOrWhiteSpace(item.ClassroomNumber) ? "Не закреплено" : item.ClassroomNumber)
+                                        }
+                                    </td>
+                                    <td>@item.MaterialResponsiblePersonName</td>
+                                    <td>@item.Location</td>
+                                    <td class="actions-cell">
+                                        <div class="d-flex gap-2">
+                                            <a asp-controller="MaterialTechnicalValue"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-galaxy">
+                                                Детали
+                                            </a>
+
+                                            <a asp-controller="MaterialTechnicalValue"
+                                       asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-galaxy">
+                                                Редактировать
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(currentPage - 1)"
+                           asp-route-pageSize="@pageSize">
+                                    Назад
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-pageSize="@pageSize">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(currentPage + 1)"
+                           asp-route-pageSize="@pageSize">
+                                    Вперед
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importInventoryModal" tabindex="-1" aria-labelledby="importInventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importInventoryModalLabel">Синхронизация с 1С</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <form asp-controller="OneCImport" asp-action="ImportInventory" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="oneCUsername" class="form-label">Логин</label>
+                        <input type="text"
+                               id="oneCUsername"
+                               name="Username"
+                               class="form-control"
+                               placeholder="Введите логин"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="oneCPassword" class="form-label">Пароль</label>
+                        <input type="password"
+                               id="oneCPassword"
+                               name="Password"
+                               class="form-control"
+                               placeholder="Введите пароль"
+                               required />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-galaxy">
+                        Запустить синхронизацию
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (TempData["OpenImportModal"] as string == "true")
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalElement = document.getElementById('importInventoryModal');
+            if (modalElement) {
+                var modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        });
+    </script>
+}

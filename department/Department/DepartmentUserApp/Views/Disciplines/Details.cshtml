@@ -1,0 +1,55 @@
+@model DepartmentContracts.ViewModels.DisciplineViewModel
+@using DepartmentDataModels.Enums
+@{
+    ViewData["Title"] = "Подробнее о Discipline";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о дисциплине</h2>
+        <div class="d-flex gap-2">
+            @*<a class="btn btn-sm btn-light" asp-controller="Disciplines" asp-action="Update">Изменить</a>*@
+            <a class="btn btn-sm btn-light" asp-controller="Disciplines" asp-action="List">К списку</a>
+        </div>
+    </div>
+    <div class="p-3">
+        <dl class="row mb-0">
+            @*<dt class="col-sm-4 text-muted">
+                Id
+            </dt>
+            <dd class="col-sm-8">
+                @Model.Id
+            </dd>*@
+            @*<dt class="col-sm-4 text-muted">
+                Блок дисциплины
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineBlock
+            </dd>*@
+            <dt class="col-sm-4 text-muted">
+                Полное наименование
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineName
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Краткое наименование
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineShortName
+            </dd>
+            <dt class="col-sm-4 text-muted">
+                Описание
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineDescription
+            </dd>
+            @*<dt class="col-sm-4 text-muted">
+                Discipline Block Blue Asterisk Name
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineBlockBlueAsteriskName
+            </dd>*@
+        </dl>
+    </div>
+</div>

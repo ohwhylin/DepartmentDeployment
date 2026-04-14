@@ -1,0 +1,107 @@
+@model DepartmentContracts.BindingModels.DisciplineBindingModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using DepartmentDataModels.Enums
+@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Изменение Discipline";
+}
+
+<div class="form-shell">
+    <div class="form-shell__header">
+        <h2 class="form-shell__title">Изменение Discipline</h2>
+        <a class="btn btn-sm btn-light" asp-controller="Disciplines" asp-action="List">К списку</a>
+    </div>
+
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post">
+            <div class="mb-3">
+                <label asp-for="Id" class="form-label">Запись</label>
+                <select asp-for="Id" class="form-select" asp-items='@(new SelectList(ViewBag.DisciplinesList, "Id", "Id"))'></select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineBlockId" class="form-label">Discipline Block Id</label>
+                <select asp-for="DisciplineBlockId" class="form-select">
+                    <option value="">Выберите значение</option>
+                    @foreach (var item in ViewBag.DisciplineBlocksList)
+                    {
+                        <option value="@item.Id">@GetDisplayValue(item)</option>
+                    }
+                </select>
+                <span asp-validation-for="DisciplineBlockId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineName" class="form-label">Discipline Name</label>
+                <input asp-for="DisciplineName" class="form-control" />
+                <span asp-validation-for="DisciplineName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineShortName" class="form-label">Discipline Short Name</label>
+                <input asp-for="DisciplineShortName" class="form-control" />
+                <span asp-validation-for="DisciplineShortName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineDescription" class="form-label">Discipline Description</label>
+                <input asp-for="DisciplineDescription" class="form-control" />
+                <span asp-validation-for="DisciplineDescription" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DisciplineBlockBlueAsteriskName" class="form-label">Discipline Block Blue Asterisk Name</label>
+                <input asp-for="DisciplineBlockBlueAsteriskName" class="form-control" />
+                <span asp-validation-for="DisciplineBlockBlueAsteriskName" class="text-danger"></span>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-app-primary">Сохранить</button>
+                <a class="btn btn-app-outline" asp-controller="Disciplines" asp-action="List">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const entities = @Html.Raw(JsonConvert.SerializeObject(ViewBag.DisciplinesList));
+        const idSelect = document.getElementById('Id');
+        function fillFields() {
+            const selected = entities.find(x => x.Id == idSelect.value);
+            if (!selected) return;
+            const elDisciplineBlockId = document.getElementById('DisciplineBlockId');
+            if (elDisciplineBlockId) elDisciplineBlockId.value = selected.DisciplineBlockId ?? '';
+            const elDisciplineName = document.getElementById('DisciplineName');
+            if (elDisciplineName) elDisciplineName.value = selected.DisciplineName ?? '';
+            const elDisciplineShortName = document.getElementById('DisciplineShortName');
+            if (elDisciplineShortName) elDisciplineShortName.value = selected.DisciplineShortName ?? '';
+            const elDisciplineDescription = document.getElementById('DisciplineDescription');
+            if (elDisciplineDescription) elDisciplineDescription.value = selected.DisciplineDescription ?? '';
+            const elDisciplineBlockBlueAsteriskName = document.getElementById('DisciplineBlockBlueAsteriskName');
+            if (elDisciplineBlockBlueAsteriskName) elDisciplineBlockBlueAsteriskName.value = selected.DisciplineBlockBlueAsteriskName ?? '';
+        }
+        if (idSelect) {
+            idSelect.addEventListener('change', fillFields);
+            fillFields();
+        }
+    });
+</script>
+
+@functions {
+    public string GetDisplayValue(object item)
+    {
+        var type = item.GetType();
+        foreach (var propName in new[] { "Name", "Title", "GroupName", "DisciplineName", "OrderNumber", "DepartmentPostTitle", "StudyPostTitle", "Cipher", "ShortName" })
+        {
+            var prop = type.GetProperty(propName);
+            var value = prop?.GetValue(item)?.ToString();
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+        }
+        var firstName = type.GetProperty("FirstName")?.GetValue(item)?.ToString();
+        var lastName = type.GetProperty("LastName")?.GetValue(item)?.ToString();
+        if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
+            return ($"{lastName} {firstName}").Trim();
+        return type.GetProperty("Id")?.GetValue(item)?.ToString() ?? string.Empty;
+    }
+}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

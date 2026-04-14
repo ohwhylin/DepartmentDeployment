@@ -1,0 +1,301 @@
+@using DepartmentContracts.ViewModels
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "AcademicPlans";
+
+    var plans = ViewBag.AcademicPlansList as List<AcademicPlanViewModel> ?? new List<AcademicPlanViewModel>();
+    var records = ViewBag.AcademicPlanRecordsList as List<AcademicPlanRecordViewModel> ?? new List<AcademicPlanRecordViewModel>();
+
+    var selectedCourse = Context.Request.Query["course"].ToString();
+    var selectedYear = Context.Request.Query["year"].ToString();
+    var selectedQualification = Context.Request.Query["qualification"].ToString();
+
+    string GetCourseName(AcademicCourse course) => course switch
+    {
+        AcademicCourse.Course_1 => "Первый курс",
+        AcademicCourse.Course_2 => "Второй курс",
+        AcademicCourse.Course_3 => "Третий курс",
+        AcademicCourse.Course_4 => "Четвёртый курс",
+        _ => course.ToString()
+    };
+
+    string GetSemesterName(int semester) => Enum.IsDefined(typeof(Semesters), semester)
+        ? ((Semesters)semester).ToString()
+        : semester.ToString();
+
+    string YesNo(int? value) => value.HasValue && value.Value == 1 ? "Да" : "Нет";
+
+    string GetQualificationName(string? direction)
+    {
+        if (string.IsNullOrWhiteSpace(direction))
+            return "учебный план";
+
+        var lower = direction.ToLower();
+
+        if (lower.Contains("маг"))
+            return "магистратуры";
+
+        return "бакалавриата";
+    }
+
+    var filteredPlans = plans.Where(x =>
+        (string.IsNullOrWhiteSpace(selectedCourse) || x.AcademicCourses.ToString() == selectedCourse)
+        &&
+        (string.IsNullOrWhiteSpace(selectedYear) || (x.Year?.Contains(selectedYear) ?? false))
+        &&
+        (string.IsNullOrWhiteSpace(selectedQualification)
+            || (selectedQualification == "Бакалавриат" && !x.EducationDirection.ToLower().Contains("маг"))
+            || (selectedQualification == "Магистратура" && x.EducationDirection.ToLower().Contains("маг"))
+        )
+    ).ToList();
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список учебных планов</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-controller="AcademicPlans" asp-action="Sync" method="post" class="d-inline">
+                <button type="submit" class="btn btn-app-primary">Синхронизировать данные</button>
+            </form>
+        </div>
+    </div>
+
+    <form method="get" class="p-3 d-flex gap-2 flex-wrap border-bottom">
+        <select name="course" class="form-select" style="max-width: 220px;">
+            <option value="">Все курсы</option>
+            <option value="Course_1" selected="@(selectedCourse == "Course_1")">Первый курс</option>
+            <option value="Course_2" selected="@(selectedCourse == "Course_2")">Второй курс</option>
+            <option value="Course_3" selected="@(selectedCourse == "Course_3")">Третий курс</option>
+            <option value="Course_4" selected="@(selectedCourse == "Course_4")">Четвёртый курс</option>
+        </select>
+
+        @*<input type="text"
+               name="year"
+               value="@selectedYear"
+               class="form-control"
+               placeholder="Год, например 2022"
+               style="max-width: 180px;" />*@
+
+        <select name="qualification" class="form-select" style="max-width: 220px;">
+            <option value="">Все</option>
+            <option value="Бакалавриат" selected="@(selectedQualification == "Бакалавриат")">Бакалавриат</option>
+            <option value="Магистратура" selected="@(selectedQualification == "Магистратура")">Магистратура</option>
+        </select>
+
+        <button type="submit" class="btn btn-app-outline">Применить</button>
+
+        <a asp-controller="AcademicPlans"
+           asp-action="List"
+           class="btn btn-app-outline">
+            Сбросить
+        </a>
+    </form>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success m-3">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger m-3">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (filteredPlans.Count > 0)
+    {
+        @foreach (var item in filteredPlans)
+        {
+            var planRecords = records.Where(x => x.AcademicPlanId == item.Id).ToList();
+            var collapseId = $"planRecords_{item.Id}";
+            var qualificationName = GetQualificationName(item.EducationDirection);
+
+            <div class="plan-block">
+                <div class="entity-row">
+                    <div class="entity-accent"></div>
+
+                    <div class="entity-content">
+                        <div class="entity-main">
+                            <h5 class="entity-title">
+                                Учебный план @qualificationName
+                            </h5>
+
+                            <div class="entity-meta d-flex flex-column gap-1">
+                                <div><strong>Направление:</strong> @(string.IsNullOrWhiteSpace(item.EducationDirection) ? "—" : item.EducationDirection)</div>
+                                <div><strong>Курс:</strong> @GetCourseName(item.AcademicCourses)</div>
+                                <div><strong>Форма обучения:</strong> @item.EducationForm</div>
+                                <div><strong>Год:</strong> @(string.IsNullOrWhiteSpace(item.Year) ? "—" : item.Year)</div>
+                                <div><strong>Количество записей:</strong> @planRecords.Count</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entity-actions">
+                        <div class="actions-stack">
+                            <a class="btn btn-sm btn-app-outline"
+                       asp-controller="AcademicPlans"
+                       asp-action="Details"
+                       asp-route-id="@item.Id">
+                                Подробнее
+                            </a>
+
+                            <button class="btn btn-sm btn-app-outline"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                                Показать записи
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapse" id="@collapseId">
+                    <div class="plan-records-wrap">
+                        @if (planRecords.Count > 0)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-app align-middle plan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Индекс</th>
+                                            <th>Наименование</th>
+                                            <th>Семестр</th>
+                                            <th>ЗЕТ</th>
+                                            <th>Часы</th>
+                                            <th>Экзамен</th>
+                                            <th>Зачёт</th>
+                                            <th>Дифф. зачёт</th>
+                                            <th>Курсовая работа</th>
+                                            <th>Курсовой проект</th>
+                                            <th>РГР</th>
+                                            <th>Лекции</th>
+                                            <th>Лаб. работы</th>
+                                            <th>Практика</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var record in planRecords)
+                                        {
+                                            <tr>
+                                                <td>@(string.IsNullOrWhiteSpace(record.Index) ? "—" : record.Index)</td>
+                                                <td class="plan-name-cell">@(string.IsNullOrWhiteSpace(record.Name) ? "—" : record.Name)</td>
+                                                <td>@GetSemesterName(record.Semester)</td>
+                                                <td>@record.Zet</td>
+                                                <td>@record.AcademicHours</td>
+                                                <td>@YesNo(record.Exam)</td>
+                                                <td>@YesNo(record.Pass)</td>
+                                                <td>@YesNo(record.GradedPass)</td>
+                                                <td>@YesNo(record.CourseWork)</td>
+                                                <td>@YesNo(record.CourseProject)</td>
+                                                <td>@YesNo(record.Rgr)</td>
+                                                <td>@(record.Lectures?.ToString() ?? "—")</td>
+                                                <td>@(record.LaboratoryHours?.ToString() ?? "—")</td>
+                                                <td>@(record.PracticalHours?.ToString() ?? "—")</td>
+                                                <td class="text-end">
+                                                    <a class="btn btn-sm btn-app-outline"
+                                       asp-controller="AcademicPlanRecords"
+                                       asp-action="Details"
+                                       asp-route-id="@record.Id">
+                                                        Подробнее
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted">
+                                Для данного учебного плана записи отсутствуют.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-secondary m-3">
+            По выбранным параметрам учебные планы не найдены.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .plan-block {
+            border-top: 1px solid var(--sky);
+        }
+
+            .plan-block:first-of-type {
+                border-top: none;
+            }
+
+            .plan-block .entity-row {
+                border-top: none;
+            }
+
+        .plan-records-wrap {
+            margin-left: 8px;
+            border-top: 1px solid var(--sky);
+            background: #f8fbff;
+            padding: 12px 14px 12px 22px;
+        }
+
+        .plan-table {
+            margin-bottom: 0;
+            font-size: .95rem;
+        }
+
+            .plan-table thead th {
+                white-space: nowrap;
+                vertical-align: middle;
+            }
+
+            .plan-table td {
+                vertical-align: middle;
+            }
+
+        .plan-name-cell {
+            min-width: 260px;
+            font-weight: 600;
+            color: var(--galaxy);
+        }
+    </style>
+}
+
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapseElements = document.querySelectorAll('.collapse');
+
+            collapseElements.forEach(function (collapseElement) {
+                collapseElement.addEventListener('shown.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button) {
+                        button.textContent = 'Скрыть записи';
+                    }
+                });
+
+                collapseElement.addEventListener('hidden.bs.collapse', function () {
+                    const button = document.querySelector('[data-bs-target="#' + collapseElement.id + '"]');
+                    if (button) {
+                        button.textContent = 'Показать записи';
+                    }
+                });
+            });
+        });
+    </script>
+}

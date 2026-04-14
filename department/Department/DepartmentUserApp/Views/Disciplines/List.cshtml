@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Disciplines";
+
+    var disciplines = ViewBag.DisciplinesList as IEnumerable<dynamic> ?? new List<dynamic>();
+    var search = Context.Request.Query["search"].ToString();
+
+    var filtered = disciplines.Where(x =>
+        string.IsNullOrWhiteSpace(search)
+        || (x.DisciplineName?.ToString().ToLower().Contains(search.ToLower()) ?? false)
+        || (x.DisciplineShortName?.ToString().ToLower().Contains(search.ToLower()) ?? false)
+        || (x.DisciplineDescription?.ToString().ToLower().Contains(search.ToLower()) ?? false)
+        || (x.DisciplineBlock?.ToString().ToLower().Contains(search.ToLower()) ?? false)
+    ).ToList();
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список дисциплин</h2>
+        </div>
+    </div>
+
+    <form method="get" class="p-3 d-flex gap-2 flex-wrap">
+        <input type="text"
+               name="search"
+               value="@search"
+               class="form-control"
+               placeholder="Поиск по дисциплине, краткому названию, описанию"
+               style="max-width: 350px;" />
+
+        <button type="submit" class="btn btn-app-outline">Применить</button>
+
+        <a class="btn btn-app-outline"
+           asp-controller="Disciplines"
+           asp-action="List">
+            Сбросить
+        </a>
+    </form>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="p-3 pt-0">
+            <div class="alert alert-danger mb-0">@TempData["Error"]</div>
+        </div>
+    }
+
+    @if (filtered.Count > 0)
+    {
+        @foreach (var item in filtered)
+        {
+            <div class="entity-row">
+                <div class="entity-accent"></div>
+
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">@(string.IsNullOrWhiteSpace(item.DisciplineName?.ToString()) ? "—" : item.DisciplineName)</h5>
+
+                        <div class="entity-meta d-flex flex-column gap-1">
+                            @*<div><strong>Блок дисциплин:</strong> @(string.IsNullOrWhiteSpace(item.DisciplineBlock?.ToString()) ? "—" : item.DisciplineBlock)</div>*@
+                            <div><strong>Полное наименование:</strong> @(string.IsNullOrWhiteSpace(item.DisciplineName?.ToString()) ? "—" : item.DisciplineName)</div>
+                            <div><strong>Краткое наименование:</strong> @(string.IsNullOrWhiteSpace(item.DisciplineShortName?.ToString()) ? "—" : item.DisciplineShortName)</div>
+                            <div><strong>Описание:</strong> @(string.IsNullOrWhiteSpace(item.DisciplineDescription?.ToString()) ? "—" : item.DisciplineDescription)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="Disciplines"
+                   asp-action="Details"
+                   asp-route-id="@item.Id">
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="p-3">
+            <div class="alert alert-secondary mb-0">
+                По заданным параметрам дисциплины не найдены.
+            </div>
+        </div>
+    }
+</div>

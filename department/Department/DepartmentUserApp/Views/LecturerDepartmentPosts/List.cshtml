@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "LecturerDepartmentPosts";
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список кафедральных должностей</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-primary" asp-controller="LecturerDepartmentPosts" asp-action="Create">Добавить</a>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="p-3 pb-0">
+            <div class="alert alert-danger mb-0">@TempData["Error"]</div>
+        </div>
+    }
+
+    @if (ViewBag.LecturerDepartmentPostsList != null)
+    {
+        @foreach (var item in ViewBag.LecturerDepartmentPostsList)
+        {
+            <div class="entity-row">
+                <div class="entity-accent"></div>
+
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">@item.DepartmentPostTitle</h5>
+
+                        <div class="entity-meta d-flex flex-column gap-1">
+                            <div><strong>Наименование должности:</strong> @item.DepartmentPostTitle</div>
+                            <div><strong>Порядок отображения:</strong> @item.Order</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="LecturerDepartmentPosts"
+                   asp-action="Details"
+                   asp-route-id="@item.Id">
+                            Подробнее
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="LecturerDepartmentPosts"
+                   asp-action="Update"
+                   asp-route-id="@item.Id">
+                            Изменить
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="LecturerDepartmentPosts"
+                   asp-action="Delete"
+                   asp-route-id="@item.Id">
+                            Удалить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

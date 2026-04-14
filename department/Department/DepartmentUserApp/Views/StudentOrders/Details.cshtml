@@ -1,0 +1,54 @@
+@model DepartmentContracts.ViewModels.StudentOrderViewModel
+@using DepartmentDataModels.Enums
+
+@{
+    ViewData["Title"] = "Подробнее о приказе";
+
+    string GetOrderTypeName(StudentOrderType type) => type switch
+    {
+        StudentOrderType.Зачисление => "Зачисление",
+        StudentOrderType.Распределение => "Распределение",
+        StudentOrderType.Движение => "Движение",
+        StudentOrderType.ПереводНаКурс => "Перевод на курс",
+        StudentOrderType.ПереводВГруппу => "Перевод в группу",
+        StudentOrderType.ИзАкадема => "Выход из академического отпуска",
+        StudentOrderType.ВАкадем => "Академический отпуск",
+        StudentOrderType.ОтчислитьЗаНеуспевамость => "Отчисление за неуспеваемость",
+        StudentOrderType.ОтчислитьВСвязиСПереводом => "Отчисление в связи с переводом",
+        StudentOrderType.ОтчислитьПоСобственному => "Отчисление по собственному желанию",
+        StudentOrderType.ЗачислитьПоПереводу => "Зачисление переводом",
+        StudentOrderType.Восстановить => "Восстановление",
+        StudentOrderType.ОтчислитьПоЗавершению => "Отчисление в связи с завершением обучения",
+        StudentOrderType.ПродлАкадем => "Продление академического отпуска",
+        StudentOrderType.ОтчислитьЗаНевыходСАкадема => "Отчисление за невыход из академического отпуска",
+        _ => type.ToString()
+    };
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о приказе</h2>
+        <div class="d-flex gap-2">
+            @*<a class="btn btn-sm btn-light" asp-controller="StudentOrders" asp-action="Update" asp-route-id="@Model.Id">Изменить</a>*@
+            <a class="btn btn-sm btn-light" asp-controller="StudentOrders" asp-action="List">К списку</a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">
+                Номер приказа
+            </dt>
+            <dd class="col-sm-8">
+                @(string.IsNullOrWhiteSpace(Model.OrderNumber) ? "—" : Model.OrderNumber)
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Тип приказа
+            </dt>
+            <dd class="col-sm-8">
+                @GetOrderTypeName(Model.StudentOrderType)
+            </dd>
+        </dl>
+    </div>
+</div>

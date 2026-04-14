@@ -1,0 +1,57 @@
+@model DepartmentContracts.ViewModels.DisciplineBlockViewModel
+
+@{
+    ViewData["Title"] = "Подробнее о блоке дисциплин";
+}
+
+<div class="app-card">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Подробнее о блоке дисциплин</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-light"
+               asp-controller="DisciplineBlocks"
+               asp-action="Update"
+               asp-route-id="@Model.Id">
+                Изменить
+            </a>
+
+            <a class="btn btn-sm btn-light"
+               asp-controller="DisciplineBlocks"
+               asp-action="List">
+                К списку
+            </a>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">
+                Наименование
+            </dt>
+            <dd class="col-sm-8">
+                @(string.IsNullOrWhiteSpace(Model.Title) ? "—" : Model.Title)
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Обозначение
+            </dt>
+            <dd class="col-sm-8">
+                @(string.IsNullOrWhiteSpace(Model.DisciplineBlockBlueAsteriskName) ? "—" : Model.DisciplineBlockBlueAsteriskName)
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Использование для группировки
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.DisciplineBlockUseForGrouping ? "Да" : "Нет")
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Порядок отображения
+            </dt>
+            <dd class="col-sm-8">
+                @Model.DisciplineBlockOrder
+            </dd>
+        </dl>
+    </div>
+</div>

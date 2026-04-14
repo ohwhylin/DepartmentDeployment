@@ -1,0 +1,106 @@
+@{
+    ViewData["Title"] = "EducationDirections";
+
+    var list = ViewBag.EducationDirectionsList as IEnumerable<dynamic> ?? new List<dynamic>();
+
+    var search = Context.Request.Query["search"].ToString();
+    var qualification = Context.Request.Query["qualification"].ToString();
+
+    var filtered = list.Where(x =>
+        (string.IsNullOrWhiteSpace(search) ||
+         (x.Title?.ToString().ToLower().Contains(search.ToLower()) ?? false) ||
+         (x.Cipher?.ToString().ToLower().Contains(search.ToLower()) ?? false))
+        &&
+        (string.IsNullOrWhiteSpace(qualification) ||
+         (x.Qualification?.ToString() == qualification))
+    ).ToList();
+}
+
+<div class="list-shell">
+    <div class="list-head">
+        <div>
+            <h2 class="list-title">Список направлений обучения</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-primary" asp-controller="EducationDirections" asp-action="Create">Добавить</a>
+        </div>
+    </div>
+
+    <form method="get" class="p-3 d-flex gap-2 flex-wrap">
+        <input type="text"
+               name="search"
+               value="@search"
+               class="form-control"
+               placeholder="Поиск (название, шифр)"
+               style="max-width: 250px;" />
+
+        <select name="qualification" class="form-select" style="max-width: 220px;">
+            <option value="">Все</option>
+            <option value="Бакалавриат" selected="@(qualification == "Бакалавриат")">Бакалавриат</option>
+            <option value="Магистратура" selected="@(qualification == "Магистратура")">Магистратура</option>
+        </select>
+
+        <button type="submit" class="btn btn-app-outline">Применить</button>
+
+        <a class="btn btn-app-outline"
+           asp-controller="EducationDirections"
+           asp-action="List">
+            Сбросить
+        </a>
+    </form>
+
+    @if (filtered.Count > 0)
+    {
+        @foreach (var item in filtered)
+        {
+            <div class="entity-row">
+                <div class="entity-accent"></div>
+
+                <div class="entity-content">
+                    <div class="entity-main">
+                        <h5 class="entity-title">@item.Title</h5>
+
+                        <div class="entity-meta d-flex flex-column gap-1">
+                            <div><strong>Шифр:</strong> @item.Cipher</div>
+                            <div><strong>Краткое наименование:</strong> @item.ShortName</div>
+                            <div><strong>Квалификация:</strong> @item.Qualification</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-actions">
+                    <div class="actions-stack">
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="EducationDirections"
+                   asp-action="Details"
+                   asp-route-id="@item.Id">
+                            Подробнее
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="EducationDirections"
+                   asp-action="Update"
+                   asp-route-id="@item.Id">
+                            Изменить
+                        </a>
+
+                        <a class="btn btn-sm btn-app-outline"
+                   asp-controller="EducationDirections"
+                   asp-action="Delete"
+                   asp-route-id="@item.Id">
+                            Удалить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="p-3">
+            <div class="alert alert-secondary mb-0">
+                По заданным параметрам направления обучения не найдены.
+            </div>
+        </div>
+    }
+</div>

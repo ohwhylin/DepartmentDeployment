@@ -1,0 +1,178 @@
+services:
+  core-db:
+    image: postgres:16
+    container_name: core-db
+    environment:
+      POSTGRES_DB: department_db
+      POSTGRES_USER: department_user
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5543:5432"
+    volumes:
+      - core-db-data:/var/lib/postgresql/data
+
+  core-api:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentRestApi/Dockerfile
+    container_name: core-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      DB_CONNECTION_STRING: Host=core-db;Port=5432;Database=department_db;Username=department_user;Password=123456
+      OneCConnection__BaseUrl: http://onec-mock-api:8080/
+      OneCConnection__Login: ""
+      OneCConnection__Password: ""
+      OneCConnection__AcademicPlansEndpoint: /academic-plans
+      OneCConnection__AcademicPlanRecordsEndpoint: ""
+      OneCConnection__StudentGroupsEndpoint: /students/groups
+      OneCConnection__StudentsEndpoint: /students
+      OneCConnection__DisciplineStudentRecordsEndpoint: /students/marks
+    depends_on:
+      - core-db
+      - onec-mock-api
+    ports:
+      - "5601:8080"
+
+  core-web:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentUserApp/Dockerfile
+    container_name: core-web
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      IPAddress: http://gateway:8080/
+    depends_on:
+      - core-api
+    ports:
+      - "5602:8080"
+
+  gateway:
+    build:
+      context: ../gateway/Gateway
+      dockerfile: GatewayApi/Dockerfile
+    container_name: gateway
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - core-api
+      - core-web
+    ports:
+      - "5600:8080"
+
+  onec-mock-api:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentOneCMockApi/Dockerfile
+    container_name: onec-mock-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5610:8080"
+
+  mol-db:
+    image: postgres:16
+    container_name: mol-db
+    environment:
+      POSTGRES_DB: mol_db
+      POSTGRES_USER: mol_user
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5544:5432"
+    volumes:
+      - mol-db-data:/var/lib/postgresql/data
+
+  mol-api:
+    build:
+      context: ../MOL/MolService
+      dockerfile: MolServiceRestApi/Dockerfile
+    container_name: mol-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=mol-db;Port=5432;Database=mol_db;Username=mol_user;Password=123456
+      CoreApi__BaseUrl: http://gateway:8080/api/core
+    depends_on:
+      - mol-db
+      - gateway
+    ports:
+      - "5603:8080"
+
+  schedule-db:
+    image: postgres:16
+    container_name: schedule-db
+    environment:
+      POSTGRES_DB: schedule_db
+      POSTGRES_USER: schedule_user
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5545:5432"
+    volumes:
+      - schedule-db-data:/var/lib/postgresql/data
+
+  schedule-api:
+    build:
+      context: ../Schedule/ScheduleService
+      dockerfile: ScheduleServiceRestApi/Dockerfile
+    container_name: schedule-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=schedule-db;Port=5432;Database=schedule_db;Username=schedule_user;Password=123456
+      CoreApi__BaseUrl: http://gateway:8080/api/core
+    depends_on:
+      - schedule-db
+      - gateway
+    ports:
+      - "5604:8080"
+
+  lab-web:
+    build:
+      context: ..
+      dockerfile: LaboratoryHead/LaboratoryHeadApp/LaboratoryHeadApp/Dockerfile
+    container_name: lab-web
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ApiSettings__MolServiceUrl: http://mol-api:8080/
+      ApiSettings__ScheduleServiceUrl: http://schedule-api:8080/
+      ApiSettings__ScheduleImportFolderPath: /app/ScheduleImport
+    depends_on:
+      - mol-api
+      - schedule-api
+    ports:
+      - "5606:8080"
+    volumes:
+      - ../ScheduleImport:/app/ScheduleImport
+      
+  load-db:
+    image: postgres:16
+    container_name: load-db
+    environment:
+      POSTGRES_DB: load_db
+      POSTGRES_USER: load_user
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5546:5432"
+    volumes:
+      - load-db-data:/var/lib/postgresql/data
+
+  load-api:
+    build:
+      context: ../departmentLoadApp/DepartmentLoadApp
+      dockerfile: Dockerfile
+    container_name: load-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=load-db;Port=5432;Database=load_db;Username=load_user;Password=123456
+    depends_on:
+      - load-db
+      - core-api
+    ports:
+      - "5605:8080"
+
+volumes:
+  core-db-data:
+  mol-db-data:
+  schedule-db-data:
+  load-db-data:

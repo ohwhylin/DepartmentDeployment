@@ -1,0 +1,36 @@
+﻿entity:
+  name: EducationDirection
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: cipher
+    type: string
+    required: true
+    maxLength: 10
+
+  - name: shortName
+    type: string
+    required: true
+    maxLength: 10
+
+  - name: title
+    type: string
+    required: true
+    maxLength: 100
+
+  - name: qualification
+    type: EducationDirectionQualification
+    required: true
+    enum: true
+
+  - name: profile
+    type: string
+    required: true
+
+  - name: description
+    type: string
+    required: true

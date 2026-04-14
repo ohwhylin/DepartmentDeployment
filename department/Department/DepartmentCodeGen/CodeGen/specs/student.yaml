@@ -1,0 +1,55 @@
+﻿entity:
+  name: Student
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: studentGroupId
+    type: int
+    required: false
+    reference: StudentGroup
+
+  - name: numberOfBook
+    type: string
+    required: true
+    maxLength: 10
+
+  - name: firstName
+    type: string
+    required: true
+    maxLength: 150
+
+  - name: lastName
+    type: string
+    required: true
+    maxLength: 150
+
+  - name: patronymic
+    type: string
+    required: true
+    maxLength: 150
+
+  - name: email
+    type: string
+    required: true
+    maxLength: 150
+
+  - name: studentState
+    type: StudentState
+    required: true
+    enum: true
+
+  - name: description
+    type: string
+    required: true
+
+  - name: photo
+    type: bytes
+    required: true
+
+  - name: isSteward
+    type: bool
+    required: true

@@ -1,0 +1,25 @@
+﻿entity:
+  name: Classroom
+  keyType: int
+
+properties:
+  - name: id
+    type: int
+    required: true
+
+  - name: number
+    type: string
+    required: true
+
+  - name: classroomType
+    type: ClassroomTypes
+    required: true
+    enum: true
+
+  - name: capacity
+    type: int
+    required: true
+
+  - name: notUseInSchedule
+    type: bool
+    required: true

@@ -1,0 +1,203 @@
+﻿@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="app-card mb-4">
+    <div class="app-card-header">
+        <h2 class="app-card-title">Главная страница</h2>
+    </div>
+    <div class="p-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger mb-3">
+                @TempData["Error"]
+            </div>
+        }
+
+        <p class="mb-2">
+            Добро пожаловать в модуль кафедрального портала.
+        </p>
+        <div class="hint">
+            Здесь отображается краткая сводка по данным, проблемным показателям и быстрым действиям.
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Студенты</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.StudentCount</div>
+                <div class="hint mb-3">Количество студентов</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="Students" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Группы</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.StudentGroupCount</div>
+                <div class="hint mb-3">Количество учебных групп</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="StudentGroups" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Дисциплины</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.DisciplineCount</div>
+                <div class="hint mb-3">Количество дисциплин</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="Disciplines" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Успеваемость</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.DisciplineStudentRecordCount</div>
+                <div class="hint mb-3">Количество записей успеваемости</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="DisciplineStudentRecords" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100 border-danger-subtle">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Неудовлетворительно</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.UnsatisfactoryCount</div>
+                <div class="hint mb-3">Количество проблемных оценок</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="DisciplineStudentRecords" asp-action="List">
+                    Проверить
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100 border-warning-subtle">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Неявка</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.AbsentCount</div>
+                <div class="hint mb-3">Количество неявок</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="DisciplineStudentRecords" asp-action="List">
+                    Проверить
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Академ</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.AcademicLeaveCount</div>
+                <div class="hint mb-3">Студенты в академическом отпуске</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="Students" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Приказы</h5>
+            </div>
+            <div class="p-3">
+                <div class="display-6 fw-bold">@ViewBag.StudentOrderCount</div>
+                <div class="hint mb-3">Количество приказов</div>
+                <a class="btn btn-app-outline btn-sm" asp-controller="StudentOrders" asp-action="List">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-3 mb-3">
+
+    <div class="col-lg-6">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Быстрые действия</h5>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                <form asp-controller="AcademicPlans" asp-action="Sync" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-app-primary w-100">Синхронизировать учебные планы</button>
+                </form>
+
+                <form asp-controller="StudentGroups" asp-action="Sync" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-app-primary w-100">Синхронизировать группы</button>
+                </form>
+
+                <form asp-controller="DisciplineStudentRecords" asp-action="Sync" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-app-primary w-100">Синхронизировать успеваемость</button>
+                </form>
+
+                <form asp-controller="StudentOrders" asp-action="Sync" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-app-primary w-100">Синхронизировать приказы</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Быстрые переходы</h5>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                <a class="btn btn-app-outline w-100" asp-controller="DisciplineStudentRecords" asp-action="List">
+                    Открыть успеваемость
+                </a>
+                <a class="btn btn-app-outline w-100" asp-controller="StudentGroups" asp-action="List">
+                    Открыть группы
+                </a>
+                <a class="btn btn-app-outline w-100" asp-controller="StudentOrders" asp-action="List">
+                    Открыть приказы
+                </a>
+                <a class="btn btn-app-outline w-100" asp-controller="AcademicPlans" asp-action="List">
+                    Открыть учебные планы
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
