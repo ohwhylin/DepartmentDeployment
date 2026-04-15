@@ -31,7 +31,6 @@ builder.Services.AddScoped<IStudentGroupSyncService, StudentGroupSyncService>();
 builder.Services.AddScoped<IAcademicPlanSyncService, AcademicPlanSyncService>();
 builder.Services.AddScoped<IAcademicPlanRecordSyncService, AcademicPlanRecordSyncService>();
 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -57,6 +56,16 @@ var localizationOptions = new RequestLocalizationOptions
 };
 
 app.UseRequestLocalization(localizationOptions);
+
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.Use((context, next) =>
+    {
+        context.Request.PathBase = pathBase;
+        return next();
+    });
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

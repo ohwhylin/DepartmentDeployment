@@ -27,6 +27,8 @@ services:
     depends_on:
       - core-db
       - onec-mock-api
+    ports:
+      - "127.0.0.1:7301:8080"
     restart: unless-stopped
 
   core-web:
@@ -84,6 +86,8 @@ services:
     depends_on:
       - mol-db
       - gateway
+    ports:
+      - "127.0.0.1:7303:8080"
     restart: unless-stopped
 
   schedule-db:
@@ -108,6 +112,8 @@ services:
     depends_on:
       - schedule-db
       - gateway
+    ports:
+      - "127.0.0.1:7304:8080"
     restart: unless-stopped
 
   load-db:
