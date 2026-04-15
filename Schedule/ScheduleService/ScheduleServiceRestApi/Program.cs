@@ -31,7 +31,7 @@ builder.Services.AddHttpClient<CoreApiService>(client =>
     var baseUrl = builder.Configuration["CoreApi:BaseUrl"];
     if (string.IsNullOrWhiteSpace(baseUrl))
     {
-        throw new InvalidOperationException("Не настроен CoreApi:BaseUrl");
+        throw new InvalidOperationException("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ CoreApi:BaseUrl");
     }
 
     client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/");
@@ -46,11 +46,12 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.RoutePrefix = "swagger";
+    c.SwaggerEndpoint("v1/swagger.json", "ScheduleServiceRestApi");
+});
 
 app.UseHttpsRedirection();
 

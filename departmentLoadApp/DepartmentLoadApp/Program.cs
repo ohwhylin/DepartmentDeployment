@@ -36,16 +36,12 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+    c.RoutePrefix = "swagger";
+    c.SwaggerEndpoint("v1/swagger.json", "DepartmentLoadApi");
+});
 
 var culture = new CultureInfo("ru-RU");
 var localizationOptions = new RequestLocalizationOptions
