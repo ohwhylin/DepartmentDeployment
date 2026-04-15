@@ -128,9 +128,12 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=load-db;Port=5432;Database=load_db;Username=load_user;Password=123456
+      PathBase: /polina/load
     depends_on:
       - load-db
       - core-api
+    ports:
+      - "127.0.0.1:7305:8080"
     restart: unless-stopped
 
   lab-web:
