@@ -1,0 +1,160 @@
+services:
+  core-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: department_db
+      POSTGRES_USER: department_user
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - core-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  core-api:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentRestApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      DB_CONNECTION_STRING: Host=core-db;Port=5432;Database=department_db;Username=department_user;Password=123456
+      OneCConnection__BaseUrl: http://onec-mock-api:8080/
+      OneCConnection__Login: ""
+      OneCConnection__Password: ""
+      OneCConnection__AcademicPlansEndpoint: /academic-plans
+      OneCConnection__AcademicPlanRecordsEndpoint: ""
+      OneCConnection__StudentGroupsEndpoint: /students/groups
+      OneCConnection__StudentsEndpoint: /students
+      OneCConnection__DisciplineStudentRecordsEndpoint: /students/marks
+    depends_on:
+      - core-db
+      - onec-mock-api
+    restart: unless-stopped
+
+  core-web:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentUserApp/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      IPAddress: http://gateway:8080/
+      PathBase: /polina/core
+    depends_on:
+      - core-api
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ../gateway/Gateway
+      dockerfile: GatewayApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - core-api
+      - core-web
+    ports:
+      - "127.0.0.1:7300:8080"
+    restart: unless-stopped
+
+  onec-mock-api:
+    build:
+      context: ../department/Department
+      dockerfile: DepartmentOneCMockApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    restart: unless-stopped
+
+  mol-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: mol_db
+      POSTGRES_USER: mol_user
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - mol-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  mol-api:
+    build:
+      context: ../MOL/MolService
+      dockerfile: MolServiceRestApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=mol-db;Port=5432;Database=mol_db;Username=mol_user;Password=123456
+      CoreApi__BaseUrl: http://gateway:8080/api/core
+    depends_on:
+      - mol-db
+      - gateway
+    restart: unless-stopped
+
+  schedule-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: schedule_db
+      POSTGRES_USER: schedule_user
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - schedule-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  schedule-api:
+    build:
+      context: ../Schedule/ScheduleService
+      dockerfile: ScheduleServiceRestApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=schedule-db;Port=5432;Database=schedule_db;Username=schedule_user;Password=123456
+      CoreApi__BaseUrl: http://gateway:8080/api/core
+    depends_on:
+      - schedule-db
+      - gateway
+    restart: unless-stopped
+
+  load-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: load_db
+      POSTGRES_USER: load_user
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - load-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  load-api:
+    build:
+      context: ../departmentLoadApp/DepartmentLoadApp
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=load-db;Port=5432;Database=load_db;Username=load_user;Password=123456
+    depends_on:
+      - load-db
+      - core-api
+    restart: unless-stopped
+
+  lab-web:
+    build:
+      context: ..
+      dockerfile: LaboratoryHead/LaboratoryHeadApp/LaboratoryHeadApp/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+      ApiSettings__MolServiceUrl: http://mol-api:8080/
+      ApiSettings__ScheduleServiceUrl: http://schedule-api:8080/
+      ApiSettings__ScheduleImportFolderPath: /app/ScheduleImport
+      PathBase: /polina/lab
+    depends_on:
+      - mol-api
+      - schedule-api
+    ports:
+      - "127.0.0.1:7306:8080"
+    volumes:
+      - ../ScheduleImport:/app/ScheduleImport
+    restart: unless-stopped
+
+volumes:
+  core-db-data:
+  mol-db-data:
+  schedule-db-data:
+  load-db-data:
