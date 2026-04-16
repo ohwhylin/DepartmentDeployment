@@ -1,3 +1,4 @@
+@using System.Linq
 @using DepartmentContracts.ViewModels
 @using DepartmentDataModels.Enums
 
@@ -52,21 +53,51 @@
         </div>
     }
 
+    <div class="p-3 pb-0">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input id="groupNameSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по группе" />
+            </div>
+            <div class="col-md-4">
+                <input id="groupStudentSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по студенту" />
+            </div>
+            <div class="col-md-auto">
+                <button id="groupSearchClear"
+                        type="button"
+                        class="btn btn-app-outline">
+                    Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="studentGroupsSearchEmpty"
+         class="alert alert-secondary m-3 d-none">
+        По заданным параметрам группы или студенты не найдены.
+    </div>
+
     @if (groups.Count > 0)
     {
         @foreach (var item in groups)
         {
             var groupStudents = students
-            .Where(x => x.StudentGroupId == item.Id)
-            .OrderBy(x => x.LastName)
-            .ThenBy(x => x.FirstName)
-            .ThenBy(x => x.Patronymic)
-            .ToList();
+                .Where(x => x.StudentGroupId == item.Id)
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .ThenBy(x => x.Patronymic)
+                .ToList();
 
             var collapseId = $"groupStudents_{item.Id}";
             var buttonId = $"toggleBtn_{item.Id}";
 
-            <div class="group-block">
+            <div class="group-block"
+                 data-group-name="@((item.GroupName ?? string.Empty).ToLowerInvariant())">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
@@ -90,19 +121,19 @@
                     <div class="entity-actions">
                         <div class="actions-stack">
                             <a class="btn btn-sm btn-app-outline"
-                       asp-controller="StudentGroups"
-                       asp-action="Details"
-                       asp-route-id="@item.Id">
+                               asp-controller="StudentGroups"
+                               asp-action="Details"
+                               asp-route-id="@item.Id">
                                 Подробнее
                             </a>
 
                             <button id="@buttonId"
-                            class="btn btn-sm btn-app-outline"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#@collapseId"
-                            aria-expanded="false"
-                            aria-controls="@collapseId">
+                                    class="btn btn-sm btn-app-outline"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#@collapseId"
+                                    aria-expanded="false"
+                                    aria-controls="@collapseId">
                                 Показать студентов
                             </button>
                         </div>
@@ -115,7 +146,10 @@
                         {
                             @foreach (var student in groupStudents)
                             {
-                                <div class="group-student-item">
+                                var studentSearch = $"{student.LastName} {student.FirstName} {student.Patronymic}".ToLowerInvariant();
+
+                                <div class="group-student-item"
+                                     data-student-name="@studentSearch">
                                     <div class="group-student-info">
                                         <div class="group-student-title">
                                             @student.LastName @student.FirstName @student.Patronymic
@@ -144,9 +178,9 @@
 
                                     <div class="group-student-actions">
                                         <a class="btn btn-sm btn-app-outline"
-                           asp-controller="Students"
-                           asp-action="Details"
-                           asp-route-id="@student.Id">
+                                           asp-controller="Students"
+                                           asp-action="Details"
+                                           asp-route-id="@student.Id">
                                             Подробнее
                                         </a>
                                     </div>
@@ -178,13 +212,13 @@
             border-top: 1px solid var(--sky);
         }
 
-            .group-block:first-of-type {
-                border-top: none;
-            }
+        .group-block:first-of-type {
+            border-top: none;
+        }
 
-            .group-block .entity-row {
-                border-top: none;
-            }
+        .group-block .entity-row {
+            border-top: none;
+        }
 
         .group-students-wrap {
             margin-left: 8px;
@@ -202,9 +236,9 @@
             border-bottom: 1px solid #e3eefb;
         }
 
-            .group-student-item:last-child {
-                border-bottom: none;
-            }
+        .group-student-item:last-child {
+            border-bottom: none;
+        }
 
         .group-student-info {
             flex: 1;
@@ -222,13 +256,40 @@
             flex-shrink: 0;
             padding-top: 2px;
         }
+
+        .group-student-item.student-match {
+            background: #eef6ff;
+            border-radius: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
     </style>
 }
 
-    @section Scripts {
+@section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
+            const groupNameSearchInput = document.getElementById('groupNameSearchInput');
+            const groupStudentSearchInput = document.getElementById('groupStudentSearchInput');
+            const clearButton = document.getElementById('groupSearchClear');
+            const groupBlocks = document.querySelectorAll('.group-block');
+            const emptyResult = document.getElementById('studentGroupsSearchEmpty');
+
+            function getCollapseInstance(element) {
+                if (!window.bootstrap) return null;
+                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
+            }
+
+            function collapseAllGroups() {
+                groupBlocks.forEach(block => {
+                    const collapseElement = block.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    if (collapseInstance) {
+                        collapseInstance.hide();
+                    }
+                });
+            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -245,6 +306,97 @@
                     }
                 });
             });
+
+            function applyFilters() {
+                const groupQuery = (groupNameSearchInput?.value || '').trim().toLowerCase();
+                const studentQuery = (groupStudentSearchInput?.value || '').trim().toLowerCase();
+                let hasVisibleGroups = false;
+
+                groupBlocks.forEach(groupBlock => {
+                    const groupName = groupBlock.dataset.groupName || '';
+                    const collapseElement = groupBlock.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    const studentItems = groupBlock.querySelectorAll('.group-student-item');
+
+                    const groupMatches = !groupQuery || groupName.includes(groupQuery);
+                    let hasStudentMatch = false;
+
+                    studentItems.forEach(studentItem => {
+                        const studentName = studentItem.dataset.studentName || '';
+                        const studentMatches = !studentQuery || studentName.includes(studentQuery);
+
+                        studentItem.classList.toggle('student-match', !!studentQuery && studentMatches);
+
+                        if (studentMatches) {
+                            hasStudentMatch = true;
+                            studentItem.style.display = '';
+                        } else {
+                            studentItem.style.display = 'none';
+                        }
+                    });
+
+                    const groupVisible = groupMatches && (!studentQuery || hasStudentMatch);
+                    groupBlock.style.display = groupVisible ? '' : 'none';
+
+                    if (groupVisible) {
+                        hasVisibleGroups = true;
+                    }
+
+                    if (studentQuery && groupVisible && hasStudentMatch && collapseInstance) {
+                        collapseInstance.show();
+                    }
+
+                    if (studentQuery && (!groupVisible || !hasStudentMatch) && collapseInstance) {
+                        collapseInstance.hide();
+                    }
+
+                    if (!studentQuery) {
+                        studentItems.forEach(studentItem => {
+                            studentItem.style.display = '';
+                            studentItem.classList.remove('student-match');
+                        });
+                    }
+                });
+
+                if (emptyResult) {
+                    emptyResult.classList.toggle('d-none', hasVisibleGroups);
+                }
+            }
+
+            if (groupNameSearchInput) {
+                groupNameSearchInput.addEventListener('input', applyFilters);
+            }
+
+            if (groupStudentSearchInput) {
+                groupStudentSearchInput.addEventListener('input', applyFilters);
+            }
+
+            if (clearButton) {
+                clearButton.addEventListener('click', function () {
+                    if (groupNameSearchInput) groupNameSearchInput.value = '';
+                    if (groupStudentSearchInput) groupStudentSearchInput.value = '';
+
+                    groupBlocks.forEach(groupBlock => {
+                        groupBlock.style.display = '';
+
+                        const studentItems = groupBlock.querySelectorAll('.group-student-item');
+                        studentItems.forEach(studentItem => {
+                            studentItem.style.display = '';
+                            studentItem.classList.remove('student-match');
+                        });
+                    });
+
+                    collapseAllGroups();
+
+                    if (emptyResult) {
+                        emptyResult.classList.add('d-none');
+                    }
+
+                    if (groupNameSearchInput) {
+                        groupNameSearchInput.focus();
+                    }
+                });
+            }
         });
     </script>
 }

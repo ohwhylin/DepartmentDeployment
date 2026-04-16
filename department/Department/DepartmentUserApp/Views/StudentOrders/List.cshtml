@@ -1,3 +1,4 @@
+@using System.Linq
 @using DepartmentContracts.ViewModels
 @using DepartmentDataModels.Enums
 
@@ -7,6 +8,12 @@
     var studentOrders = ViewBag.StudentOrdersList as List<StudentOrderViewModel> ?? new List<StudentOrderViewModel>();
     var studentOrderBlocks = ViewBag.StudentOrderBlocksList as List<StudentOrderBlockViewModel> ?? new List<StudentOrderBlockViewModel>();
     var blockStudents = ViewBag.StudentOrderBlockStudentsList as List<StudentOrderBlockStudentViewModel> ?? new List<StudentOrderBlockStudentViewModel>();
+
+    var orderTypes = studentOrders
+        .Select(x => x.StudentOrderType)
+        .Distinct()
+        .OrderBy(x => GetOrderTypeName(x))
+        .ToList();
 
     string GetOrderTypeName(StudentOrderType type) => type switch
     {
@@ -55,6 +62,47 @@
         </div>
     }
 
+    <div class="p-3 pb-0">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input id="orderStudentSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по студенту" />
+            </div>
+
+            <div class="col-md-3">
+                <input id="orderGroupSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по группе" />
+            </div>
+
+            <div class="col-md-3">
+                <select id="orderTypeFilter" class="form-select">
+                    <option value="">Все типы приказов</option>
+                    @foreach (var type in orderTypes)
+                    {
+                        <option value="@type.ToString()">@GetOrderTypeName(type)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-auto">
+                <button id="orderSearchClear"
+                        type="button"
+                        class="btn btn-app-outline">
+                    Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="studentOrdersSearchEmpty"
+         class="alert alert-secondary m-3 d-none">
+        По заданным параметрам приказы не найдены.
+    </div>
+
     @if (studentOrders.Count > 0)
     {
         @foreach (var order in studentOrders)
@@ -62,7 +110,28 @@
             var orderBlocks = studentOrderBlocks.Where(x => x.StudentOrderId == order.Id).ToList();
             var collapseId = $"orderBlocks_{order.Id}";
 
-            <div class="plan-block">
+            var orderStudentsSearch = string.Join(" ",
+                orderBlocks.SelectMany(block =>
+                    blockStudents
+                        .Where(x => x.StudentOrderBlockId == block.Id)
+                        .Select(x => x.Student ?? string.Empty)))
+                .ToLowerInvariant();
+
+            var orderGroupsSearch = string.Join(" ",
+                orderBlocks.SelectMany(block =>
+                    blockStudents
+                        .Where(x => x.StudentOrderBlockId == block.Id)
+                        .SelectMany(x => new[]
+                        {
+                            x.StudentGroupFrom ?? string.Empty,
+                            x.StudentGroupTo ?? string.Empty
+                        })))
+                .ToLowerInvariant();
+
+            <div class="plan-block order-item"
+                 data-order-type="@order.StudentOrderType.ToString()"
+                 data-order-students-search="@orderStudentsSearch"
+                 data-order-groups-search="@orderGroupsSearch">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
@@ -80,18 +149,18 @@
                     <div class="entity-actions">
                         <div class="actions-stack">
                             <a class="btn btn-sm btn-app-outline"
-                       asp-controller="StudentOrders"
-                       asp-action="Details"
-                       asp-route-id="@order.Id">
+                               asp-controller="StudentOrders"
+                               asp-action="Details"
+                               asp-route-id="@order.Id">
                                 Подробнее
                             </a>
 
                             <button class="btn btn-sm btn-app-outline"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#@collapseId"
-                            aria-expanded="false"
-                            aria-controls="@collapseId">
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#@collapseId"
+                                    aria-expanded="false"
+                                    aria-controls="@collapseId">
                                 Показать блоки
                             </button>
                         </div>
@@ -105,10 +174,24 @@
                             @foreach (var block in orderBlocks)
                             {
                                 var currentBlockStudents = blockStudents
-                                .Where(x => x.StudentOrderBlockId == block.Id)
-                                .ToList();
+                                    .Where(x => x.StudentOrderBlockId == block.Id)
+                                    .ToList();
 
-                                <div class="order-block-card">
+                                var blockStudentsSearch = string.Join(" ",
+                                    currentBlockStudents.Select(x => x.Student ?? string.Empty))
+                                    .ToLowerInvariant();
+
+                                var blockGroupsSearch = string.Join(" ",
+                                    currentBlockStudents.SelectMany(x => new[]
+                                    {
+                                        x.StudentGroupFrom ?? string.Empty,
+                                        x.StudentGroupTo ?? string.Empty
+                                    }))
+                                    .ToLowerInvariant();
+
+                                <div class="order-block-card"
+                                     data-block-students-search="@blockStudentsSearch"
+                                     data-block-groups-search="@blockGroupsSearch">
                                     <div class="order-block-head">
                                         <div class="order-block-info">
                                             <div class="plan-record-title">Блок приказа</div>
@@ -122,9 +205,9 @@
 
                                         <div class="plan-record-actions">
                                             <a class="btn btn-sm btn-app-outline"
-                               asp-controller="StudentOrderBlocks"
-                               asp-action="Details"
-                               asp-route-id="@block.Id">
+                                               asp-controller="StudentOrderBlocks"
+                                               asp-action="Details"
+                                               asp-route-id="@block.Id">
                                                 Подробнее
                                             </a>
                                         </div>
@@ -145,15 +228,20 @@
                                                 {
                                                     @foreach (var blockStudent in currentBlockStudents)
                                                     {
-                                                        <tr>
+                                                        var rowStudentSearch = (blockStudent.Student ?? string.Empty).ToLowerInvariant();
+                                                        var rowGroupSearch = $"{blockStudent.StudentGroupFrom ?? string.Empty} {blockStudent.StudentGroupTo ?? string.Empty}".ToLowerInvariant();
+
+                                                        <tr class="order-student-row"
+                                                            data-student-search="@rowStudentSearch"
+                                                            data-group-search="@rowGroupSearch">
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)</td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupFrom) ? "—" : blockStudent.StudentGroupFrom)</td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupTo) ? "—" : blockStudent.StudentGroupTo)</td>
                                                             <td class="text-end">
                                                                 <a class="btn btn-sm btn-app-outline"
-                                           asp-controller="StudentOrderBlockStudents"
-                                           asp-action="Details"
-                                           asp-route-id="@blockStudent.Id">
+                                                                   asp-controller="StudentOrderBlockStudents"
+                                                                   asp-action="Details"
+                                                                   asp-route-id="@blockStudent.Id">
                                                                     Подробнее
                                                                 </a>
                                                             </td>
@@ -162,7 +250,7 @@
                                                 }
                                                 else
                                                 {
-                                                    <tr>
+                                                    <tr class="order-empty-row">
                                                         <td colspan="4" class="text-muted">
                                                             Для данного блока студенты отсутствуют.
                                                         </td>
@@ -259,13 +347,38 @@
             .order-students-table td {
                 vertical-align: middle;
             }
+
+        .order-student-row.row-match td {
+            background: #eef6ff;
+        }
     </style>
 }
 
-    @section Scripts {
+@section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
+            const studentSearchInput = document.getElementById('orderStudentSearchInput');
+            const groupSearchInput = document.getElementById('orderGroupSearchInput');
+            const typeFilter = document.getElementById('orderTypeFilter');
+            const clearButton = document.getElementById('orderSearchClear');
+            const orderItems = document.querySelectorAll('.order-item');
+            const emptyResult = document.getElementById('studentOrdersSearchEmpty');
+
+            function getCollapseInstance(element) {
+                if (!window.bootstrap) return null;
+                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
+            }
+
+            function collapseAllOrders() {
+                orderItems.forEach(orderItem => {
+                    const collapseElement = orderItem.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    if (collapseInstance) {
+                        collapseInstance.hide();
+                    }
+                });
+            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -282,6 +395,134 @@
                     }
                 });
             });
+
+            function applyOrderFilters() {
+                const studentQuery = (studentSearchInput?.value || '').trim().toLowerCase();
+                const groupQuery = (groupSearchInput?.value || '').trim().toLowerCase();
+                const selectedType = (typeFilter?.value || '').trim();
+
+                let hasVisibleOrders = false;
+
+                orderItems.forEach(orderItem => {
+                    const orderType = orderItem.dataset.orderType || '';
+                    const orderStudentsSearch = orderItem.dataset.orderStudentsSearch || '';
+                    const orderGroupsSearch = orderItem.dataset.orderGroupsSearch || '';
+                    const collapseElement = orderItem.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    const blockCards = orderItem.querySelectorAll('.order-block-card');
+
+                    const typeMatches = !selectedType || orderType === selectedType;
+                    const orderStudentMatches = !studentQuery || orderStudentsSearch.includes(studentQuery);
+                    const orderGroupMatches = !groupQuery || orderGroupsSearch.includes(groupQuery);
+
+                    let hasVisibleBlock = false;
+
+                    blockCards.forEach(blockCard => {
+                        const blockStudentsSearch = blockCard.dataset.blockStudentsSearch || '';
+                        const blockGroupsSearch = blockCard.dataset.blockGroupsSearch || '';
+                        const rows = blockCard.querySelectorAll('.order-student-row');
+
+                        const blockStudentMatches = !studentQuery || blockStudentsSearch.includes(studentQuery);
+                        const blockGroupMatches = !groupQuery || blockGroupsSearch.includes(groupQuery);
+
+                        let hasMatchedRow = false;
+
+                        rows.forEach(row => {
+                            const rowStudentSearch = row.dataset.studentSearch || '';
+                            const rowGroupSearch = row.dataset.groupSearch || '';
+
+                            const rowStudentMatches = !studentQuery || rowStudentSearch.includes(studentQuery);
+                            const rowGroupMatches = !groupQuery || rowGroupSearch.includes(groupQuery);
+
+                            const rowVisible = rowStudentMatches && rowGroupMatches;
+
+                            row.style.display = rowVisible ? '' : 'none';
+                            row.classList.toggle('row-match',
+                                ((studentQuery && rowStudentSearch.includes(studentQuery)) ||
+                                 (groupQuery && rowGroupSearch.includes(groupQuery))) && rowVisible);
+
+                            if (rowVisible) {
+                                hasMatchedRow = true;
+                            }
+                        });
+
+                        const blockVisible = blockStudentMatches && blockGroupMatches && hasMatchedRow;
+                        blockCard.style.display = blockVisible ? '' : 'none';
+
+                        if (blockVisible) {
+                            hasVisibleBlock = true;
+                        }
+                    });
+
+                    const orderVisible = typeMatches && orderStudentMatches && orderGroupMatches && hasVisibleBlock;
+                    orderItem.style.display = orderVisible ? '' : 'none';
+
+                    if (orderVisible) {
+                        hasVisibleOrders = true;
+                    }
+
+                    if ((studentQuery || groupQuery) && orderVisible && collapseInstance) {
+                        collapseInstance.show();
+                    }
+
+                    if ((studentQuery || groupQuery) && !orderVisible && collapseInstance) {
+                        collapseInstance.hide();
+                    }
+
+                    if (!studentQuery && !groupQuery && !typeMatches && collapseInstance) {
+                        collapseInstance.hide();
+                    }
+                });
+
+                if (emptyResult) {
+                    emptyResult.classList.toggle('d-none', hasVisibleOrders);
+                }
+            }
+
+            if (studentSearchInput) {
+                studentSearchInput.addEventListener('input', applyOrderFilters);
+            }
+
+            if (groupSearchInput) {
+                groupSearchInput.addEventListener('input', applyOrderFilters);
+            }
+
+            if (typeFilter) {
+                typeFilter.addEventListener('change', applyOrderFilters);
+            }
+
+            if (clearButton) {
+                clearButton.addEventListener('click', function () {
+                    if (studentSearchInput) studentSearchInput.value = '';
+                    if (groupSearchInput) groupSearchInput.value = '';
+                    if (typeFilter) typeFilter.value = '';
+
+                    orderItems.forEach(orderItem => {
+                        orderItem.style.display = '';
+
+                        const blockCards = orderItem.querySelectorAll('.order-block-card');
+                        blockCards.forEach(blockCard => {
+                            blockCard.style.display = '';
+
+                            const rows = blockCard.querySelectorAll('.order-student-row');
+                            rows.forEach(row => {
+                                row.style.display = '';
+                                row.classList.remove('row-match');
+                            });
+                        });
+                    });
+
+                    collapseAllOrders();
+
+                    if (emptyResult) {
+                        emptyResult.classList.add('d-none');
+                    }
+
+                    if (studentSearchInput) {
+                        studentSearchInput.focus();
+                    }
+                });
+            }
         });
     </script>
 }

@@ -124,6 +124,8 @@ services:
       - gateway
     ports:
       - "5604:8080"
+    volumes:
+      - C:/ScheduleImport:/app/ScheduleImport
 
   lab-web:
     build:
@@ -142,7 +144,7 @@ services:
     ports:
       - "5606:8080"
     volumes:
-      - ../ScheduleImport:/app/ScheduleImport
+      - C:/ScheduleImport:/app/ScheduleImport
       
   load-db:
     image: postgres:16

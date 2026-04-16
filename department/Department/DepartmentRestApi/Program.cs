@@ -46,7 +46,7 @@ builder.Services.AddTransient<IStudentOrderLogic, StudentOrderLogic>();
 builder.Services.AddTransient<IStudentOrderBlockLogic, StudentOrderBlockLogic>();
 builder.Services.AddTransient<IStudentOrderBlockStudentLogic, StudentOrderBlockStudentLogic>();
 
-// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+// один эска
 builder.Services.Configure<OneCConnectionConfig>(builder.Configuration.GetSection("OneCConnection"));
 builder.Services.Configure<AcademicPlanSyncScheduleConfig>(builder.Configuration.GetSection("AcademicPlanSyncSchedule"));
 builder.Services.AddHostedService<AcademicPlanSyncBackgroundService>();
@@ -69,11 +69,7 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.RoutePrefix = "swagger";
-    c.SwaggerEndpoint("v1/swagger.json", "DepartmentRestApi");
-});
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DepartmentRestApi"));
 
 app.UseHttpsRedirection();
 

@@ -66,14 +66,32 @@
     }
 
     <div class="p-3 pb-0">
-        <div class="row g-2">
-            <div class="col-md-6">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
                 <input id="groupSearchInput"
                        type="text"
                        class="form-control"
-                       placeholder="Поиск по названию группы, например ПИбд-31" />
+                       placeholder="Поиск по группе" />
+            </div>
+            <div class="col-md-4">
+                <input id="studentSearchInput"
+                       type="text"
+                       class="form-control"
+                       placeholder="Поиск по студенту" />
+            </div>
+            <div class="col-md-auto">
+                <button id="marksSearchClear"
+                        type="button"
+                        class="btn btn-app-outline">
+                    Сбросить
+                </button>
             </div>
         </div>
+    </div>
+
+    <div id="marksSearchEmpty"
+         class="alert alert-secondary m-3 d-none">
+        По заданным параметрам ничего не найдено.
     </div>
 
     @if (groups.Count > 0)
@@ -107,7 +125,7 @@
             var buttonId = $"toggleBtn_{group.Id}";
 
             <div class="group-block"
-         data-group-name="@group.GroupName.ToLowerInvariant()">
+         data-group-name="@((group.GroupName ?? string.Empty).ToLowerInvariant())">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
@@ -181,7 +199,10 @@
                                     <tbody>
                                         @foreach (var student in groupStudents)
                                         {
-                                            <tr>
+                                            var studentSearch = $"{student.LastName} {student.FirstName} {student.Patronymic}".ToLowerInvariant();
+
+                                            <tr class="student-record-row"
+                                data-student-name="@studentSearch">
                                                 <td class="student-col">
                                                     <div class="student-cell">
                                                         <div class="student-name">
@@ -364,6 +385,10 @@
             font-size: .9rem;
             color: #6c757d;
         }
+
+        .student-record-row.student-match td {
+            background: #eef6ff;
+        }
     </style>
 }
 
@@ -371,6 +396,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
+            const groupSearchInput = document.getElementById('groupSearchInput');
+            const studentSearchInput = document.getElementById('studentSearchInput');
+            const clearButton = document.getElementById('marksSearchClear');
+            const groupBlocks = document.querySelectorAll('.group-block');
+            const emptyResult = document.getElementById('marksSearchEmpty');
+
+            function getCollapseInstance(element) {
+                if (!window.bootstrap) return null;
+                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
+            }
+
+            function collapseAllGroups() {
+                groupBlocks.forEach(block => {
+                    const collapseElement = block.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    if (collapseInstance) {
+                        collapseInstance.hide();
+                    }
+                });
+            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -388,22 +433,95 @@
                 });
             });
 
-            const groupSearchInput = document.getElementById('groupSearchInput');
-            const groupBlocks = document.querySelectorAll('.group-block');
-
             function filterGroups() {
-                const search = (groupSearchInput?.value || '').trim().toLowerCase();
+                const groupQuery = (groupSearchInput?.value || '').trim().toLowerCase();
+                const studentQuery = (studentSearchInput?.value || '').trim().toLowerCase();
+                let hasVisibleGroups = false;
 
                 groupBlocks.forEach(block => {
                     const groupName = block.dataset.groupName || '';
-                    const matches = !search || groupName.includes(search);
+                    const collapseElement = block.querySelector('.collapse');
+                    const collapseInstance = getCollapseInstance(collapseElement);
+                    const studentRows = block.querySelectorAll('.student-record-row');
 
-                    block.style.display = matches ? '' : 'none';
+                    const groupMatches = !groupQuery || groupName.includes(groupQuery);
+                    let hasStudentMatch = false;
+
+                    studentRows.forEach(row => {
+                        const studentName = row.dataset.studentName || '';
+                        const studentMatches = !studentQuery || studentName.includes(studentQuery);
+
+                        row.classList.toggle('student-match', !!studentQuery && studentMatches);
+
+                        if (studentMatches) {
+                            hasStudentMatch = true;
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    const groupVisible = groupMatches && (!studentQuery || hasStudentMatch);
+                    block.style.display = groupVisible ? '' : 'none';
+
+                    if (groupVisible) {
+                        hasVisibleGroups = true;
+                    }
+
+                    if (studentQuery && groupVisible && hasStudentMatch && collapseInstance) {
+                        collapseInstance.show();
+                    }
+
+                    if (studentQuery && (!groupVisible || !hasStudentMatch) && collapseInstance) {
+                        collapseInstance.hide();
+                    }
+
+                    if (!studentQuery) {
+                        studentRows.forEach(row => {
+                            row.style.display = '';
+                            row.classList.remove('student-match');
+                        });
+                    }
                 });
+
+                if (emptyResult) {
+                    emptyResult.classList.toggle('d-none', hasVisibleGroups);
+                }
             }
 
             if (groupSearchInput) {
                 groupSearchInput.addEventListener('input', filterGroups);
+            }
+
+            if (studentSearchInput) {
+                studentSearchInput.addEventListener('input', filterGroups);
+            }
+
+            if (clearButton) {
+                clearButton.addEventListener('click', function () {
+                    if (groupSearchInput) groupSearchInput.value = '';
+                    if (studentSearchInput) studentSearchInput.value = '';
+
+                    groupBlocks.forEach(block => {
+                        block.style.display = '';
+
+                        const studentRows = block.querySelectorAll('.student-record-row');
+                        studentRows.forEach(row => {
+                            row.style.display = '';
+                            row.classList.remove('student-match');
+                        });
+                    });
+
+                    collapseAllGroups();
+
+                    if (emptyResult) {
+                        emptyResult.classList.add('d-none');
+                    }
+
+                    if (groupSearchInput) {
+                        groupSearchInput.focus();
+                    }
+                });
             }
         });
     </script>
