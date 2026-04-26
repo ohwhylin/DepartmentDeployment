@@ -1,5 +1,4 @@
-﻿using DepartmentBusinessLogic.BusinessLogics.Sync;
-using DepartmentContracts.BusinessLogicsContracts.Sync;
+﻿using DepartmentContracts.BusinessLogicsContracts.Sync;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DepartmentRestApi.Controllers
@@ -13,19 +12,59 @@ namespace DepartmentRestApi.Controllers
         private readonly IStudentSyncLogic _studentSyncLogic;
         private readonly IDisciplineStudentRecordSyncLogic _disciplineStudentRecordSyncLogic;
         private readonly IStudentOrderSyncLogic _studentOrderSyncLogic;
+        private readonly ISyncOrchestrator _syncOrchestrator;
 
         public SyncController(
-            IAcademicPlanSyncLogic academicPlanSyncLogic, 
-            IStudentGroupSyncLogic studentGroupSyncLogic, 
-            IStudentSyncLogic studentSyncLogic, 
-            IDisciplineStudentRecordSyncLogic disciplineStudentRecordSyncLogic, 
-            IStudentOrderSyncLogic studentOrderSyncLogic)
+            IAcademicPlanSyncLogic academicPlanSyncLogic,
+            IStudentGroupSyncLogic studentGroupSyncLogic,
+            IStudentSyncLogic studentSyncLogic,
+            IDisciplineStudentRecordSyncLogic disciplineStudentRecordSyncLogic,
+            IStudentOrderSyncLogic studentOrderSyncLogic,
+            ISyncOrchestrator syncOrchestrator)
         {
             _academicPlanSyncLogic = academicPlanSyncLogic;
             _studentGroupSyncLogic = studentGroupSyncLogic;
             _studentSyncLogic = studentSyncLogic;
             _disciplineStudentRecordSyncLogic = disciplineStudentRecordSyncLogic;
             _studentOrderSyncLogic = studentOrderSyncLogic;
+            _syncOrchestrator = syncOrchestrator;
+        }
+
+        [HttpPost("all")]
+        public async Task<IActionResult> SyncAll()
+        {
+            try
+            {
+                var result = await _syncOrchestrator.RunSyncAsync();
+
+                if (!result.Started)
+                {
+                    return Conflict(new
+                    {
+                        error = "Synchronization is already running",
+                        details = result.Message
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return StatusCode(500, new
+                    {
+                        error = "Internal server error",
+                        details = result.Error ?? result.Message
+                    });
+                }
+
+                return Ok("Synchronization completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Internal server error",
+                    details = ex.Message
+                });
+            }
         }
 
         [HttpPost("academic-plans")]

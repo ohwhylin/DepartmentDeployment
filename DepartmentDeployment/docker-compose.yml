@@ -27,6 +27,11 @@ services:
       OneCConnection__StudentGroupsEndpoint: /students/groups
       OneCConnection__StudentsEndpoint: /students
       OneCConnection__DisciplineStudentRecordsEndpoint: /students/marks
+      OneCConnection__StudentOrdersEndpoint: /student-orders
+      
+      SyncSchedule__Enabled: "true"
+      SyncSchedule__Hour: "10"
+      SyncSchedule__Minute: "0"
     depends_on:
       - core-db
       - onec-mock-api

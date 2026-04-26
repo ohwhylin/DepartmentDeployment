@@ -48,8 +48,8 @@ builder.Services.AddTransient<IStudentOrderBlockStudentLogic, StudentOrderBlockS
 
 // один эска
 builder.Services.Configure<OneCConnectionConfig>(builder.Configuration.GetSection("OneCConnection"));
-builder.Services.Configure<AcademicPlanSyncScheduleConfig>(builder.Configuration.GetSection("AcademicPlanSyncSchedule"));
-builder.Services.AddHostedService<AcademicPlanSyncBackgroundService>();
+builder.Services.Configure<SyncScheduleConfig>(builder.Configuration.GetSection("AcademicPlanSyncSchedule"));
+builder.Services.AddHostedService<SyncBackgroundService>();
 
 builder.Services.AddHttpClient<IOneCApiService, OneCApiService>();
 builder.Services.AddScoped<IAcademicPlanSyncLogic, AcademicPlanSyncLogic>();
@@ -57,6 +57,7 @@ builder.Services.AddScoped<IStudentGroupSyncLogic, StudentGroupSyncLogic>();
 builder.Services.AddScoped<IStudentSyncLogic, StudentSyncLogic>();
 builder.Services.AddScoped<IDisciplineStudentRecordSyncLogic, DisciplineStudentRecordSyncLogic>();
 builder.Services.AddScoped<IStudentOrderSyncLogic, StudentOrderSyncLogic>();
+builder.Services.AddScoped<ISyncOrchestrator, SyncOrchestrator>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

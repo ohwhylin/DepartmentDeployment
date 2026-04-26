@@ -4,16 +4,16 @@ using Microsoft.Extensions.Options;
 
 namespace DepartmentRestApi.BackgroundServices
 {
-    public class AcademicPlanSyncBackgroundService : BackgroundService
+    public class SyncBackgroundService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<AcademicPlanSyncBackgroundService> _logger;
-        private readonly AcademicPlanSyncScheduleConfig _schedule;
+        private readonly ILogger<SyncBackgroundService> _logger;
+        private readonly SyncScheduleConfig _schedule;
 
-        public AcademicPlanSyncBackgroundService(
+        public SyncBackgroundService(
             IServiceProvider serviceProvider,
-            ILogger<AcademicPlanSyncBackgroundService> logger,
-            IOptions<AcademicPlanSyncScheduleConfig> scheduleOptions)
+            ILogger<SyncBackgroundService> logger,
+            IOptions<SyncScheduleConfig> scheduleOptions)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
@@ -24,13 +24,12 @@ namespace DepartmentRestApi.BackgroundServices
         {
             if (!_schedule.Enabled)
             {
-                _logger.LogInformation("Academic plan automatic sync is disabled.");
+                _logger.LogInformation("Automatic synchronization is disabled.");
                 return;
             }
 
             _logger.LogInformation(
-                "Academic plan automatic sync is enabled. Schedule: {DayOfWeek} {Hour:D2}:{Minute:D2}",
-                _schedule.DayOfWeek,
+                "Automatic synchronization is enabled. Schedule: every day at {Hour:D2}:{Minute:D2}",
                 _schedule.Hour,
                 _schedule.Minute);
 
@@ -46,7 +45,9 @@ namespace DepartmentRestApi.BackgroundServices
                         delay = TimeSpan.Zero;
                     }
 
-                    _logger.LogInformation("Next academic plan sync scheduled at {NextRun}", nextRun);
+                    _logger.LogInformation(
+                        "Next automatic synchronization scheduled at {NextRun}",
+                        nextRun);
 
                     await Task.Delay(delay, stoppingToken);
 
@@ -56,13 +57,30 @@ namespace DepartmentRestApi.BackgroundServices
                     }
 
                     using var scope = _serviceProvider.CreateScope();
-                    var syncLogic = scope.ServiceProvider.GetRequiredService<IAcademicPlanSyncLogic>();
 
-                    _logger.LogInformation("Academic plan automatic sync started at {StartTime}", DateTime.Now);
+                    var syncOrchestrator = scope.ServiceProvider
+                        .GetRequiredService<ISyncOrchestrator>();
 
-                    await syncLogic.SyncAcademicPlansAsync();
+                    _logger.LogInformation(
+                        "Automatic synchronization started at {StartTime}",
+                        DateTime.Now);
 
-                    _logger.LogInformation("Academic plan automatic sync completed successfully at {EndTime}", DateTime.Now);
+                    var result = await syncOrchestrator.RunSyncAsync(stoppingToken);
+
+                    if (result.Success)
+                    {
+                        _logger.LogInformation(
+                            "Automatic synchronization completed successfully at {EndTime}. Completed steps: {CompletedSteps}",
+                            DateTime.Now,
+                            string.Join(", ", result.CompletedSteps));
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Automatic synchronization was not completed. Message: {Message}. Error: {Error}",
+                            result.Message,
+                            result.Error);
+                    }
                 }
                 catch (TaskCanceledException)
                 {
@@ -70,21 +88,15 @@ namespace DepartmentRestApi.BackgroundServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error during academic plan automatic sync.");
+                    _logger.LogError(ex, "Error during automatic synchronization.");
 
-                    // чтобы при ошибке сервис не умер насовсем
                     await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }
             }
         }
 
-        private static DateTime GetNextRunTime(DateTime now, AcademicPlanSyncScheduleConfig schedule)
+        private static DateTime GetNextRunTime(DateTime now, SyncScheduleConfig schedule)
         {
-            if (!Enum.TryParse<DayOfWeek>(schedule.DayOfWeek, true, out var targetDay))
-            {
-                targetDay = DayOfWeek.Sunday;
-            }
-
             var nextRun = new DateTime(
                 now.Year,
                 now.Month,
@@ -93,13 +105,9 @@ namespace DepartmentRestApi.BackgroundServices
                 schedule.Minute,
                 0);
 
-            var daysUntilTarget = ((int)targetDay - (int)now.DayOfWeek + 7) % 7;
-
-            nextRun = nextRun.AddDays(daysUntilTarget);
-
             if (nextRun <= now)
             {
-                nextRun = nextRun.AddDays(7);
+                nextRun = nextRun.AddDays(1);
             }
 
             return nextRun;
