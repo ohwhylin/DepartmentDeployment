@@ -56,7 +56,7 @@ services:
       Ldap__SearchBase: "dc=ams,dc=ulstu,dc=ru"
       Ldap__LoginAttribute: "uid"
       Auth__CloneLoginUrl: "https://lk-clone.laop.ulstu.ru/?q=auth/login&r=q%3Dhome"
-     depends_on:
+    depends_on:
       - core-api
       - core-web
     ports:
