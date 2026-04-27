@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Ocelot" Version="23.3.6" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="6.0.0" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties ocelot_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

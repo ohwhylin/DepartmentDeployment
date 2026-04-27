@@ -48,20 +48,19 @@ services:
       context: ../gateway/Gateway
       dockerfile: GatewayApi/Dockerfile
     environment:
-      ASPNETCORE_URLS: http://+:8080
-    depends_on:
+      ASPNETCORE_URLS: "http://+:8080"
+      Ldap__Host: "10.100.5.133"
+      Ldap__Port: "30589"
+      Ldap__BindDn: "cn=explanatorynote,ou=services,dc=ams,dc=ulstu,dc=ru"
+      Ldap__BindPassword: "gYanE4g<vA48G1kN3>"
+      Ldap__SearchBase: "dc=ams,dc=ulstu,dc=ru"
+      Ldap__LoginAttribute: "uid"
+      Auth__CloneLoginUrl: "https://lk-clone.laop.ulstu.ru/?q=auth/login&r=q%3Dhome"
+     depends_on:
       - core-api
       - core-web
     ports:
       - "127.0.0.1:7300:8080"
-    restart: unless-stopped
-
-  onec-mock-api:
-    build:
-      context: ../department/Department
-      dockerfile: DepartmentOneCMockApi/Dockerfile
-    environment:
-      ASPNETCORE_URLS: http://+:8080
     restart: unless-stopped
 
   mol-db:
