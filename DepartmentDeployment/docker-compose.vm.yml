@@ -24,11 +24,13 @@ services:
       OneCConnection__StudentGroupsEndpoint: /students/groups
       OneCConnection__StudentsEndpoint: /students
       OneCConnection__DisciplineStudentRecordsEndpoint: /students/marks
+      OneCConnection__StudentOrdersEndpoint: /student-orders
+      SyncSchedule__Enabled: "true"
+      SyncSchedule__Hour: "10"
+      SyncSchedule__Minute: "0"
     depends_on:
       - core-db
       - onec-mock-api
-    ports:
-      - "127.0.0.1:7301:8080"
     restart: unless-stopped
 
   core-web:
@@ -48,7 +50,8 @@ services:
       context: ../gateway/Gateway
       dockerfile: GatewayApi/Dockerfile
     environment:
-      ASPNETCORE_URLS: "http://+:8080"
+      ASPNETCORE_URLS: http://+:8080
+
       Ldap__Host: "10.100.5.133"
       Ldap__Port: "30589"
       Ldap__BindDn: "cn=explanatorynote,ou=services,dc=ams,dc=ulstu,dc=ru"
@@ -62,16 +65,14 @@ services:
     ports:
       - "127.0.0.1:7300:8080"
     restart: unless-stopped
-    
+
   onec-mock-api:
     build:
       context: ../department/Department
       dockerfile: DepartmentOneCMockApi/Dockerfile
-    container_name: onec-mock-api
     environment:
       ASPNETCORE_URLS: http://+:8080
-    ports:
-      - "5610:8080"
+    restart: unless-stopped
 
   mol-db:
     image: postgres:16
@@ -95,8 +96,6 @@ services:
     depends_on:
       - mol-db
       - gateway
-    ports:
-      - "127.0.0.1:7303:8080"
     restart: unless-stopped
 
   schedule-db:
@@ -121,8 +120,6 @@ services:
     depends_on:
       - schedule-db
       - gateway
-    ports:
-      - "127.0.0.1:7304:8080"
     restart: unless-stopped
 
   load-db:
@@ -147,8 +144,6 @@ services:
     depends_on:
       - load-db
       - core-api
-    ports:
-      - "127.0.0.1:7305:8080"
     restart: unless-stopped
 
   lab-web:
