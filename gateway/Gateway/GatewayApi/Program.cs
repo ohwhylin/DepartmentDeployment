@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using GatewayApi.Auth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Ocelot.DependencyInjection;
@@ -20,7 +19,7 @@ builder.Services
     {
         options.LoginPath = "/auth/login";
         options.LogoutPath = "/auth/logout";
-        options.Cookie.Name = "department_auth";
+        options.Cookie.Name = "polina_auth";
     });
 
 builder.Services.AddAuthorization();
@@ -28,25 +27,36 @@ builder.Services.AddOcelot();
 
 var app = builder.Build();
 
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Защищаем только UI-маршруты.
-// /api/core/* пока не трогаем, потому что core-web ходит в gateway сервер-сайд.
+// Защищаем UI-маршруты вашего приложения
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
 
     var isAuthPath = path.StartsWithSegments("/auth");
-    var isUiPath = path.StartsWithSegments("/core");
+    var isUiPath =
+        path.StartsWithSegments("/core") ||
+        path.StartsWithSegments("/load") ||
+        path.StartsWithSegments("/lab");
 
     if (isUiPath && !isAuthPath && !(context.User.Identity?.IsAuthenticated ?? false))
     {
-        var returnUrl = Uri.EscapeDataString(context.Request.Path + context.Request.QueryString);
-        context.Response.Redirect($"/auth/login?returnUrl={returnUrl}");
+        var returnUrl = Uri.EscapeDataString(
+            $"{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}");
+
+        context.Response.Redirect(
+            $"{context.Request.PathBase}/auth/login?returnUrl={returnUrl}");
         return;
     }
 

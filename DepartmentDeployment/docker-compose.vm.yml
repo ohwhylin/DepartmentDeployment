@@ -51,6 +51,7 @@ services:
       dockerfile: GatewayApi/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:8080
+      PathBase: /polina
 
       Ldap__Host: "10.100.5.133"
       Ldap__Port: "30589"
