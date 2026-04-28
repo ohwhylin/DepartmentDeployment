@@ -72,7 +72,7 @@
             <div class="error">@ViewBag.Error</div>
         }
 
-        <form asp-controller="Auth" asp-action="Login" method="post">
+        <form method="post" action="@(Context.Request.PathBase + "/auth/login")">
             @Html.AntiForgeryToken()
             <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 

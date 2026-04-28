@@ -39,7 +39,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Защищаем UI-маршруты вашего приложения
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
@@ -63,9 +62,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+// Р’РђР–РќРћ: auth-РєРѕРЅС‚СЂРѕР»Р»РµСЂС‹ РґРѕР»Р¶РЅС‹ РјР°РїРёС‚СЊСЃСЏ Р”Рћ Ocelot
+app.MapControllers();
 
 await app.UseOcelot();
 

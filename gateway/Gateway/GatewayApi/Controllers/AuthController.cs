@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 namespace GatewayApi.Controllers;
 
+[Route("auth")]
 public class AuthController : Controller
 {
     private readonly LdapLookupService _ldapLookupService;
@@ -15,14 +16,14 @@ public class AuthController : Controller
         _ldapLookupService = ldapLookupService;
     }
 
-    [HttpGet]
+    [HttpGet("login")]
     public IActionResult Login(string? returnUrl = null)
     {
         ViewBag.ReturnUrl = returnUrl;
-        return View();
+        return View("~/Views/Auth/Login.cshtml");
     }
 
-    [HttpPost]
+    [HttpPost("login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(string login, string? returnUrl = null)
     {
@@ -30,7 +31,7 @@ public class AuthController : Controller
         {
             ViewBag.Error = "Введите логин";
             ViewBag.ReturnUrl = returnUrl;
-            return View();
+            return View("~/Views/Auth/Login.cshtml");
         }
 
         var user = _ldapLookupService.FindByLogin(login.Trim());
@@ -39,7 +40,7 @@ public class AuthController : Controller
         {
             ViewBag.Error = "Пользователь не найден";
             ViewBag.ReturnUrl = returnUrl;
-            return View();
+            return View("~/Views/Auth/Login.cshtml");
         }
 
         var claims = new List<Claim>
@@ -66,7 +67,7 @@ public class AuthController : Controller
         return Redirect($"{Request.PathBase}/core/");
     }
 
-    [HttpPost]
+    [HttpPost("logout")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
