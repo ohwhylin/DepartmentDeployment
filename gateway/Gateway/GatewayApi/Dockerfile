@@ -12,7 +12,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    libldap-2.5-0 \
+    libldap-2.4-2 \
     libsasl2-2 \
     && rm -rf /var/lib/apt/lists/*
 
