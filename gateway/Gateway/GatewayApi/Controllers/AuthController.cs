@@ -1,8 +1,8 @@
-﻿using System.Security.Claims;
-using GatewayApi.Auth;
+﻿using GatewayApi.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GatewayApi.Controllers;
 
@@ -37,7 +37,7 @@ public class AuthController : Controller
 
         if (user is null)
         {
-            ViewBag.Error = "Пользователь не найден в LDAP";
+            ViewBag.Error = "Пользователь не найден";
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
@@ -46,8 +46,8 @@ public class AuthController : Controller
         {
             new Claim(ClaimTypes.Name, user.Uid),
             new Claim("uid", user.Uid),
-            new Claim("cn", user.Cn),
-            new Claim(ClaimTypes.Email, user.Mail ?? string.Empty)
+            new Claim("cn", user.Cn ?? ""),
+            new Claim(ClaimTypes.Email, user.Mail ?? "")
         };
 
         var identity = new ClaimsIdentity(
@@ -63,7 +63,7 @@ public class AuthController : Controller
         if (!string.IsNullOrWhiteSpace(returnUrl))
             return Redirect(returnUrl);
 
-        return Redirect("/core/Home/Index");
+        return Redirect($"{Request.PathBase}/core/");
     }
 
     [HttpPost]
@@ -71,6 +71,6 @@ public class AuthController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Redirect("/auth/login");
+        return Redirect($"{Request.PathBase}/auth/login");
     }
 }
