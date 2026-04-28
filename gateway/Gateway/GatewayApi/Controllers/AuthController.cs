@@ -10,10 +10,12 @@ namespace GatewayApi.Controllers;
 public class AuthController : Controller
 {
     private readonly LdapLookupService _ldapLookupService;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(LdapLookupService ldapLookupService)
+    public AuthController(LdapLookupService ldapLookupService, ILogger<AuthController> logger)
     {
         _ldapLookupService = ldapLookupService;
+        _logger = logger;
     }
 
     [HttpGet("login")]
@@ -25,46 +27,55 @@ public class AuthController : Controller
 
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string login, string? returnUrl = null)
+    public async Task<IActionResult> Login(string login, string password, string? returnUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(login))
+        ViewBag.ReturnUrl = returnUrl;
+
+        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
         {
-            ViewBag.Error = "Введите логин";
-            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.Error = "Введите логин и пароль.";
             return View("~/Views/Auth/Login.cshtml");
         }
 
-        var user = _ldapLookupService.FindByLogin(login.Trim());
-
-        if (user is null)
+        try
         {
-            ViewBag.Error = "Пользователь не найден";
-            ViewBag.ReturnUrl = returnUrl;
+            var user = _ldapLookupService.Authenticate(login.Trim(), password);
+
+            if (user is null)
+            {
+                ViewBag.Error = "Неверный логин или пароль.";
+                return View("~/Views/Auth/Login.cshtml");
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Uid),
+                new Claim("uid", user.Uid),
+                new Claim("cn", user.Cn ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Mail ?? string.Empty)
+            };
+
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal);
+
+            if (!string.IsNullOrWhiteSpace(returnUrl))
+                return Redirect(returnUrl);
+
+            return Redirect($"{Request.PathBase}/core/");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка авторизации LDAP для пользователя {Login}", login);
+            ViewBag.Error = "Не удалось выполнить авторизацию. Проверьте введённые данные или настройки подключения.";
             return View("~/Views/Auth/Login.cshtml");
         }
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Uid),
-            new Claim("uid", user.Uid),
-            new Claim("cn", user.Cn ?? ""),
-            new Claim(ClaimTypes.Email, user.Mail ?? "")
-        };
-
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme);
-
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal);
-
-        if (!string.IsNullOrWhiteSpace(returnUrl))
-            return Redirect(returnUrl);
-
-        return Redirect($"{Request.PathBase}/core/");
     }
 
     [HttpPost("logout")]

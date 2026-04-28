@@ -2,89 +2,40 @@
     ViewData["Title"] = "Вход";
 }
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8" />
-    <title>Вход</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
-            margin: 0;
-            padding: 40px;
-        }
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="app-card">
+            <div class="app-card-header">
+                <h2 class="app-card-title">Вход в систему</h2>
+            </div>
 
-        .login-card {
-            max-width: 420px;
-            margin: 40px auto;
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.08);
-        }
+            <div class="p-4">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger mb-3">
+                        @ViewBag.Error
+                    </div>
+                }
 
-        .title {
-            margin: 0 0 16px 0;
-            font-size: 24px;
-        }
+                <form method="post" action="@(Context.Request.PathBase + "/auth/login")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
-        .error {
-            color: #b00020;
-            margin-bottom: 12px;
-        }
+                    <div class="mb-3">
+                        <label for="login" class="form-label">Логин</label>
+                        <input id="login" name="login" type="text" class="form-control" autocomplete="username" />
+                    </div>
 
-        .hint {
-            color: #555;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" />
+                    </div>
 
-        input[type=text] {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 12px;
-            margin-top: 8px;
-            margin-bottom: 16px;
-        }
-
-        button {
-            padding: 10px 16px;
-            cursor: pointer;
-        }
-
-        .external-link {
-            display: inline-block;
-            margin-top: 16px;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-card">
-        <h2 class="title">Тестовая авторизация</h2>
-
-        <div class="hint">
-            На этом этапе выполняется поиск пользователя в LDAP по логину.
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-app-primary">Войти</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        @if (ViewBag.Error != null)
-        {
-            <div class="error">@ViewBag.Error</div>
-        }
-
-        <form method="post" action="@(Context.Request.PathBase + "/auth/login")">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-
-            <label for="login">Логин</label>
-            <input id="login" name="login" type="text" />
-
-            <button type="submit">Войти</button>
-        </form>
-
-        <a class="external-link" href="https://lk-clone..ru/?q=auth/login&r=q%3Dhome" target="_blank">
-            Открыть тестовый ЛК
-        </a>
     </div>
-</body>
-</html>
+</div>

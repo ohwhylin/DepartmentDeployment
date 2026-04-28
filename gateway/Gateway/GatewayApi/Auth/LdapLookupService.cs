@@ -12,6 +12,16 @@ public class LdapUserInfo
     public string Mail { get; set; } = string.Empty;
 }
 
+public class LdapOptions
+{
+    public string Host { get; set; } = string.Empty;
+    public int Port { get; set; }
+    public string BindDn { get; set; } = string.Empty;
+    public string BindPassword { get; set; } = string.Empty;
+    public string SearchBase { get; set; } = string.Empty;
+    public string LoginAttribute { get; set; } = "uid";
+}
+
 public class LdapLookupService
 {
     private readonly LdapOptions _options;
@@ -21,16 +31,15 @@ public class LdapLookupService
         _options = options.Value;
     }
 
-    public LdapUserInfo? FindByLogin(string login)
+    public LdapUserInfo? Authenticate(string login, string password)
     {
+        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            return null;
+
         var identifier = new LdapDirectoryIdentifier(_options.Host, _options.Port);
 
-        using var connection = new LdapConnection(identifier)
-        {
-            AuthType = AuthType.Basic
-        };
-
-        connection.Bind(new NetworkCredential(_options.BindDn, _options.BindPassword));
+        using var serviceConnection = CreateConnection(identifier);
+        serviceConnection.Bind(new NetworkCredential(_options.BindDn, _options.BindPassword));
 
         var escapedLogin = EscapeLdap(login);
         var filter = $"({_options.LoginAttribute}={escapedLogin})";
@@ -41,20 +50,43 @@ public class LdapLookupService
             SearchScope.Subtree,
             new[] { "uid", "cn", "mail" });
 
-        var response = (SearchResponse)connection.SendRequest(request);
+        var response = (SearchResponse)serviceConnection.SendRequest(request);
 
         if (response.Entries.Count != 1)
             return null;
 
         var entry = response.Entries[0];
+        var userDn = entry.DistinguishedName;
+
+        using var userConnection = CreateConnection(identifier);
+
+        try
+        {
+            userConnection.Bind(new NetworkCredential(userDn, password));
+        }
+        catch (LdapException)
+        {
+            return null;
+        }
 
         return new LdapUserInfo
         {
-            Dn = entry.DistinguishedName,
+            Dn = userDn,
             Uid = GetAttribute(entry, "uid"),
             Cn = GetAttribute(entry, "cn"),
             Mail = GetAttribute(entry, "mail")
         };
+    }
+
+    private static LdapConnection CreateConnection(LdapDirectoryIdentifier identifier)
+    {
+        var connection = new LdapConnection(identifier)
+        {
+            AuthType = AuthType.Basic
+        };
+
+        connection.SessionOptions.ProtocolVersion = 3;
+        return connection;
     }
 
     private static string GetAttribute(SearchResultEntry entry, string name)
