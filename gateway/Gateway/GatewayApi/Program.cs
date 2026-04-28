@@ -62,8 +62,10 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// ВАЖНО: auth-контроллеры должны мапиться ДО Ocelot
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 await app.UseOcelot();
 
