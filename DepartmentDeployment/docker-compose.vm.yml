@@ -5,6 +5,8 @@ services:
       POSTGRES_DB: department_db
       POSTGRES_USER: department_user
       POSTGRES_PASSWORD: 123456
+    ports:
+    - "127.0.0.1:5433:5432"
     volumes:
       - core-db-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -81,6 +83,8 @@ services:
       POSTGRES_DB: mol_db
       POSTGRES_USER: mol_user
       POSTGRES_PASSWORD: 123456
+    ports:
+    - "127.0.0.1:5434:5432"
     volumes:
       - mol-db-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -105,6 +109,8 @@ services:
       POSTGRES_DB: schedule_db
       POSTGRES_USER: schedule_user
       POSTGRES_PASSWORD: 123456
+    ports:
+    - "127.0.0.1:5435:5432"
     volumes:
       - schedule-db-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -129,6 +135,8 @@ services:
       POSTGRES_DB: load_db
       POSTGRES_USER: load_user
       POSTGRES_PASSWORD: 123456
+    ports:
+    - "127.0.0.1:5436:5432"
     volumes:
       - load-db-data:/var/lib/postgresql/data
     restart: unless-stopped
