@@ -24,6 +24,17 @@ builder.Services.AddScoped<IInventoryReportPdfService, InventoryReportPdfService
 
 var app = builder.Build();
 
+// паф бейс
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.Use((context, next) =>
+    {
+        context.Request.PathBase = pathBase;
+        return next();
+    });
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
