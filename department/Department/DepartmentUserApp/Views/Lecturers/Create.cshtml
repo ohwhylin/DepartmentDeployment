@@ -81,8 +81,8 @@
 
                                 <input asp-for="DateBirth"
                                        type="date"
-                                       class="form-control"
-                                       value="@(Model == null || Model.DateBirth == DateTime.MinValue ? "" : Model.DateBirth.ToString("yyyy-MM-dd"))" />
+                                       asp-format="{0:yyyy-MM-dd}"
+                                       class="form-control" />
 
                                 <span asp-validation-for="DateBirth" class="text-danger"></span>
                             </div>
