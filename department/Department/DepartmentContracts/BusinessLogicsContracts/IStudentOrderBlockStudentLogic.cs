@@ -13,5 +13,6 @@ namespace DepartmentContracts.BusinessLogicsContracts
         bool Create(StudentOrderBlockStudentBindingModel model);
         bool Update(StudentOrderBlockStudentBindingModel model);
         bool Delete(StudentOrderBlockStudentBindingModel model);
+        List<StudentMovementHistoryViewModel> GetStudentMovementHistory(int studentId);
     }
 }

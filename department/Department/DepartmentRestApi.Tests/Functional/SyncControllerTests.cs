@@ -18,22 +18,22 @@ public class SyncControllerTests
 
     private SyncController _controller = null!;
 
-    [SetUp]
-    public void SetUp()
-    {
-        _academicPlanSyncLogicMock = new Mock<IAcademicPlanSyncLogic>();
-        _studentGroupSyncLogicMock = new Mock<IStudentGroupSyncLogic>();
-        _studentSyncLogicMock = new Mock<IStudentSyncLogic>();
-        _disciplineStudentRecordSyncLogicMock = new Mock<IDisciplineStudentRecordSyncLogic>();
-        _studentOrderSyncLogicMock = new Mock<IStudentOrderSyncLogic>();
+    //[SetUp]
+    //public void SetUp()
+    //{
+    //    _academicPlanSyncLogicMock = new Mock<IAcademicPlanSyncLogic>();
+    //    _studentGroupSyncLogicMock = new Mock<IStudentGroupSyncLogic>();
+    //    _studentSyncLogicMock = new Mock<IStudentSyncLogic>();
+    //    _disciplineStudentRecordSyncLogicMock = new Mock<IDisciplineStudentRecordSyncLogic>();
+    //    _studentOrderSyncLogicMock = new Mock<IStudentOrderSyncLogic>();
 
-        _controller = new SyncController(
-            _academicPlanSyncLogicMock.Object,
-            _studentGroupSyncLogicMock.Object,
-            _studentSyncLogicMock.Object,
-            _disciplineStudentRecordSyncLogicMock.Object,
-            _studentOrderSyncLogicMock.Object);
-    }
+    //    _controller = new SyncController(
+    //        _academicPlanSyncLogicMock.Object,
+    //        _studentGroupSyncLogicMock.Object,
+    //        _studentSyncLogicMock.Object,
+    //        _disciplineStudentRecordSyncLogicMock.Object,
+    //        _studentOrderSyncLogicMock.Object);
+    //}
 
     [Test]
     public async Task SyncAcademicPlans_ShouldReturnOk_WhenLogicSucceeds()

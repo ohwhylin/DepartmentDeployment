@@ -10,5 +10,6 @@ namespace DepartmentDataModels.Models
         int Id { get; }
         string OrderNumber { get; }
         StudentOrderType StudentOrderType { get; }
+        DateTime OrderDate { get; }
     }
 }

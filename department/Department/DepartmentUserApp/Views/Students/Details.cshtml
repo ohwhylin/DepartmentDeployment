@@ -1,8 +1,12 @@
 @model DepartmentContracts.ViewModels.StudentViewModel
 @using DepartmentDataModels.Enums
+@using DepartmentContracts.ViewModels
 
 @{
     ViewData["Title"] = "Подробнее о студенте";
+
+    var movementHistory = ViewBag.StudentMovementHistory as List<StudentMovementHistoryViewModel>
+        ?? new List<StudentMovementHistoryViewModel>();
 
     string GetStudentStateName(StudentState state) => state switch
     {
@@ -12,6 +16,8 @@
         StudentState.Завершил => "Завершил",
         _ => state.ToString()
     };
+
+    string GetOrderTypeName(StudentOrderType type) => type.ToString();
 }
 
 <div class="app-card">
@@ -88,5 +94,77 @@
                 @(Model.IsSteward ? "Да" : "Нет")
             </dd>
         </dl>
+    </div>
+</div>
+
+<div class="app-card mt-3">
+    <div class="app-card-header">
+        <h3 class="app-card-title mb-0">История движения студента</h3>
+    </div>
+
+    <div class="p-3">
+        @if (movementHistory.Count == 0)
+        {
+            <div class="text-muted">
+                История движения студента отсутствует.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Дата приказа</th>
+                            <th>Номер приказа</th>
+                            <th>Движение</th>
+                            <th>Группа откуда</th>
+                            <th>Группа куда</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in movementHistory)
+                        {
+                            <tr>
+                                <td>
+                                    @(item.OrderDate == DateTime.MinValue
+                                                                ? "—"
+                                                                : item.OrderDate.ToString("dd.MM.yyyy"))
+                                                                                                    </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.OrderNumber)
+                                                                ? "—"
+                                                                : item.OrderNumber)
+                                                                               </td>
+
+                                <td>
+                                    @GetOrderTypeName(item.StudentOrderType)
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.StudentGroupFromName)
+                                                                ? "—"
+                                                                : item.StudentGroupFromName)
+                                                                                        </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.StudentGroupToName)
+                                                                ? "—"
+                                                                : item.StudentGroupToName)
+                                                                                      </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(item.MovementDescription)
+                                                                ? "—"
+                                                                : item.MovementDescription)
+                        </td>
+                    </tr>
+                                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>

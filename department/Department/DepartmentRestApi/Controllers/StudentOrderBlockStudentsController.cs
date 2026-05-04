@@ -132,5 +132,29 @@ namespace DepartmentRestApi.Controllers
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }
+
+        [HttpGet]
+        public IActionResult GetStudentMovementHistory(int studentId)
+        {
+            try
+            {
+                if (studentId <= 0)
+                {
+                    return BadRequest("Invalid student ID");
+                }
+
+                var history = _studentOrderBlockStudent.GetStudentMovementHistory(studentId);
+                return Ok(history);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading student movement history");
+                return StatusCode(500, new
+                {
+                    error = "Internal server error",
+                    details = ex.Message
+                });
+            }
+        }
     }
 }

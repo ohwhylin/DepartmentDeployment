@@ -11,5 +11,6 @@ namespace DepartmentOneCMockApi.Models
         public StudentOrderType StudentOrderType { get; set; }
 
         public List<StudentOrderBlockMockModel> Blocks { get; set; } = new();
+        public DateTime OrderDate { get; set; }
     }
 }

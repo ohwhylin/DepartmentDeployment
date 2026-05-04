@@ -37,12 +37,18 @@ namespace DepartmentUserApp.Controllers
                     return RedirectToAction("List");
                 }
 
-                var item = APIClient.GetRequest<StudentViewModel>($"api/core/Students/GetStudent?id={id}");
+                var item = APIClient.GetRequest<StudentViewModel>(
+                    $"api/core/Students/GetStudent?id={id}");
+
                 if (item == null)
                 {
                     TempData["Error"] = "Запись не найдена";
                     return RedirectToAction("List");
                 }
+
+                ViewBag.StudentMovementHistory =
+                    APIClient.GetRequest<List<StudentMovementHistoryViewModel>>(
+                        $"api/core/StudentOrderBlockStudents/GetStudentMovementHistory?studentId={id}");
 
                 return View(item);
             }

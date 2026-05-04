@@ -79,13 +79,10 @@
                             <div class="mb-3">
                                 <label asp-for="DateBirth" class="form-label">Дата рождения</label>
 
-                                <input id="dateBirthUi"
-                                       type="date"
-                                       class="form-control" />
-
                                 <input asp-for="DateBirth"
-                                       type="hidden"
-                                       id="dateBirthHidden" />
+                                       type="date"
+                                       class="form-control"
+                                       value="@(Model == null || Model.DateBirth == DateTime.MinValue ? "" : Model.DateBirth.ToString("yyyy-MM-dd"))" />
 
                                 <span asp-validation-for="DateBirth" class="text-danger"></span>
                             </div>
@@ -183,32 +180,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.querySelector("form");
-            const ui = document.getElementById("dateBirthUi");
-            const hidden = document.getElementById("dateBirthHidden");
-
-            if (hidden && hidden.value) {
-                const value = hidden.value;
-
-                if (value.includes("T")) {
-                    ui.value = value.split("T")[0];
-                } else if (value.length >= 10) {
-                    ui.value = value.substring(0, 10);
-                }
-            }
-
-            if (form) {
-                form.addEventListener("submit", function () {
-                    if (!ui || !hidden) return;
-
-                    hidden.value = ui.value
-                        ? `${ui.value}T00:00:00`
-                        : "";
-                });
-            }
-        });
-    </script>
 }

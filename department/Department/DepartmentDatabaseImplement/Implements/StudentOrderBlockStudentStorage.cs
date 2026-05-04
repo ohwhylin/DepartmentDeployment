@@ -127,5 +127,72 @@ namespace DepartmentDatabaseImplement.Implements
 
             return vm;
         }
+
+        public List<StudentMovementHistoryViewModel> GetStudentMovementHistory(int studentId)
+        {
+            using var context = new DepartmentDatabase();
+
+            var query = context.Set<StudentOrderBlockStudent>()
+                .Include(x => x.StudentOrderBlock)
+                    .ThenInclude(x => x.StudentOrder)
+                .Include(x => x.StudentGroupFrom)
+                .Include(x => x.StudentGroupTo)
+                .Where(x => x.StudentId == studentId);
+
+            return query
+                .ToList()
+                .Select(x => new StudentMovementHistoryViewModel
+                {
+                    StudentOrderId = x.StudentOrderBlock.StudentOrderId,
+                    StudentOrderBlockId = x.StudentOrderBlockId,
+                    StudentOrderBlockStudentId = x.Id,
+
+                    OrderNumber = x.StudentOrderBlock.StudentOrder == null
+                        ? string.Empty
+                        : x.StudentOrderBlock.StudentOrder.OrderNumber,
+
+                    OrderDate = x.StudentOrderBlock.StudentOrder == null
+                        ? DateTime.MinValue
+                        : x.StudentOrderBlock.StudentOrder.OrderDate,
+
+                    StudentOrderType = x.StudentOrderBlock.StudentOrderType,
+
+                    StudentGroupFromId = x.StudentGroupFromId,
+                    StudentGroupFromName = x.StudentGroupFrom == null
+                        ? null
+                        : x.StudentGroupFrom.GroupName,
+
+                    StudentGroupToId = x.StudentGroupToId,
+                    StudentGroupToName = x.StudentGroupTo == null
+                        ? null
+                        : x.StudentGroupTo.GroupName,
+
+                    MovementDescription = BuildMovementDescription(
+                        x.StudentOrderBlock.StudentOrderType,
+                        x.StudentGroupFrom == null ? null : x.StudentGroupFrom.GroupName,
+                        x.StudentGroupTo == null ? null : x.StudentGroupTo.GroupName)
+                })
+                .OrderBy(x => x.OrderDate)
+                .ThenBy(x => x.StudentOrderBlockStudentId)
+                .ToList();
+        }
+
+        private static string BuildMovementDescription(
+            DepartmentDataModels.Enums.StudentOrderType orderType,
+            string? groupFrom,
+            string? groupTo)
+        {
+            var from = string.IsNullOrWhiteSpace(groupFrom) ? "—" : groupFrom;
+            var to = string.IsNullOrWhiteSpace(groupTo) ? "—" : groupTo;
+
+            return orderType.ToString() switch
+            {
+                "Зачисление" => $"Зачисление в группу {to}",
+                "Отчисление" => $"Отчисление из группы {from}",
+                "Перевод" => $"Перевод из группы {from} в группу {to}",
+                "Академ" => $"Академический отпуск, группа {from}",
+                _ => orderType.ToString()
+            };
+        }
     }
 }

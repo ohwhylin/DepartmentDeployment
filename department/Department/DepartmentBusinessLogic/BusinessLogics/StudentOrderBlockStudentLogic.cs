@@ -96,5 +96,15 @@ namespace DepartmentBusinessLogic.BusinessLogics
             if (model.StudentGroupToId <= 0)
                 throw new ArgumentNullException("", nameof(model.StudentGroupToId));
         }
+
+        public List<StudentMovementHistoryViewModel> GetStudentMovementHistory(int studentId)
+        {
+            if (studentId <= 0)
+            {
+                throw new ArgumentException("Некорректный идентификатор студента.", nameof(studentId));
+            }
+
+            return _StudentOrderBlockStudentStorage.GetStudentMovementHistory(studentId);
+        }
     }
 }

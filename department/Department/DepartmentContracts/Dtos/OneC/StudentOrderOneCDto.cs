@@ -7,6 +7,7 @@ namespace DepartmentContracts.Dtos.OneC
         public int Id { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public StudentOrderType StudentOrderType { get; set; }
+        public DateTime OrderDate { get; set; }
 
         public List<StudentOrderBlockOneCDto> Blocks { get; set; } = new();
     }

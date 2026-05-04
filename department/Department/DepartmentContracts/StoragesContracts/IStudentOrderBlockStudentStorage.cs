@@ -14,5 +14,6 @@ namespace DepartmentContracts.StoragesContracts
         StudentOrderBlockStudentViewModel? Insert(StudentOrderBlockStudentBindingModel model);
         StudentOrderBlockStudentViewModel? Update(StudentOrderBlockStudentBindingModel model);
         StudentOrderBlockStudentViewModel? Delete(StudentOrderBlockStudentBindingModel model);
+        List<StudentMovementHistoryViewModel> GetStudentMovementHistory(int studentId);
     }
 }

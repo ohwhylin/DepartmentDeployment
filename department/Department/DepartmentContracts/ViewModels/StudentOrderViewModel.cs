@@ -14,5 +14,7 @@ namespace DepartmentContracts.ViewModels
         public string OrderNumber { get; set; } = string.Empty;
         [Column(title: "", width: 100)]
         public StudentOrderType StudentOrderType { get; set; }
+        [Column(title: "", width: 100)]
+        public DateTime OrderDate { get; set; }
     }
 }

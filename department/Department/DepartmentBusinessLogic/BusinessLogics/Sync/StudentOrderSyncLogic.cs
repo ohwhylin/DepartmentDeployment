@@ -145,6 +145,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
             {
                 Id = oneCOrder.Id,
                 OrderNumber = oneCOrder.OrderNumber,
+                OrderDate = oneCOrder.OrderDate,
                 StudentOrderType = oneCOrder.StudentOrderType
             };
 
@@ -156,6 +157,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                 {
                     Id = orderModel.Id,
                     OrderNumber = orderModel.OrderNumber,
+                    OrderDate = orderModel.OrderDate,
                     StudentOrderType = orderModel.StudentOrderType
                 });
             }
@@ -163,6 +165,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
             {
                 var needUpdate =
                     existingOrder.OrderNumber != oneCOrder.OrderNumber ||
+                    existingOrder.OrderDate != oneCOrder.OrderDate ||
                     existingOrder.StudentOrderType != oneCOrder.StudentOrderType;
 
                 if (needUpdate)
@@ -170,6 +173,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     _orderStorage.Update(orderModel);
 
                     existingOrder.OrderNumber = orderModel.OrderNumber;
+                    existingOrder.OrderDate = orderModel.OrderDate;
                     existingOrder.StudentOrderType = orderModel.StudentOrderType;
                 }
             }

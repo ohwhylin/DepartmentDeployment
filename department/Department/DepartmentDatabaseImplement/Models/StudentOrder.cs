@@ -21,6 +21,9 @@ namespace DepartmentDatabaseImplement.Models
         [DataMember]
         [Required]
         public StudentOrderType StudentOrderType { get; private set; }
+        [DataMember]
+        [Required]
+        public DateTime OrderDate { get; private set; }
         [ForeignKey("StudentOrderId")]
         public virtual List<StudentOrderBlock> StudentOrderBlocks { get; set; }
 
@@ -32,6 +35,7 @@ namespace DepartmentDatabaseImplement.Models
                 Id = model.Id,
                 OrderNumber = model.OrderNumber,
                 StudentOrderType = model.StudentOrderType,
+                OrderDate = model.OrderDate,
             };
         }
 
@@ -40,6 +44,7 @@ namespace DepartmentDatabaseImplement.Models
             if (model == null) return;
             OrderNumber = model.OrderNumber;
             StudentOrderType = model.StudentOrderType;
+            OrderDate = model.OrderDate;
         }
 
         public StudentOrderViewModel GetViewModel => new()
@@ -47,6 +52,7 @@ namespace DepartmentDatabaseImplement.Models
             Id = Id,
             OrderNumber = OrderNumber,
             StudentOrderType = StudentOrderType,
+            OrderDate = OrderDate,
         };
     }
 }
