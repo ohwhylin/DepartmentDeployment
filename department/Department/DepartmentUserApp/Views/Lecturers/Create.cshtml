@@ -77,12 +77,15 @@
                             </div>*@
 
                             <div class="mb-3">
-                                <label asp-for="DateBirth" class="form-label">Дата рождения</label>
+                                <label class="form-label">Дата рождения</label>
+
+                                <input id="dateBirthUi"
+                                       type="date"
+                                       class="form-control" />
 
                                 <input asp-for="DateBirth"
-                                       type="date"
-                                       asp-format="{0:yyyy-MM-dd}"
-                                       class="form-control" />
+                                       type="hidden"
+                                       id="dateBirthHidden" />
 
                                 <span asp-validation-for="DateBirth" class="text-danger"></span>
                             </div>
@@ -180,4 +183,29 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+            const ui = document.getElementById("dateBirthUi");
+            const hidden = document.getElementById("dateBirthHidden");
+
+            if (hidden && hidden.value) {
+                const value = hidden.value;
+                if (value.length >= 10) {
+                    ui.value = value.substring(0, 10);
+                }
+            }
+
+            if (form) {
+                form.addEventListener("submit", function () {
+                    if (!ui || !hidden) return;
+
+                    hidden.value = ui.value
+                        ? ui.value
+                        : "";
+                });
+            }
+        });
+    </script>
 }
