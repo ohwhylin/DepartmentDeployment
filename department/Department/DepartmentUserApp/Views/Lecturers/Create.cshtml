@@ -81,10 +81,11 @@
 
                                 <input id="dateBirthUi"
                                        type="date"
-                                       class="form-control" />
+                                       class="form-control"
+                                       required />
 
-                                <input asp-for="DateBirth"
-                                       type="hidden"
+                                <input type="hidden"
+                                       name="DateBirth"
                                        id="dateBirthHidden" />
 
                                 <span asp-validation-for="DateBirth" class="text-danger"></span>
@@ -190,20 +191,35 @@
             const ui = document.getElementById("dateBirthUi");
             const hidden = document.getElementById("dateBirthHidden");
 
-            if (hidden && hidden.value) {
-                const value = hidden.value;
-                if (value.length >= 10) {
-                    ui.value = value.substring(0, 10);
+            function syncDateBirth() {
+                if (!ui || !hidden) return;
+
+                if (!ui.value) {
+                    hidden.value = "";
+                    return;
                 }
+
+                const parts = ui.value.split("-");
+                if (parts.length !== 3) {
+                    hidden.value = "";
+                    return;
+                }
+
+                const yyyy = parts[0];
+                const mm = parts[1];
+                const dd = parts[2];
+
+                hidden.value = `${dd}.${mm}.${yyyy}`;
+            }
+
+            if (ui) {
+                ui.addEventListener("change", syncDateBirth);
+                ui.addEventListener("input", syncDateBirth);
             }
 
             if (form) {
                 form.addEventListener("submit", function () {
-                    if (!ui || !hidden) return;
-
-                    hidden.value = ui.value
-                        ? ui.value
-                        : "";
+                    syncDateBirth();
                 });
             }
         });
