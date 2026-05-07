@@ -145,7 +145,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
             {
                 Id = oneCOrder.Id,
                 OrderNumber = oneCOrder.OrderNumber,
-                OrderDate = oneCOrder.OrderDate,
+                OrderDate = ToUtc(oneCOrder.OrderDate),
                 StudentOrderType = oneCOrder.StudentOrderType
             };
 
@@ -271,6 +271,13 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     existingBlockStudent.StudentGroupToId = blockStudentModel.StudentGroupToId;
                 }
             }
+        }
+
+        private static DateTime ToUtc(DateTime value)
+        {
+            return value.Kind == DateTimeKind.Utc
+                ? value
+                : DateTime.SpecifyKind(value, DateTimeKind.Utc);
         }
     }
 }
