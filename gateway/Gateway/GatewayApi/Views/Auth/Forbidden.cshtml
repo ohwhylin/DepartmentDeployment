@@ -1,13 +1,13 @@
 @{
     Layout = null;
-    ViewData["Title"] = "Доступ запрещён";
+    ViewData["Title"] = "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ";
 }
 
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <title>Доступ запрещён</title>
+    <title>Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
@@ -93,7 +93,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark app-navbar mb-4">
         <div class="container">
             <a class="navbar-brand" href="@(Context.Request.PathBase + "/core/")">
-                Портал кафедры
+                РџРѕСЂС‚Р°Р» РєР°С„РµРґСЂС‹
             </a>
         </div>
     </nav>
@@ -103,31 +103,31 @@
             <div class="auth-card">
                 <div class="app-card">
                     <div class="app-card-header">
-                        <h2 class="app-card-title">Доступ запрещён</h2>
+                        <h2 class="app-card-title">Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ</h2>
                     </div>
 
                     <div class="p-4">
                         <div class="alert alert-danger mb-4">
-                            У вас нет прав для доступа к этому разделу.
+                            РЈ РІР°СЃ РЅРµС‚ РїСЂР°РІ РґР»СЏ РґРѕСЃС‚СѓРїР° Рє СЌС‚РѕРјСѓ СЂР°Р·РґРµР»Сѓ.
                         </div>
 
                         <div class="d-flex gap-2 flex-wrap">
                             <button type="button"
                                     class="btn btn-app-outline"
                                     onclick="if (window.history.length > 1) { history.back(); } else { window.location.href='@(Context.Request.PathBase + "/core/")'; }">
-                                Вернуться назад
+                                Р’РµСЂРЅСѓС‚СЊСЃСЏ РЅР°Р·Р°Рґ
                             </button>
 
                             <a href="@(Context.Request.PathBase + "/core/")"
                                class="btn btn-app-primary">
-                                На главную
+                                РќР° РіР»Р°РІРЅСѓСЋ
                             </a>
                         </div>
 
                         @if (ViewBag.ReturnUrl != null)
                         {
                         <div class="mt-3 text-muted small">
-                            Запрошенный адрес: @ViewBag.ReturnUrl
+                            Р—Р°РїСЂРѕС€РµРЅРЅС‹Р№ Р°РґСЂРµСЃ: @ViewBag.ReturnUrl
                         </div>
                         }
                     </div>
