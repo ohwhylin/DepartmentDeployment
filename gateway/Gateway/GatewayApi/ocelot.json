@@ -26,6 +26,18 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/core/",
+      "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "core-web",
+          "Port": 8080
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/core/{everything}",
       "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/{everything}",
@@ -51,6 +63,18 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/load/",
+      "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "load-api",
+          "Port": 8080
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/load/{everything}",
       "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/{everything}",
@@ -65,6 +89,18 @@
 
     {
       "UpstreamPathTemplate": "/lab",
+      "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "lab-web",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/lab/",
       "UpstreamHttpMethod": [ "GET", "HEAD", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/",
       "DownstreamScheme": "http",
