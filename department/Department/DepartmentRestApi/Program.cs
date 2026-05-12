@@ -29,6 +29,12 @@ builder.Services.AddTransient<IStudentGroupStorage, StudentGroupStorage>();
 builder.Services.AddTransient<IStudentOrderStorage, StudentOrderStorage>();
 builder.Services.AddTransient<IStudentOrderBlockStorage, StudentOrderBlockStorage>();
 builder.Services.AddTransient<IStudentOrderBlockStudentStorage, StudentOrderBlockStudentStorage>();
+builder.Services.AddTransient<ISystemUserStorage, SystemUserStorage>();
+builder.Services.AddTransient<ISystemRoleStorage, SystemRoleStorage>();
+builder.Services.AddTransient<ISystemPermissionStorage, SystemPermissionStorage>();
+builder.Services.AddTransient<ISystemUserRoleStorage, SystemUserRoleStorage>();
+builder.Services.AddTransient<ISystemRolePermissionStorage, SystemRolePermissionStorage>();
+builder.Services.AddTransient<IAuthProfileStorage, AuthProfileStorage>();
 
 builder.Services.AddTransient<IAcademicPlanLogic, AcademicPlanLogic>();
 builder.Services.AddTransient<IAcademicPlanRecordLogic, AcademicPlanRecordLogic>();
@@ -45,8 +51,13 @@ builder.Services.AddTransient<IStudentGroupLogic, StudentGroupLogic>();
 builder.Services.AddTransient<IStudentOrderLogic, StudentOrderLogic>();
 builder.Services.AddTransient<IStudentOrderBlockLogic, StudentOrderBlockLogic>();
 builder.Services.AddTransient<IStudentOrderBlockStudentLogic, StudentOrderBlockStudentLogic>();
+builder.Services.AddTransient<ISystemUserLogic, SystemUserLogic>();
+builder.Services.AddTransient<ISystemRoleLogic, SystemRoleLogic>();
+builder.Services.AddTransient<ISystemPermissionLogic, SystemPermissionLogic>();
+builder.Services.AddTransient<ISystemUserRoleLogic, SystemUserRoleLogic>();
+builder.Services.AddTransient<ISystemRolePermissionLogic, SystemRolePermissionLogic>();
+builder.Services.AddTransient<IAuthProfileLogic, AuthProfileLogic>();
 
-// один эска
 builder.Services.Configure<OneCConnectionConfig>(builder.Configuration.GetSection("OneCConnection"));
 builder.Services.Configure<SyncScheduleConfig>(builder.Configuration.GetSection("AcademicPlanSyncSchedule"));
 builder.Services.AddHostedService<SyncBackgroundService>();
@@ -60,11 +71,10 @@ builder.Services.AddScoped<IStudentOrderSyncLogic, StudentOrderSyncLogic>();
 builder.Services.AddScoped<ISyncOrchestrator, SyncOrchestrator>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DepartmentRestApi", Version = "v1"});
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DepartmentRestApi", Version = "v1" });
 });
 
 var app = builder.Build();
