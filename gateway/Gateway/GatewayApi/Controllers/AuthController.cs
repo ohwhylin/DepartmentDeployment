@@ -10,11 +10,16 @@ namespace GatewayApi.Controllers;
 public class AuthController : Controller
 {
     private readonly LdapLookupService _ldapLookupService;
+    private readonly CoreAuthApiClient _coreAuthApiClient;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(LdapLookupService ldapLookupService, ILogger<AuthController> logger)
+    public AuthController(
+        LdapLookupService ldapLookupService,
+        CoreAuthApiClient coreAuthApiClient,
+        ILogger<AuthController> logger)
     {
         _ldapLookupService = ldapLookupService;
+        _coreAuthApiClient = coreAuthApiClient;
         _logger = logger;
     }
 
@@ -39,21 +44,39 @@ public class AuthController : Controller
 
         try
         {
-            var user = _ldapLookupService.Authenticate(login.Trim(), password);
+            var ldapUser = _ldapLookupService.Authenticate(login.Trim(), password);
 
-            if (user is null)
+            if (ldapUser is null)
             {
                 ViewBag.Error = "Неверный логин или пароль.";
                 return View("~/Views/Auth/Login.cshtml");
             }
 
+            var profile = await _coreAuthApiClient.GetProfileAsync(ldapUser.Uid);
+
+            if (profile is null || !profile.Exists || !profile.IsActive)
+            {
+                ViewBag.Error = "У вас нет доступа к системе.";
+                return View("~/Views/Auth/Login.cshtml");
+            }
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Uid),
-                new Claim("uid", user.Uid),
-                new Claim("cn", user.Cn ?? string.Empty),
-                new Claim(ClaimTypes.Email, user.Mail ?? string.Empty)
+                new Claim(ClaimTypes.Name, profile.Login),
+                new Claim("uid", ldapUser.Uid),
+                new Claim("cn", ldapUser.Cn ?? string.Empty),
+                new Claim(ClaimTypes.Email, ldapUser.Mail ?? string.Empty)
             };
+
+            foreach (var role in profile.Roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            foreach (var permission in profile.Permissions)
+            {
+                claims.Add(new Claim("perm", permission));
+            }
 
             var identity = new ClaimsIdentity(
                 claims,

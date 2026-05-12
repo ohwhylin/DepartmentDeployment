@@ -54,6 +54,7 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       PathBase: /polina
+      CoreAuth__BaseUrl: http://core-api:8080/api/
 
       Ldap__Host: "10.100.5.133"
       Ldap__Port: "30589"

@@ -13,6 +13,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.Configure<LdapOptions>(builder.Configuration.GetSection("Ldap"));
 builder.Services.AddScoped<LdapLookupService>();
 
+builder.Services.AddHttpClient<CoreAuthApiClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["CoreAuth:BaseUrl"]!);
+});
+
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -39,6 +44,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+static bool HasPermission(HttpContext context, string permission) =>
+    context.User.Claims.Any(x => x.Type == "perm" && x.Value == permission);
+
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
@@ -57,6 +65,36 @@ app.Use(async (context, next) =>
         context.Response.Redirect(
             $"{context.Request.PathBase}/auth/login?returnUrl={returnUrl}");
         return;
+    }
+
+    if (path.StartsWithSegments("/core") && !HasPermission(context, "Core.Access"))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsync("Доступ запрещен");
+        return;
+    }
+
+    if (path.StartsWithSegments("/load") && !HasPermission(context, "Load.Access"))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsync("Доступ запрещен");
+        return;
+    }
+
+    if (path.StartsWithSegments("/lab"))
+    {
+        var hasLabAccess =
+            HasPermission(context, "Lab.Schedule.View") ||
+            HasPermission(context, "Lab.DutySchedule.Access") ||
+            HasPermission(context, "Lab.Inventory.Access") ||
+            HasPermission(context, "Lab.Schedule.BookConsultation");
+
+        if (!hasLabAccess)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync("Доступ запрещен");
+            return;
+        }
     }
 
     await next();
