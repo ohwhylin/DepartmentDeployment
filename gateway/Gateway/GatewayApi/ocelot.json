@@ -6,7 +6,10 @@
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "core-api", "Port": 8080 }
+        {
+          "Host": "core-api",
+          "Port": 8080
+        }
       ]
     },
 
@@ -16,7 +19,10 @@
       "DownstreamPathTemplate": "/",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "core-web", "Port": 8080 }
+        {
+          "Host": "core-web",
+          "Port": 8080
+        }
       ]
     },
     {
@@ -25,7 +31,10 @@
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "core-web", "Port": 8080 }
+        {
+          "Host": "core-web",
+          "Port": 8080
+        }
       ]
     },
 
@@ -35,7 +44,10 @@
       "DownstreamPathTemplate": "/",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "load-api", "Port": 8080 }
+        {
+          "Host": "load-api",
+          "Port": 8080
+        }
       ]
     },
     {
@@ -44,7 +56,10 @@
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "load-api", "Port": 8080 }
+        {
+          "Host": "load-api",
+          "Port": 8080
+        }
       ]
     },
 
@@ -54,7 +69,10 @@
       "DownstreamPathTemplate": "/",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "lab-web", "Port": 8080 }
+        {
+          "Host": "lab-web",
+          "Port": 8080
+        }
       ]
     },
     {
@@ -63,7 +81,10 @@
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "lab-web", "Port": 8080 }
+        {
+          "Host": "lab-web",
+          "Port": 8080
+        }
       ]
     }
   ],
