@@ -47,6 +47,16 @@ app.UseAuthorization();
 static bool HasPermission(HttpContext context, string permission) =>
     context.User.Claims.Any(x => x.Type == "perm" && x.Value == permission);
 
+static bool StartsWithAny(PathString path, params string[] prefixes) =>
+    prefixes.Any(prefix => path.StartsWithSegments(prefix));
+
+static Task DenyAsync(HttpContext context)
+{
+    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+    context.Response.ContentType = "text/plain; charset=utf-8";
+    return context.Response.WriteAsync("Доступ запрещён");
+}
+
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
@@ -67,33 +77,79 @@ app.Use(async (context, next) =>
         return;
     }
 
+    // ядро
     if (path.StartsWithSegments("/core") && !HasPermission(context, "Core.Access"))
     {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        await context.Response.WriteAsync("Доступ запрещен");
+        await DenyAsync(context);
         return;
     }
 
+    // нагрузка
     if (path.StartsWithSegments("/load") && !HasPermission(context, "Load.Access"))
     {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        await context.Response.WriteAsync("Доступ запрещен");
+        await DenyAsync(context);
         return;
     }
 
+    // лабораторный модуль
     if (path.StartsWithSegments("/lab"))
     {
-        var hasLabAccess =
-            HasPermission(context, "Lab.Schedule.View") ||
-            HasPermission(context, "Lab.DutySchedule.Access") ||
-            HasPermission(context, "Lab.Inventory.Access") ||
-            HasPermission(context, "Lab.Schedule.BookConsultation");
-
-        if (!hasLabAccess)
+        // МОЛ — только завлаб / developer
+        if (StartsWithAny(path,
+                "/lab/Mol",
+                "/lab/Classroom",
+                "/lab/EquipmentMovementHistory",
+                "/lab/InventoryReport",
+                "/lab/MaterialResponsiblePerson",
+                "/lab/MaterialTechnicalValue",
+                "/lab/Software",
+                "/lab/SoftwareRecord",
+                "/lab/OneCImport"))
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsync("Доступ запрещен");
-            return;
+            if (!HasPermission(context, "Lab.Inventory.Access"))
+            {
+                await DenyAsync(context);
+                return;
+            }
+        }
+        // график дежурств
+        else if (StartsWithAny(path,
+                     "/lab/DutyPerson",
+                     "/lab/DutySchedule",
+                     "/lab/Group",
+                     "/lab/LessonTime",
+                     "/lab/Teacher"))
+        {
+            if (!HasPermission(context, "Lab.DutySchedule.Access"))
+            {
+                await DenyAsync(context);
+                return;
+            }
+        }
+        // добавление / редактирование / удаление консультаций
+        else if (StartsWithAny(path,
+                     "/lab/ClassroomReservation"))
+        {
+            if (!HasPermission(context, "Lab.Schedule.BookConsultation"))
+            {
+                await DenyAsync(context);
+                return;
+            }
+        }
+        // остальное внутри lab — обычный просмотр расписания
+        else
+        {
+            var hasLabAccess =
+                HasPermission(context, "Lab.Schedule.View") ||
+                HasPermission(context, "Lab.DutySchedule.Access") ||
+                HasPermission(context, "Lab.Inventory.Access") ||
+                HasPermission(context, "Lab.Schedule.BookConsultation");
+
+            if (!hasLabAccess)
+            {
+                await DenyAsync(context);
+                return;
+            }
         }
     }
 
