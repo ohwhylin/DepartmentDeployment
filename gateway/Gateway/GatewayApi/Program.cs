@@ -52,7 +52,12 @@ static bool StartsWithAny(PathString path, params string[] prefixes) =>
 
 static Task DenyAsync(HttpContext context)
 {
-    context.Response.Redirect($"{context.Request.PathBase}/auth/forbidden");
+    var returnUrl = Uri.EscapeDataString(
+        $"{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}");
+
+    context.Response.Redirect(
+        $"{context.Request.PathBase}/auth/forbidden?returnUrl={returnUrl}");
+
     return Task.CompletedTask;
 }
 

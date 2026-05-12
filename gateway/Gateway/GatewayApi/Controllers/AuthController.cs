@@ -109,8 +109,9 @@ public class AuthController : Controller
     }
 
     [HttpGet("forbidden")]
-    public IActionResult ForbiddenPage()
+    public IActionResult ForbiddenPage(string? returnUrl = null)
     {
+        ViewBag.ReturnUrl = returnUrl;
         return View("~/Views/Auth/Forbidden.cshtml");
     }
 }
