@@ -52,9 +52,8 @@ static bool StartsWithAny(PathString path, params string[] prefixes) =>
 
 static Task DenyAsync(HttpContext context)
 {
-    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-    context.Response.ContentType = "text/plain; charset=utf-8";
-    return context.Response.WriteAsync("Доступ запрещён");
+    context.Response.Redirect($"{context.Request.PathBase}/auth/forbidden");
+    return Task.CompletedTask;
 }
 
 app.Use(async (context, next) =>

@@ -107,4 +107,10 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return Redirect($"{Request.PathBase}/auth/login");
     }
+
+    [HttpGet("forbidden")]
+    public IActionResult ForbiddenPage()
+    {
+        return View("~/Views/Auth/Forbidden.cshtml");
+    }
 }

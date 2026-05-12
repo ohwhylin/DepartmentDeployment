@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Доступ запрещён";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="app-card">
+            <div class="app-card-header">
+                <h2 class="app-card-title">Доступ запрещён</h2>
+            </div>
+
+            <div class="p-4">
+                <div class="alert alert-danger mb-3">
+                    У вас нет прав для доступа к этому разделу.
+                </div>
+
+                <a href="@(Context.Request.PathBase + "/core/")" class="btn btn-app-primary">
+                    На главную
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
