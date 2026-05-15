@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DepartmentLoadApp.Migrations
 {
     [DbContext(typeof(DepartmentLoadDbContext))]
-    [Migration("20260425133858_AddContingentSubgroups")]
-    partial class AddContingentSubgroups
+    [Migration("20260515114112_AddNewLoadEntities")]
+    partial class AddNewLoadEntities
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,87 @@ namespace DepartmentLoadApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DepartmentLoadApp.Models.AdditionalWork.AdditionalWorkloadRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AcademicYear")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("AdditionalWorkNormId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("HoursPerUnit")
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int>("TotalHours")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WorkName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("WorkType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcademicYear");
+
+                    b.HasIndex("AdditionalWorkNormId");
+
+                    b.ToTable("AdditionalWorkloadRows");
+                });
+
+            modelBuilder.Entity("DepartmentLoadApp.Models.AdditionalWork.AdditionalWorkNorm", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Hours")
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("WorkType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("AdditionalWorkNorms");
+                });
 
             modelBuilder.Entity("DepartmentLoadApp.Models.Contingent.ContingentRow", b =>
                 {
@@ -536,15 +617,21 @@ namespace DepartmentLoadApp.Migrations
                         .HasMaxLength(9)
                         .HasColumnType("character varying(9)");
 
-                    b.Property<int>("AssignedHours")
+                    b.Property<decimal>("AssignedHours")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int?>("ContingentSubgroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DistributionUnitType")
                         .HasColumnType("integer");
 
                     b.Property<int>("LecturerAcademicYearPlanId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("LoadElementType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("LoadElementType")
+                        .HasColumnType("integer");
 
                     b.Property<int>("SourceAcademicPlanRecordId")
                         .HasColumnType("integer");
@@ -552,15 +639,25 @@ namespace DepartmentLoadApp.Migrations
                     b.Property<int>("SourceRowId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("SourceType")
+                    b.Property<int>("SourceType")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StudentGroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StudentsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UnitName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AcademicYear", "SourceType", "SourceRowId", "LoadElementType");
+                    b.HasIndex("AcademicYear", "SourceType", "SourceRowId", "LoadElementType", "DistributionUnitType", "StudentGroupId", "ContingentSubgroupId");
 
-                    b.HasIndex("LecturerAcademicYearPlanId", "SourceType", "SourceRowId", "LoadElementType")
+                    b.HasIndex("LecturerAcademicYearPlanId", "SourceType", "SourceRowId", "LoadElementType", "DistributionUnitType", "StudentGroupId", "ContingentSubgroupId")
                         .IsUnique();
 
                     b.ToTable("LecturerLoadAssignments");
@@ -840,6 +937,10 @@ namespace DepartmentLoadApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EducationLevel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<decimal>("ExamHours")
                         .HasColumnType("numeric");
 
@@ -906,6 +1007,16 @@ namespace DepartmentLoadApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("WorkloadRows");
+                });
+
+            modelBuilder.Entity("DepartmentLoadApp.Models.AdditionalWork.AdditionalWorkloadRow", b =>
+                {
+                    b.HasOne("DepartmentLoadApp.Models.AdditionalWork.AdditionalWorkNorm", "AdditionalWorkNorm")
+                        .WithMany()
+                        .HasForeignKey("AdditionalWorkNormId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AdditionalWorkNorm");
                 });
 
             modelBuilder.Entity("DepartmentLoadApp.Models.Contingent.ContingentSubgroup", b =>
