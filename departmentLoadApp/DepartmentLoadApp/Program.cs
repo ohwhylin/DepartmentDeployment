@@ -69,9 +69,29 @@ var localizationOptions = new RequestLocalizationOptions
 
 app.UseRequestLocalization(localizationOptions);
 
+var culture = new CultureInfo("ru-RU");
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culture),
+    SupportedCultures = new[] { culture },
+    SupportedUICultures = new[] { culture }
+};
+
+app.UseRequestLocalization(localizationOptions);
+
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.Use((context, next) =>
+    {
+        context.Request.PathBase = pathBase;
+        return next();
+    });
+}
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.MapControllerRoute(
