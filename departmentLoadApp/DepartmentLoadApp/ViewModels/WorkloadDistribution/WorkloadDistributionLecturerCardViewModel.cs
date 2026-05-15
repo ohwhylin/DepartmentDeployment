@@ -14,11 +14,11 @@
 
         public int NormHours { get; set; }
 
-        public int LimitHours { get; set; }
+        public decimal LimitHours { get; set; }
 
-        public int AssignedHours { get; set; }
+        public decimal AssignedHours { get; set; }
 
-        public int RemainingHours { get; set; }
+        public decimal RemainingHours { get; set; }
 
         public bool IsAssistant { get; set; }
 
@@ -27,5 +27,11 @@
         public List<WorkloadDistributionAvailableItemViewModel> AvailableItems { get; set; } = new();
 
         public List<WorkloadDistributionAssignmentViewModel> Assignments { get; set; } = new();
+
+        public List<WorkloadDistributionSemesterGroupViewModel> SemesterGroups { get; set; } = new();
+
+        public List<WorkloadDistributionGiaItemViewModel> GiaItems { get; set; } = new();
+
+        public List<WorkloadDistributionAvailableItemViewModel> AdditionalWorkItems { get; set; } = new();
     }
 }

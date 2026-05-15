@@ -1,4 +1,5 @@
-﻿using DepartmentLoadApp.Services;
+﻿using System.Globalization;
+using DepartmentLoadApp.Services;
 using DepartmentLoadApp.ViewModels.WorkloadDistribution;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,72 +23,39 @@ public class WorkloadDistributionController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> FillAssignmentToRemaining(int startYear, int assignmentId)
-    {
-        var result = await _service.FillAssignmentToMaxAsync(startYear, assignmentId);
-
-        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Message;
-
-        return RedirectToAction(nameof(Index), new
-        {
-            startYear,
-            selectedLecturerId = result.LecturerId
-        });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveLecturerPlan(UpdateLecturerPlanInputModel model)
     {
+        var rate = ParseRate(model.Rate);
+
         var result = await _service.SaveLecturerPlanAsync(
             model.SelectedYearStart,
             model.LecturerId,
             model.LecturerStudyPostId,
-            model.Rate);
+            rate);
 
         PutMessage(result);
 
-        return RedirectToAction(nameof(Index), new
-        {
-            startYear = model.SelectedYearStart,
-            selectedLecturerId = result.LecturerId ?? model.SelectedLecturerId ?? model.LecturerId
-        });
+        return RedirectToIndex(
+            model.SelectedYearStart,
+            result.LecturerId ?? model.SelectedLecturerId ?? model.LecturerId);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddAssignment(AddAssignmentInputModel model)
+    public async Task<IActionResult> AddSelectedAssignments(AddSelectedAssignmentsInputModel model)
     {
-        var result = await _service.AddAssignmentAsync(
-            model.SelectedYearStart,
-            model.LecturerId,
-            model.ItemKey);
+        var result = await _service.AddSelectedAssignmentsAsync(
+          model.SelectedYearStart,
+          model.LecturerId,
+          model.SelectedItemKeys,
+          model.GiaStudents,
+          model.AdditionalWorks);
 
         PutMessage(result);
 
-        return RedirectToAction(nameof(Index), new
-        {
-            startYear = model.SelectedYearStart,
-            selectedLecturerId = result.LecturerId ?? model.SelectedLecturerId ?? model.LecturerId
-        });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangeAssignmentHours(ChangeAssignmentHoursInputModel model)
-    {
-        var result = await _service.ChangeAssignmentHoursAsync(
+        return RedirectToIndex(
             model.SelectedYearStart,
-            model.AssignmentId,
-            model.Delta);
-
-        PutMessage(result);
-
-        return RedirectToAction(nameof(Index), new
-        {
-            startYear = model.SelectedYearStart,
-            selectedLecturerId = result.LecturerId ?? model.SelectedLecturerId
-        });
+            result.LecturerId ?? model.SelectedLecturerId ?? model.LecturerId);
     }
 
     [HttpPost]
@@ -98,24 +66,50 @@ public class WorkloadDistributionController : Controller
             model.SelectedYearStart,
             model.AssignmentId);
 
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new
+            {
+                success = result.Success,
+                message = result.Message,
+                lecturerId = result.LecturerId ?? model.SelectedLecturerId
+            });
+        }
+
         PutMessage(result);
 
-        return RedirectToAction(nameof(Index), new
-        {
-            startYear = model.SelectedYearStart,
-            selectedLecturerId = result.LecturerId ?? model.SelectedLecturerId
-        });
+        return RedirectToIndex(
+            model.SelectedYearStart,
+            result.LecturerId ?? model.SelectedLecturerId);
+    }
+
+    private RedirectToActionResult RedirectToIndex(
+        int startYear,
+        int? selectedLecturerId)
+    {
+        return RedirectToAction(nameof(Index), new { startYear, selectedLecturerId });
     }
 
     private void PutMessage(WorkloadDistributionOperationResult result)
     {
-        if (result.Success)
+        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Message;
+    }
+
+    private static decimal ParseRate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
-            TempData["SuccessMessage"] = result.Message;
+            return 1m;
         }
-        else
-        {
-            TempData["ErrorMessage"] = result.Message;
-        }
+
+        var normalized = value.Trim().Replace(',', '.');
+
+        return decimal.TryParse(
+            normalized,
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out var rate)
+            ? rate
+            : 1m;
     }
 }

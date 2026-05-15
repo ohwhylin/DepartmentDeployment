@@ -14,6 +14,7 @@ public class SyncController : ControllerBase
     private readonly IStudentGroupSyncService _studentGroupSyncService;
     private readonly IAcademicPlanSyncService _academicPlanSyncService;
     private readonly IAcademicPlanRecordSyncService _academicPlanRecordSyncService;
+    private readonly ILogger<SyncController> _logger;
 
     public SyncController(
         IEducationDirectionSyncService educationDirectionSyncService,
@@ -22,7 +23,8 @@ public class SyncController : ControllerBase
         ILecturerSyncService lecturerSyncService,
         IStudentGroupSyncService studentGroupSyncService,
         IAcademicPlanSyncService academicPlanSyncService,
-        IAcademicPlanRecordSyncService academicPlanRecordSyncService)
+        IAcademicPlanRecordSyncService academicPlanRecordSyncService,
+        ILogger<SyncController> logger)
     {
         _educationDirectionSyncService = educationDirectionSyncService;
         _lecturerStudyPostSyncService = lecturerStudyPostSyncService;
@@ -31,6 +33,7 @@ public class SyncController : ControllerBase
         _studentGroupSyncService = studentGroupSyncService;
         _academicPlanSyncService = academicPlanSyncService;
         _academicPlanRecordSyncService = academicPlanRecordSyncService;
+        _logger = logger;
     }
 
     [HttpGet("ping")]
@@ -42,105 +45,70 @@ public class SyncController : ControllerBase
     [HttpPost("education-directions")]
     public async Task<IActionResult> SyncEducationDirections()
     {
-        try
-        {
-            await _educationDirectionSyncService.Sync();
-            return Ok("EducationDirections synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _educationDirectionSyncService.Sync,
+            "Направления подготовки синхронизированы",
+            "education-directions");
     }
 
     [HttpPost("lecturer-study-posts")]
     public async Task<IActionResult> SyncLecturerStudyPosts()
     {
-        try
-        {
-            await _lecturerStudyPostSyncService.Sync();
-            return Ok("LecturerStudyPosts synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _lecturerStudyPostSyncService.Sync,
+            "Учебные должности преподавателей синхронизированы",
+            "lecturer-study-posts");
     }
 
     [HttpPost("lecturer-department-posts")]
     public async Task<IActionResult> SyncLecturerDepartmentPosts()
     {
-        try
-        {
-            await _lecturerDepartmentPostSyncService.Sync();
-            return Ok("LecturerDepartmentPosts synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _lecturerDepartmentPostSyncService.Sync,
+            "Кафедральные должности преподавателей синхронизированы",
+            "lecturer-department-posts");
     }
 
     [HttpPost("lecturers")]
     public async Task<IActionResult> SyncLecturers()
     {
-        try
-        {
-            await _lecturerSyncService.Sync();
-            return Ok("Lecturers synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _lecturerSyncService.Sync,
+            "Преподаватели синхронизированы",
+            "lecturers");
     }
 
     [HttpPost("student-groups")]
     public async Task<IActionResult> SyncStudentGroups()
     {
-        try
-        {
-            await _studentGroupSyncService.Sync();
-            return Ok("StudentGroups synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _studentGroupSyncService.Sync,
+            "Студенческие группы синхронизированы",
+            "student-groups");
     }
 
     [HttpPost("academic-plans")]
     public async Task<IActionResult> SyncAcademicPlans()
     {
-        try
-        {
-            await _academicPlanSyncService.Sync();
-            return Ok("AcademicPlans synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _academicPlanSyncService.Sync,
+            "Учебные планы синхронизированы",
+            "academic-plans");
     }
 
     [HttpPost("academic-plan-records")]
     public async Task<IActionResult> SyncAcademicPlanRecords()
     {
-        try
-        {
-            await _academicPlanRecordSyncService.Sync();
-            return Ok("AcademicPlanRecords synced");
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return await RunSyncAsync(
+            _academicPlanRecordSyncService.Sync,
+            "Записи учебных планов синхронизированы",
+            "academic-plan-records");
     }
 
     [HttpPost("all")]
     public async Task<IActionResult> SyncAll()
     {
-        try
+        return await RunSyncAsync(async () =>
         {
             await _educationDirectionSyncService.Sync();
             await _lecturerStudyPostSyncService.Sync();
@@ -149,12 +117,28 @@ public class SyncController : ControllerBase
             await _studentGroupSyncService.Sync();
             await _academicPlanSyncService.Sync();
             await _academicPlanRecordSyncService.Sync();
+        }, "Синхронизация всех данных завершена", "all");
+    }
 
-            return Ok("Core sync completed");
+    private async Task<IActionResult> RunSyncAsync(
+        Func<Task> syncAction,
+        string successMessage,
+        string operationName)
+    {
+        try
+        {
+            await syncAction();
+
+            return Ok(successMessage);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ex.ToString());
+            _logger.LogError(
+                ex,
+                "Ошибка при синхронизации данных. Операция: {OperationName}",
+                operationName);
+
+            return StatusCode(500, "Ошибка при синхронизации данных");
         }
     }
 }

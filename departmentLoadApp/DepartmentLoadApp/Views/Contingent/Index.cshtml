@@ -4,373 +4,170 @@
     ViewData["Title"] = "Контингент";
 }
 
-<div class="container-fluid py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-0 pb-0">
-            <h2 class="mb-1">Контингент</h2>
-            <p class="text-muted mb-3">В ячейке сверху — студенты, ниже — группы, затем подгруппы</p>
-        </div>
+<div class="contingent-page">
+    <h1 class="mb-3">Контингент</h1>
 
-        <div class="card-body pt-0">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-            }
-
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-            }
-
-            <form asp-controller="Contingent" method="post" id="contingentForm">
-                @Html.AntiForgeryToken()
-
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-                    <button type="submit" asp-action="Add" class="btn btn-outline-primary">
-                        Добавить направление
-                    </button>
-
-                    <div class="legend-box">
-                        <div><span class="legend-mark legend-students"></span> Студенты</div>
-                        <div><span class="legend-mark legend-groups"></span> Группы</div>
-                        <div><span class="legend-mark legend-subgroups"></span> Подгруппы</div>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle contingent-table">
-                        <thead>
-                            <tr>
-                                <th class="text-center code-col">Код</th>
-                                <th class="text-center type-col">Тип</th>
-                                <th class="text-center course-col">1 курс</th>
-                                <th class="text-center course-col">2 курс</th>
-                                <th class="text-center course-col">3 курс</th>
-                                <th class="text-center course-col">4 курс</th>
-                                <th class="text-center action-col"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < Model.Rows.Count; i++)
-                            {
-                                <tr>
-                                    <td>
-                                        <input type="hidden" name="Rows[@i].Id" value="@Model.Rows[i].Id" />
-                                        <input type="text"
-                                               class="form-control form-control-sm text-center"
-                                               name="Rows[@i].DirectionCode"
-                                               value="@Model.Rows[i].DirectionCode" />
-                                    </td>
-
-                                    <td>
-                                        <div class="type-switch">
-                                            <label class="form-check-label small d-block mb-1">
-                                                <input type="radio"
-                                                       class="form-check-input me-1"
-                                                       name="Rows[@i].IsBachelor"
-                                                       value="true"
-                                                @(Model.Rows[i].IsBachelor ? "checked" : null) />
-                                                Бак
-                                            </label>
-
-                                            <label class="form-check-label small d-block">
-                                                <input type="radio"
-                                                       class="form-check-input me-1"
-                                                       name="Rows[@i].IsBachelor"
-                                                       value="false"
-                                                @(Model.Rows[i].IsMaster ? "checked" : null) />
-                                                Маг
-                                            </label>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input students-input js-course1"
-                                               name="Rows[@i].Course1Count"
-                                               value="@Model.Rows[i].Course1Count"
-                                               min="0"
-                                               placeholder="Студ." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input groups-input"
-                                               name="Rows[@i].Course1Groups"
-                                               value="@Model.Rows[i].Course1Groups"
-                                               min="0"
-                                               placeholder="Груп." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input subgroups-input"
-                                               name="Rows[@i].Course1Subgroups"
-                                               value="@Model.Rows[i].Course1Subgroups"
-                                               min="0"
-                                               placeholder="Подгр." />
-                                    </td>
-
-                                    <td>
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input students-input js-course2"
-                                               name="Rows[@i].Course2Count"
-                                               value="@Model.Rows[i].Course2Count"
-                                               min="0"
-                                               placeholder="Студ." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input groups-input"
-                                               name="Rows[@i].Course2Groups"
-                                               value="@Model.Rows[i].Course2Groups"
-                                               min="0"
-                                               placeholder="Груп." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input subgroups-input"
-                                               name="Rows[@i].Course2Subgroups"
-                                               value="@Model.Rows[i].Course2Subgroups"
-                                               min="0"
-                                               placeholder="Подгр." />
-                                    </td>
-
-                                    <td>
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input students-input js-course3"
-                                               name="Rows[@i].Course3Count"
-                                               value="@Model.Rows[i].Course3Count"
-                                               min="0"
-                                               placeholder="Студ." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input groups-input"
-                                               name="Rows[@i].Course3Groups"
-                                               value="@Model.Rows[i].Course3Groups"
-                                               min="0"
-                                               placeholder="Груп." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input subgroups-input"
-                                               name="Rows[@i].Course3Subgroups"
-                                               value="@Model.Rows[i].Course3Subgroups"
-                                               min="0"
-                                               placeholder="Подгр." />
-                                    </td>
-
-                                    <td>
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input students-input js-course4"
-                                               name="Rows[@i].Course4Count"
-                                               value="@Model.Rows[i].Course4Count"
-                                               min="0"
-                                               placeholder="Студ." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input groups-input"
-                                               name="Rows[@i].Course4Groups"
-                                               value="@Model.Rows[i].Course4Groups"
-                                               min="0"
-                                               placeholder="Груп." />
-
-                                        <input type="number"
-                                               class="form-control form-control-sm compact-input subgroups-input"
-                                               name="Rows[@i].Course4Subgroups"
-                                               value="@Model.Rows[i].Course4Subgroups"
-                                               min="0"
-                                               placeholder="Подгр." />
-                                    </td>
-
-                                    <td class="text-center">
-                                        <button type="submit"
-                                                asp-action="Delete"
-                                                asp-route-id="@Model.Rows[i].Id"
-                                                class="btn btn-sm btn-danger delete-btn">
-                                            ×
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-
-                            <tr class="summary-row total-row">
-                                <td colspan="2" class="fw-bold text-end">Итого</td>
-                                <td class="text-center fw-bold" id="totalCourse1">@Model.TotalCourse1</td>
-                                <td class="text-center fw-bold" id="totalCourse2">@Model.TotalCourse2</td>
-                                <td class="text-center fw-bold" id="totalCourse3">@Model.TotalCourse3</td>
-                                <td class="text-center fw-bold" id="totalCourse4">@Model.TotalCourse4</td>
-                                <td></td>
-                            </tr>
-
-                            <tr class="summary-row">
-                                <td colspan="2" class="fw-semibold text-end">Общее количество студентов</td>
-                                <td colspan="4" class="text-center fw-bold" id="totalStudents">@Model.TotalStudents</td>
-                                <td></td>
-                            </tr>
-
-                            <tr class="summary-row">
-                                <td colspan="2" class="fw-semibold text-end">Поток бакалавров</td>
-                                <td class="text-center">@Model.BachelorCourse1</td>
-                                <td class="text-center">@Model.BachelorCourse2</td>
-                                <td class="text-center">@Model.BachelorCourse3</td>
-                                <td class="text-center">@Model.BachelorCourse4</td>
-                                <td></td>
-                            </tr>
-
-                            <tr class="summary-row">
-                                <td colspan="2" class="fw-semibold text-end">Поток магистров</td>
-                                <td class="text-center">@Model.MasterCourse1</td>
-                                <td class="text-center">@Model.MasterCourse2</td>
-                                <td class="text-center">@Model.MasterCourse3</td>
-                                <td class="text-center">@Model.MasterCourse4</td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="d-flex justify-content-end mt-3">
-                    <button type="submit" asp-action="Save" class="btn btn-primary px-4">
-                        Сохранить
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div id="contingent-content">
+        @await Html.PartialAsync("_ContingentContent", Model)
     </div>
 </div>
 
-<style>
-    .contingent-table th,
-    .contingent-table td {
-        vertical-align: top;
-    }
+@section Scripts
+{
+    <script>
+        (() => {
+            const containerId = "contingent-content";
+            const storageKey = "contingent-open-collapses";
 
-    .contingent-table thead th {
-        background: #f3f6fb;
-        font-weight: 700;
-    }
+            function getContainer() {
+                return document.getElementById(containerId);
+            }
 
-    .code-col {
-        width: 120px;
-        min-width: 120px;
-    }
+            function getOpenCollapseIds(root = document) {
+                return [...root.querySelectorAll(".accordion-collapse.show[id]")]
+                    .map(x => x.id);
+            }
 
-    .type-col {
-        width: 90px;
-        min-width: 90px;
-    }
+            function saveOpenState(root = document) {
+                const ids = getOpenCollapseIds(root);
+                sessionStorage.setItem(storageKey, JSON.stringify(ids));
+            }
 
-    .course-col {
-        width: 132px;
-        min-width: 132px;
-    }
+            function restoreCollapses(ids) {
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
 
-    .action-col {
-        width: 40px;
-        min-width: 40px;
-    }
+                    if (window.bootstrap) {
+                        bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).show();
+                    } else {
+                        el.classList.add("show");
+                    }
+                });
+            }
 
-    .compact-input {
-        min-width: 90px;
-        margin-bottom: 6px;
-        font-size: 13px;
-        padding: 4px 6px;
-    }
+            function restoreOpenState() {
+                try {
+                    const raw = sessionStorage.getItem(storageKey);
+                    if (!raw) return;
 
-        .compact-input:last-child {
-            margin-bottom: 0;
-        }
+                    const ids = JSON.parse(raw);
+                    if (Array.isArray(ids)) {
+                        restoreCollapses(ids);
+                    }
+                } catch {
+                }
+            }
 
-    .students-input {
-        border-left: 3px solid #3b82f6;
-    }
+            function openAccordion(targetId, scroll = true) {
+                const collapse = document.getElementById(targetId);
+                if (!collapse) return;
 
-    .groups-input {
-        border-left: 3px solid #10b981;
-    }
+                if (window.bootstrap) {
+                    bootstrap.Collapse.getOrCreateInstance(collapse, { toggle: false }).show();
+                } else {
+                    collapse.classList.add("show");
+                }
 
-    .subgroups-input {
-        border-left: 3px solid #f59e0b;
-    }
+                history.replaceState(null, "", "#" + targetId);
+                saveOpenState(document);
 
-    .summary-row td {
-        background: #fafbfc;
-        vertical-align: middle;
-    }
+                if (scroll) {
+                    const card = collapse.closest(".accordion-item") || collapse;
+                    card.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
 
-    .total-row td {
-        background: #eaf2ff;
-    }
+            async function submitContingentForm(form, submitter) {
+                const container = getContainer();
+                if (!container) return;
 
-    .legend-box {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        font-size: 14px;
-        color: #555;
-    }
+                const openIds = getOpenCollapseIds(document);
+                const parentCollapse = form.closest(".accordion-collapse[id]");
+                if (parentCollapse && !openIds.includes(parentCollapse.id)) {
+                    openIds.push(parentCollapse.id);
+                }
 
-    .legend-mark {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border-radius: 2px;
-        margin-right: 6px;
-    }
+                const submitterAction = submitter?.getAttribute("formaction");
+                const submitterMethod = submitter?.getAttribute("formmethod");
 
-    .legend-students {
-        background: #3b82f6;
-    }
+                const action = submitterAction ? submitterAction : form.action;
+                const method = (submitterMethod || form.method || "post").toUpperCase();
+                const formData = new FormData(form);
 
-    .legend-groups {
-        background: #10b981;
-    }
+                const currentScrollY = window.scrollY;
+                container.classList.add("contingent-loading");
 
-    .legend-subgroups {
-        background: #f59e0b;
-    }
+                const response = await fetch(action, {
+                    method,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: formData
+                });
 
-    .delete-btn {
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        line-height: 1;
-    }
+                const html = await response.text();
 
-    .type-switch {
-        text-align: left;
-        min-width: 56px;
-    }
-</style>
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = html;
 
-<script>
-    function parseValue(value) {
-        const n = parseInt(value);
-        return isNaN(n) ? 0 : n;
-    }
+                const newCourseSection = wrapper.querySelector(".js-course-section");
+                const currentCourseSection = form.closest(".js-course-section");
 
-    function recalcTotals() {
-        let total1 = 0;
-        let total2 = 0;
-        let total3 = 0;
-        let total4 = 0;
+                if (newCourseSection && currentCourseSection) {
+                    currentCourseSection.replaceWith(newCourseSection);
+                } else {
+                    container.innerHTML = html;
+                }
 
-        document.querySelectorAll('.js-course1').forEach(x => total1 += parseValue(x.value));
-        document.querySelectorAll('.js-course2').forEach(x => total2 += parseValue(x.value));
-        document.querySelectorAll('.js-course3').forEach(x => total3 += parseValue(x.value));
-        document.querySelectorAll('.js-course4').forEach(x => total4 += parseValue(x.value));
+                restoreCollapses(openIds);
+                saveOpenState(document);
 
-        document.getElementById('totalCourse1').textContent = total1;
-        document.getElementById('totalCourse2').textContent = total2;
-        document.getElementById('totalCourse3').textContent = total3;
-        document.getElementById('totalCourse4').textContent = total4;
-        document.getElementById('totalStudents').textContent = total1 + total2 + total3 + total4;
-    }
+                if (parentCollapse) {
+                    openAccordion(parentCollapse.id, false);
+                }
 
-    document.addEventListener('input', function (e) {
-        if (e.target.classList.contains('js-course1') ||
-            e.target.classList.contains('js-course2') ||
-            e.target.classList.contains('js-course3') ||
-            e.target.classList.contains('js-course4')) {
-            recalcTotals();
-        }
-    });
+                window.scrollTo({ top: currentScrollY, behavior: "auto" });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        recalcTotals();
-    });
-</script>
+                requestAnimationFrame(() => {
+                    container.classList.remove("contingent-loading");
+                });
+            }
+
+            document.addEventListener("submit", async (e) => {
+                const form = e.target.closest(".js-contingent-form");
+                if (!form) return;
+
+                e.preventDefault();
+                await submitContingentForm(form, e.submitter);
+            });
+
+            document.addEventListener("click", (e) => {
+                const openBtn = e.target.closest(".js-open-accordion");
+                if (!openBtn) return;
+
+                e.preventDefault();
+                const targetId = openBtn.dataset.target;
+                if (targetId) {
+                    openAccordion(targetId, true);
+                }
+            });
+
+            document.addEventListener("shown.bs.collapse", (e) => {
+                if (e.target.matches(".accordion-collapse[id]")) {
+                    saveOpenState(document);
+                }
+            });
+
+            document.addEventListener("hidden.bs.collapse", (e) => {
+                if (e.target.matches(".accordion-collapse[id]")) {
+                    saveOpenState(document);
+                }
+            });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                restoreOpenState();
+            });
+        })();
+    </script>
+}

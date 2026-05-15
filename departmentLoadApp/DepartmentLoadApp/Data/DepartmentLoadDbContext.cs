@@ -4,6 +4,7 @@ using DepartmentLoadApp.Models.Core;
 using DepartmentLoadApp.Models.Gia;
 using DepartmentLoadApp.Models.Practice;
 using DepartmentLoadApp.Models.Workload;
+using DepartmentLoadApp.Models.AdditionalWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace DepartmentLoadApp.Data;
@@ -24,8 +25,9 @@ public class DepartmentLoadDbContext : DbContext
     public DbSet<LecturerStudyPost> LecturerStudyPosts { get; set; } = null!;
     public DbSet<LecturerDepartmentPost> LecturerDepartmentPosts { get; set; } = null!;
 
-    // Твой модуль
+    // Сущности модуля расчёта нагрузки кафедры
     public DbSet<ContingentRow> ContingentRows { get; set; } = null!;
+    public DbSet<ContingentSubgroup> ContingentSubgroups { get; set; } = null!;
     public DbSet<NormTime> NormTimes { get; set; } = null!;
     public DbSet<WorkloadRow> WorkloadRows { get; set; } = null!;
     public DbSet<LoadCalculation> LoadCalculations { get; set; } = null!;
@@ -34,6 +36,8 @@ public class DepartmentLoadDbContext : DbContext
     public DbSet<GiaWorkloadRow> GiaWorkloadRows { get; set; } = null!;
     public DbSet<SemesterPeriod> SemesterPeriods { get; set; } = null!;
     public DbSet<StudentFlow> StudentFlows { get; set; } = null!;
+    public DbSet<AdditionalWorkNorm> AdditionalWorkNorms => Set<AdditionalWorkNorm>();
+    public DbSet<AdditionalWorkloadRow> AdditionalWorkloadRows => Set<AdditionalWorkloadRow>();
 
     // Распределение нагрузки
     public DbSet<LecturerAcademicYearPlan> LecturerAcademicYearPlans { get; set; } = null!;
@@ -139,6 +143,24 @@ public class DepartmentLoadDbContext : DbContext
         });
 
         // ---------- ТВОЙ МОДУЛЬ ----------
+        modelBuilder.Entity<ContingentSubgroup>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasIndex(x => new
+            {
+                x.StudentGroupId,
+                x.SubgroupNumber
+            }).IsUnique();
+
+            entity.Property(x => x.StudentsCount).IsRequired();
+
+            entity.HasOne<StudentGroup>()
+                .WithMany()
+                .HasForeignKey(x => x.StudentGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<LoadDistribution>(entity =>
         {
             entity.HasOne(x => x.Lecturer)
@@ -195,12 +217,20 @@ public class DepartmentLoadDbContext : DbContext
                 .HasMaxLength(9);
 
             entity.Property(x => x.SourceType)
-                .HasConversion<string>();
+                .HasConversion<int>();
 
             entity.Property(x => x.LoadElementType)
-                .HasConversion<string>();
+                .HasConversion<int>();
+
+            entity.Property(x => x.DistributionUnitType)
+                .HasConversion<int>();
+
+            entity.Property(x => x.UnitName)
+                .IsRequired()
+                .HasMaxLength(300);
 
             entity.Property(x => x.AssignedHours)
+                .HasPrecision(10, 2)
                 .IsRequired();
 
             entity.HasIndex(x => new
@@ -208,7 +238,10 @@ public class DepartmentLoadDbContext : DbContext
                 x.LecturerAcademicYearPlanId,
                 x.SourceType,
                 x.SourceRowId,
-                x.LoadElementType
+                x.LoadElementType,
+                x.DistributionUnitType,
+                x.StudentGroupId,
+                x.ContingentSubgroupId
             }).IsUnique();
 
             entity.HasIndex(x => new
@@ -216,13 +249,61 @@ public class DepartmentLoadDbContext : DbContext
                 x.AcademicYear,
                 x.SourceType,
                 x.SourceRowId,
-                x.LoadElementType
+                x.LoadElementType,
+                x.DistributionUnitType,
+                x.StudentGroupId,
+                x.ContingentSubgroupId
             });
 
             entity.HasOne(x => x.LecturerAcademicYearPlan)
                 .WithMany()
                 .HasForeignKey(x => x.LecturerAcademicYearPlanId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AdditionalWorkNorm>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Code)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(x => x.Name)
+                .IsRequired()
+                .HasMaxLength(300);
+
+            entity.Property(x => x.Hours)
+                .HasColumnType("decimal(10,2)");
+
+            entity.HasIndex(x => x.Code)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<AdditionalWorkloadRow>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.AcademicYear)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            entity.Property(x => x.WorkName)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(x => x.HoursPerUnit)
+                .HasColumnType("decimal(10,2)");
+
+            entity.Property(x => x.Comment)
+                .HasMaxLength(1000);
+
+            entity.HasOne(x => x.AdditionalWorkNorm)
+                .WithMany()
+                .HasForeignKey(x => x.AdditionalWorkNormId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(x => x.AcademicYear);
         });
     }
 }

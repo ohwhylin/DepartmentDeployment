@@ -2,6 +2,7 @@
 using DepartmentLoadApp.Models.Gia;
 using DepartmentLoadApp.Models.Practice;
 using DepartmentLoadApp.Models.Workload;
+using DepartmentLoadApp.Services;
 
 namespace DepartmentLoadApp.Helpers
 {
@@ -10,6 +11,7 @@ namespace DepartmentLoadApp.Helpers
         public static byte[] ExportWorkload(List<WorkloadRow> rows)
         {
             using var workbook = new XLWorkbook();
+
             var ws = workbook.Worksheets.Add("Дисциплины");
 
             var headers = new[]
@@ -45,10 +47,12 @@ namespace DepartmentLoadApp.Helpers
 
             FillHeaders(ws, headers);
 
-            int rowIndex = 2;
+            var rowIndex = 2;
+
             foreach (var row in rows)
             {
-                int col = 1;
+                var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
                 ws.Cell(rowIndex, col++).Value = row.DirectionCode;
@@ -81,12 +85,14 @@ namespace DepartmentLoadApp.Helpers
             }
 
             FormatSheet(ws, headers.Length);
+
             return SaveWorkbook(workbook);
         }
 
         public static byte[] ExportPractice(IEnumerable<PracticeWorkloadRow> rows)
         {
             using var workbook = new XLWorkbook();
+
             var ws = workbook.Worksheets.Add("Практики");
 
             var headers = new[]
@@ -105,9 +111,11 @@ namespace DepartmentLoadApp.Helpers
             FillHeaders(ws, headers);
 
             var rowIndex = 2;
+
             foreach (var row in rows)
             {
                 var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
                 ws.Cell(rowIndex, col++).Value = row.DirectionCode;
@@ -117,16 +125,19 @@ namespace DepartmentLoadApp.Helpers
                 ws.Cell(rowIndex, col++).Value = row.StudentsCount;
                 ws.Cell(rowIndex, col++).Value = row.WeeksCount;
                 ws.Cell(rowIndex, col++).Value = row.TotalHours;
+
                 rowIndex++;
             }
 
             FormatSheet(ws, headers.Length);
+
             return SaveWorkbook(workbook);
         }
 
         public static byte[] ExportGia(IEnumerable<GiaWorkloadRow> rows)
         {
             using var workbook = new XLWorkbook();
+
             var ws = workbook.Worksheets.Add("ГИА");
 
             var headers = new[]
@@ -146,9 +157,11 @@ namespace DepartmentLoadApp.Helpers
             FillHeaders(ws, headers);
 
             var rowIndex = 2;
+
             foreach (var row in rows)
             {
                 var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = row.GiaSection;
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
@@ -159,20 +172,38 @@ namespace DepartmentLoadApp.Helpers
                 ws.Cell(rowIndex, col++).Value = row.StudentsCount;
                 ws.Cell(rowIndex, col++).Value = row.ManualHours;
                 ws.Cell(rowIndex, col++).Value = row.TotalHours;
+
                 rowIndex++;
             }
 
             FormatSheet(ws, headers.Length);
+
             return SaveWorkbook(workbook);
         }
 
         public static byte[] ExportCombinedCalculation(
-    string academicYear,
-    IEnumerable<WorkloadRow> workloadRows,
-    IEnumerable<PracticeWorkloadRow> practiceRows,
-    IEnumerable<GiaWorkloadRow> giaRows)
+            string academicYear,
+            IEnumerable<WorkloadRow> workloadRows,
+            IEnumerable<PracticeWorkloadRow> practiceRows,
+            IEnumerable<GiaWorkloadRow> giaRows)
+        {
+            return ExportCombinedCalculation(
+                academicYear,
+                workloadRows,
+                practiceRows,
+                giaRows,
+                Enumerable.Empty<AdditionalWorkDistributionItem>());
+        }
+
+        public static byte[] ExportCombinedCalculation(
+            string academicYear,
+            IEnumerable<WorkloadRow> workloadRows,
+            IEnumerable<PracticeWorkloadRow> practiceRows,
+            IEnumerable<GiaWorkloadRow> giaRows,
+            IEnumerable<AdditionalWorkDistributionItem> additionalWorkRows)
         {
             using var workbook = new XLWorkbook();
+
             var ws = workbook.Worksheets.Add("Каф. ИС");
 
             const int lastColumn = 26;
@@ -213,7 +244,7 @@ namespace DepartmentLoadApp.Helpers
             ws.Cell(5, 22).Value = "РГР";
             ws.Cell(5, 23).Value = "Практика";
             ws.Cell(5, 24).Value = "ГИА";
-            ws.Cell(5, 25).Value = "Ручные";
+            ws.Cell(5, 25).Value = "Доп. работа";
             ws.Cell(5, 26).Value = "Итого";
 
             var headerRange = ws.Range(5, 1, 5, lastColumn);
@@ -233,6 +264,7 @@ namespace DepartmentLoadApp.Helpers
             foreach (var row in workloadRows)
             {
                 var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = number++;
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
@@ -268,6 +300,7 @@ namespace DepartmentLoadApp.Helpers
             foreach (var row in practiceRows)
             {
                 var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = number++;
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
@@ -303,6 +336,7 @@ namespace DepartmentLoadApp.Helpers
             foreach (var row in giaRows)
             {
                 var col = 1;
+
                 ws.Cell(rowIndex, col++).Value = number++;
                 ws.Cell(rowIndex, col++).Value = row.SemesterName;
                 ws.Cell(rowIndex, col++).Value = row.EducationForm;
@@ -333,14 +367,58 @@ namespace DepartmentLoadApp.Helpers
                 rowIndex++;
             }
 
-            var usedRange = ws.Range(5, 1, rowIndex - 1, lastColumn);
+            rowIndex = FillSectionHeader(ws, rowIndex, lastColumn, "ДОП. РАБОТА");
+
+            foreach (var row in additionalWorkRows)
+            {
+                var col = 1;
+
+                ws.Cell(rowIndex, col++).Value = number++;
+                ws.Cell(rowIndex, col++).Value = string.Empty;
+                ws.Cell(rowIndex, col++).Value = string.Empty;
+                ws.Cell(rowIndex, col++).Value = "Доп. работа";
+                ws.Cell(rowIndex, col++).Value = string.Empty;
+                ws.Cell(rowIndex, col++).Value = row.Title;
+                ws.Cell(rowIndex, col++).Value = row.ElementDisplayName;
+                ws.Cell(rowIndex, col++).Value = string.Empty;
+                ws.Cell(rowIndex, col++).Value = string.Empty;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = 0;
+                ws.Cell(rowIndex, col++).Value = row.TotalHours;
+                ws.Cell(rowIndex, col++).Value = row.TotalHours;
+
+                rowIndex++;
+            }
+
+            var totalRow = rowIndex;
+            ws.Range(totalRow, 1, totalRow, lastColumn - 1).Merge();
+            ws.Cell(totalRow, 1).Value = "ИТОГО";
+            ws.Cell(totalRow, 1).Style.Font.Bold = true;
+            ws.Cell(totalRow, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEECE1");
+            ws.Cell(totalRow, lastColumn).FormulaA1 = $"SUM(Z6:Z{totalRow - 1})";
+            ws.Cell(totalRow, lastColumn).Style.Font.Bold = true;
+            ws.Cell(totalRow, lastColumn).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEECE1");
+
+            var usedRange = ws.Range(5, 1, totalRow, lastColumn);
             usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
             usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             usedRange.Style.Alignment.WrapText = true;
 
             ws.Columns().AdjustToContents();
-
             ws.Column(1).Width = 6;
             ws.Column(2).Width = 10;
             ws.Column(3).Width = 10;
@@ -365,58 +443,20 @@ namespace DepartmentLoadApp.Helpers
             ws.Column(22).Width = 10;
             ws.Column(23).Width = 12;
             ws.Column(24).Width = 12;
-            ws.Column(25).Width = 10;
+            ws.Column(25).Width = 14;
             ws.Column(26).Width = 12;
 
             ws.SheetView.FreezeRows(5);
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
+
             return stream.ToArray();
-        }
-
-        private static int FillSectionTitle(IXLWorksheet ws, int rowIndex, int lastColumn, string title)
-        {
-            ws.Range(rowIndex, 1, rowIndex, lastColumn).Merge();
-            ws.Cell(rowIndex, 1).Value = title;
-            ws.Cell(rowIndex, 1).Style.Font.Bold = true;
-            ws.Cell(rowIndex, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#D9EAF7");
-            ws.Cell(rowIndex, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(rowIndex, 1).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            return rowIndex + 1;
-        }
-
-        private static int FillTotalRow(IXLWorksheet ws, int rowIndex, int lastColumn, string title)
-        {
-            ws.Range(rowIndex, 1, rowIndex, lastColumn - 1).Merge();
-            ws.Cell(rowIndex, 1).Value = title;
-            ws.Cell(rowIndex, 1).Style.Font.Bold = true;
-            ws.Cell(rowIndex, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEECE1");
-
-            ws.Cell(rowIndex, lastColumn).FormulaA1 = $"SUM(X{GetSectionStartRow(ws, rowIndex)}:X{rowIndex - 1})";
-            ws.Cell(rowIndex, lastColumn).Style.Font.Bold = true;
-            ws.Cell(rowIndex, lastColumn).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEECE1");
-
-            return rowIndex + 1;
-        }
-
-        private static int GetSectionStartRow(IXLWorksheet ws, int totalRow)
-        {
-            for (int row = totalRow - 1; row >= 1; row--)
-            {
-                if (ws.Cell(row, 1).IsMerged() &&
-                    ws.Cell(row, 1).GetString() is "ДИСЦИПЛИНЫ" or "ПРАКТИКИ" or "ГИА")
-                {
-                    return row + 1;
-                }
-            }
-
-            return 5;
         }
 
         private static void FillHeaders(IXLWorksheet ws, string[] headers, int headerRow = 1)
         {
-            for (int i = 0; i < headers.Length; i++)
+            for (var i = 0; i < headers.Length; i++)
             {
                 ws.Cell(headerRow, i + 1).Value = headers[i];
                 ws.Cell(headerRow, i + 1).Style.Font.Bold = true;
@@ -440,6 +480,7 @@ namespace DepartmentLoadApp.Helpers
             ws.Columns(1, lastColumn).AdjustToContents();
 
             var usedRange = ws.RangeUsed();
+
             if (usedRange != null)
             {
                 usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -449,34 +490,20 @@ namespace DepartmentLoadApp.Helpers
             }
         }
 
-        private static void ApplyBorders(IXLWorksheet ws, int fromRow, int toRow, int lastColumn)
-        {
-            var range = ws.Range(fromRow, 1, toRow, lastColumn);
-            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            range.Style.Alignment.WrapText = true;
-        }
-
-        private static void ApplyNumberFormat(IXLWorksheet ws, int fromRow, int toRow, int fromColumn, int toColumn)
-        {
-            for (int row = fromRow; row <= toRow; row++)
-            {
-                for (int col = fromColumn; col <= toColumn; col++)
-                {
-                    ws.Cell(row, col).Style.NumberFormat.Format = "0.##";
-                }
-            }
-        }
-
         private static byte[] SaveWorkbook(XLWorkbook workbook)
         {
             using var stream = new MemoryStream();
+
             workbook.SaveAs(stream);
+
             return stream.ToArray();
         }
 
-        private static int FillSectionHeader(IXLWorksheet ws, int rowIndex, int lastColumn, string title)
+        private static int FillSectionHeader(
+            IXLWorksheet ws,
+            int rowIndex,
+            int lastColumn,
+            string title)
         {
             ws.Range(rowIndex, 1, rowIndex, lastColumn).Merge();
             ws.Cell(rowIndex, 1).Value = title;

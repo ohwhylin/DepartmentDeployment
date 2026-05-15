@@ -64,8 +64,6 @@ namespace DepartmentLoadApp.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PlanYear = table.Column<string>(type: "text", nullable: false),
-                    AcademicPlanId = table.Column<int>(type: "integer", nullable: false),
-                    AcademicPlanRecordId = table.Column<int>(type: "integer", nullable: false),
                     GiaSection = table.Column<string>(type: "text", nullable: false),
                     WorkName = table.Column<string>(type: "text", nullable: false),
                     DirectionCode = table.Column<string>(type: "text", nullable: false),
@@ -153,8 +151,6 @@ namespace DepartmentLoadApp.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PlanYear = table.Column<string>(type: "text", nullable: false),
-                    AcademicPlanId = table.Column<int>(type: "integer", nullable: false),
-                    AcademicPlanRecordId = table.Column<int>(type: "integer", nullable: false),
                     PracticeName = table.Column<string>(type: "text", nullable: false),
                     DirectionCode = table.Column<string>(type: "text", nullable: false),
                     DirectionName = table.Column<string>(type: "text", nullable: false),
@@ -217,13 +213,11 @@ namespace DepartmentLoadApp.Migrations
                     AcademicPlanId = table.Column<int>(type: "integer", nullable: false),
                     AcademicPlanRecordId = table.Column<int>(type: "integer", nullable: false),
                     DisciplineId = table.Column<int>(type: "integer", nullable: false),
-                    RecordIndex = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     DisciplineName = table.Column<string>(type: "text", nullable: false),
                     DirectionCode = table.Column<string>(type: "text", nullable: false),
                     DirectionName = table.Column<string>(type: "text", nullable: false),
                     SemesterName = table.Column<string>(type: "text", nullable: false),
                     EducationForm = table.Column<string>(type: "text", nullable: false),
-                    IsFacultyOptional = table.Column<bool>(type: "boolean", nullable: false),
                     Course = table.Column<int>(type: "integer", nullable: false),
                     StudentsCount = table.Column<int>(type: "integer", nullable: false),
                     FlowCount = table.Column<int>(type: "integer", nullable: false),
@@ -239,13 +233,11 @@ namespace DepartmentLoadApp.Migrations
                     HasCredit = table.Column<bool>(type: "boolean", nullable: false),
                     HasCourseWork = table.Column<bool>(type: "boolean", nullable: false),
                     HasCourseProject = table.Column<bool>(type: "boolean", nullable: false),
-                    HasRgr = table.Column<bool>(type: "boolean", nullable: false),
                     ConsultationHours = table.Column<decimal>(type: "numeric", nullable: false),
                     ExamHours = table.Column<decimal>(type: "numeric", nullable: false),
                     CreditHours = table.Column<decimal>(type: "numeric", nullable: false),
                     CourseWorkHours = table.Column<decimal>(type: "numeric", nullable: false),
-                    CourseProjectHours = table.Column<decimal>(type: "numeric", nullable: false),
-                    RgrHours = table.Column<decimal>(type: "numeric", nullable: false)
+                    CourseProjectHours = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -351,34 +343,6 @@ namespace DepartmentLoadApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "LecturerAcademicYearPlans",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AcademicYear = table.Column<string>(type: "character varying(9)", maxLength: 9, nullable: false),
-                    LecturerId = table.Column<int>(type: "integer", nullable: false),
-                    LecturerStudyPostId = table.Column<int>(type: "integer", nullable: true),
-                    Rate = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_LecturerAcademicYearPlans", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_LecturerAcademicYearPlans_Lecturers_LecturerId",
-                        column: x => x.LecturerId,
-                        principalTable: "Lecturers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_LecturerAcademicYearPlans_LecturerStudyPosts_LecturerStudyP~",
-                        column: x => x.LecturerStudyPostId,
-                        principalTable: "LecturerStudyPosts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "LoadDistributions",
                 columns: table => new
                 {
@@ -440,31 +404,6 @@ namespace DepartmentLoadApp.Migrations
                         onDelete: ReferentialAction.SetNull);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "LecturerLoadAssignments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AcademicYear = table.Column<string>(type: "character varying(9)", maxLength: 9, nullable: false),
-                    LecturerAcademicYearPlanId = table.Column<int>(type: "integer", nullable: false),
-                    SourceType = table.Column<string>(type: "text", nullable: false),
-                    SourceRowId = table.Column<int>(type: "integer", nullable: false),
-                    SourceAcademicPlanRecordId = table.Column<int>(type: "integer", nullable: false),
-                    LoadElementType = table.Column<string>(type: "text", nullable: false),
-                    AssignedHours = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_LecturerLoadAssignments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_LecturerLoadAssignments_LecturerAcademicYearPlans_LecturerA~",
-                        column: x => x.LecturerAcademicYearPlanId,
-                        principalTable: "LecturerAcademicYearPlans",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AcademicPlanRecordsCore_AcademicPlanId",
                 table: "AcademicPlanRecordsCore",
@@ -494,36 +433,9 @@ namespace DepartmentLoadApp.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_LecturerAcademicYearPlans_AcademicYear_LecturerId",
-                table: "LecturerAcademicYearPlans",
-                columns: new[] { "AcademicYear", "LecturerId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LecturerAcademicYearPlans_LecturerId",
-                table: "LecturerAcademicYearPlans",
-                column: "LecturerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LecturerAcademicYearPlans_LecturerStudyPostId",
-                table: "LecturerAcademicYearPlans",
-                column: "LecturerStudyPostId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_LecturerDepartmentPosts_CoreId",
                 table: "LecturerDepartmentPosts",
                 column: "CoreId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LecturerLoadAssignments_AcademicYear_SourceType_SourceRowId~",
-                table: "LecturerLoadAssignments",
-                columns: new[] { "AcademicYear", "SourceType", "SourceRowId", "LoadElementType" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LecturerLoadAssignments_LecturerAcademicYearPlanId_SourceTy~",
-                table: "LecturerLoadAssignments",
-                columns: new[] { "LecturerAcademicYearPlanId", "SourceType", "SourceRowId", "LoadElementType" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -592,9 +504,6 @@ namespace DepartmentLoadApp.Migrations
                 name: "GiaWorkloadRows");
 
             migrationBuilder.DropTable(
-                name: "LecturerLoadAssignments");
-
-            migrationBuilder.DropTable(
                 name: "LoadDistributions");
 
             migrationBuilder.DropTable(
@@ -619,16 +528,13 @@ namespace DepartmentLoadApp.Migrations
                 name: "AcademicPlansCore");
 
             migrationBuilder.DropTable(
-                name: "LecturerAcademicYearPlans");
-
-            migrationBuilder.DropTable(
                 name: "LoadCalculations");
 
             migrationBuilder.DropTable(
-                name: "EducationDirections");
+                name: "Lecturers");
 
             migrationBuilder.DropTable(
-                name: "Lecturers");
+                name: "EducationDirections");
 
             migrationBuilder.DropTable(
                 name: "LecturerDepartmentPosts");

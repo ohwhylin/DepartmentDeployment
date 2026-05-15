@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DepartmentLoadApp.Migrations
 {
     [DbContext(typeof(DepartmentLoadDbContext))]
-    [Migration("20260414195544_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260425133858_AddContingentSubgroups")]
+    partial class AddContingentSubgroups
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -84,6 +84,31 @@ namespace DepartmentLoadApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ContingentRows");
+                });
+
+            modelBuilder.Entity("DepartmentLoadApp.Models.Contingent.ContingentSubgroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("StudentGroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StudentsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SubgroupNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentGroupId", "SubgroupNumber")
+                        .IsUnique();
+
+                    b.ToTable("ContingentSubgroups");
                 });
 
             modelBuilder.Entity("DepartmentLoadApp.Models.Core.AcademicPlan", b =>
@@ -420,6 +445,9 @@ namespace DepartmentLoadApp.Migrations
                     b.Property<string>("GroupName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("StudentCount")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -878,6 +906,15 @@ namespace DepartmentLoadApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("WorkloadRows");
+                });
+
+            modelBuilder.Entity("DepartmentLoadApp.Models.Contingent.ContingentSubgroup", b =>
+                {
+                    b.HasOne("DepartmentLoadApp.Models.Core.StudentGroup", null)
+                        .WithMany()
+                        .HasForeignKey("StudentGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DepartmentLoadApp.Models.Core.AcademicPlan", b =>
