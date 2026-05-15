@@ -422,7 +422,6 @@ public class AcademicPlanSyncLogicTests
         Assert.That(db.AcademicPlanRecords.Count(), Is.EqualTo(0));
         Assert.That(db.AcademicPlans.Count(), Is.EqualTo(0));
 
-        // Эти сущности текущая логика НЕ удаляет
         Assert.That(db.DisciplineBlocks.Count(), Is.EqualTo(1));
         Assert.That(db.Disciplines.Count(), Is.EqualTo(1));
     }

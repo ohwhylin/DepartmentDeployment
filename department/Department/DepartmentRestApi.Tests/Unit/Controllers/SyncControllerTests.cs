@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 
-namespace DepartmentRestApi.Tests.Functional;
+namespace DepartmentRestApi.Tests.Unit.Controllers;
 
 [TestFixture]
 public class SyncControllerTests
@@ -15,25 +15,110 @@ public class SyncControllerTests
     private Mock<IStudentSyncLogic> _studentSyncLogicMock = null!;
     private Mock<IDisciplineStudentRecordSyncLogic> _disciplineStudentRecordSyncLogicMock = null!;
     private Mock<IStudentOrderSyncLogic> _studentOrderSyncLogicMock = null!;
+    private Mock<ISyncOrchestrator> _syncOrchestratorMock = null!;
 
     private SyncController _controller = null!;
 
-    //[SetUp]
-    //public void SetUp()
-    //{
-    //    _academicPlanSyncLogicMock = new Mock<IAcademicPlanSyncLogic>();
-    //    _studentGroupSyncLogicMock = new Mock<IStudentGroupSyncLogic>();
-    //    _studentSyncLogicMock = new Mock<IStudentSyncLogic>();
-    //    _disciplineStudentRecordSyncLogicMock = new Mock<IDisciplineStudentRecordSyncLogic>();
-    //    _studentOrderSyncLogicMock = new Mock<IStudentOrderSyncLogic>();
+    [SetUp]
+    public void SetUp()
+    {
+        _academicPlanSyncLogicMock = new Mock<IAcademicPlanSyncLogic>();
+        _studentGroupSyncLogicMock = new Mock<IStudentGroupSyncLogic>();
+        _studentSyncLogicMock = new Mock<IStudentSyncLogic>();
+        _disciplineStudentRecordSyncLogicMock = new Mock<IDisciplineStudentRecordSyncLogic>();
+        _studentOrderSyncLogicMock = new Mock<IStudentOrderSyncLogic>();
+        _syncOrchestratorMock = new Mock<ISyncOrchestrator>();
 
-    //    _controller = new SyncController(
-    //        _academicPlanSyncLogicMock.Object,
-    //        _studentGroupSyncLogicMock.Object,
-    //        _studentSyncLogicMock.Object,
-    //        _disciplineStudentRecordSyncLogicMock.Object,
-    //        _studentOrderSyncLogicMock.Object);
-    //}
+        _controller = new SyncController(
+            _academicPlanSyncLogicMock.Object,
+            _studentGroupSyncLogicMock.Object,
+            _studentSyncLogicMock.Object,
+            _disciplineStudentRecordSyncLogicMock.Object,
+            _studentOrderSyncLogicMock.Object,
+            _syncOrchestratorMock.Object);
+    }
+
+    [Test]
+    public async Task SyncAll_ShouldReturnOk_WhenSynchronizationCompletedSuccessfully()
+    {
+        _syncOrchestratorMock
+            .Setup(x => x.RunSyncAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SyncOrchestratorResult
+            {
+                Started = true,
+                Success = true,
+                Message = "Полная синхронизация завершена успешно."
+            });
+
+        var result = await _controller.SyncAll();
+
+        Assert.That(result, Is.InstanceOf<OkObjectResult>());
+
+        var okResult = (OkObjectResult)result;
+        Assert.That(okResult.Value, Is.EqualTo("Synchronization completed successfully."));
+
+        _syncOrchestratorMock.Verify(
+            x => x.RunSyncAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task SyncAll_ShouldReturn500_WhenSynchronizationFinishedWithError()
+    {
+        _syncOrchestratorMock
+            .Setup(x => x.RunSyncAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SyncOrchestratorResult
+            {
+                Started = true,
+                Success = false,
+                Message = "Ошибка при синхронизации.",
+                Error = "test orchestrator error"
+            });
+
+        var result = await _controller.SyncAll();
+
+        Assert.That(result, Is.InstanceOf<ObjectResult>());
+
+        var objectResult = (ObjectResult)result;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(500));
+
+        var json = JsonSerializer.Serialize(objectResult.Value);
+        Assert.That(json, Does.Contain("Internal server error"));
+        Assert.That(json, Does.Contain("test orchestrator error"));
+
+        _syncOrchestratorMock.Verify(
+            x => x.RunSyncAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task SyncAll_ShouldReturn500_WhenOrchestratorThrows()
+    {
+        _syncOrchestratorMock
+            .Setup(x => x.RunSyncAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("unexpected sync all error"));
+
+        var result = await _controller.SyncAll();
+
+        Assert.That(result, Is.InstanceOf<ObjectResult>());
+
+        var objectResult = (ObjectResult)result;
+        Assert.That(objectResult.StatusCode, Is.EqualTo(500));
+
+        var json = JsonSerializer.Serialize(objectResult.Value);
+        Assert.That(json, Does.Contain("Internal server error"));
+        Assert.That(json, Does.Contain("unexpected sync all error"));
+
+        _syncOrchestratorMock.Verify(
+            x => x.RunSyncAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        VerifyNoOtherCalls();
+    }
 
     [Test]
     public async Task SyncAcademicPlans_ShouldReturnOk_WhenLogicSucceeds()
@@ -242,7 +327,6 @@ public class SyncControllerTests
         _studentSyncLogicMock.VerifyNoOtherCalls();
         _disciplineStudentRecordSyncLogicMock.VerifyNoOtherCalls();
         _studentOrderSyncLogicMock.VerifyNoOtherCalls();
+        _syncOrchestratorMock.VerifyNoOtherCalls();
     }
 }
-
-

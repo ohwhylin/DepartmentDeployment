@@ -22,7 +22,7 @@ namespace DepartmentBusinessLogic.BusinessLogics
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (string.IsNullOrWhiteSpace(model.Login))
-                throw new ArgumentNullException("", nameof(model.Login));
+                throw new ArgumentNullException(nameof(model.Login));
 
             model.Login = model.Login.Trim();
 
