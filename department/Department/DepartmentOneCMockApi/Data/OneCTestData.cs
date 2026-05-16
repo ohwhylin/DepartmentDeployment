@@ -251,58 +251,86 @@ namespace DepartmentOneCMockApi.Data
 
         public static List<StudentMockModel> Students => GenerateStudents();
 
+        private static readonly string[] femaleFirstNames =
+        {
+            "Алина", "Мария", "Екатерина", "Анна",
+            "Дарья", "Виктория", "Полина", "София"
+        };
+
+        private static readonly string[] maleFirstNames =
+        {
+            "Илья", "Даниил", "Артем", "Кирилл",
+            "Степан", "Максим", "Павел", "Егор"
+        };
+
+        private static readonly string[] lastNames =
+        {
+            "Иванов", "Петров", "Сидоров", "Кузнецов",
+            "Смирнов", "Орлов", "Волков", "Попов"
+        };
+
+        private static readonly string[] femalePatronymics =
+        {
+            "Сергеевна", "Андреевна", "Игоревна", "Павловна",
+            "Дмитриевна", "Олеговна", "Романовна", "Ильинична"
+        };
+
+        private static readonly string[] malePatronymics =
+        {
+            "Сергеевич", "Андреевич", "Игоревич", "Павлович",
+            "Дмитриевич", "Олегович", "Романович", "Ильич"
+        };
+
+        private static string ToFemaleLastName(string lastName)
+        {
+            if (lastName.EndsWith("ов") || lastName.EndsWith("ев") || lastName.EndsWith("ин"))
+                return lastName + "а";
+
+            if (lastName.EndsWith("ый") || lastName.EndsWith("ой") || lastName.EndsWith("ий"))
+                return lastName[..^2] + "ая";
+
+            return lastName;
+        }
+
         private static List<StudentMockModel> GenerateStudents()
         {
-            var firstNames = new[]
-            {
-                "Алина", "Мария", "Екатерина", "Анна", "Дарья", "Виктория", "Полина", "София",
-                "Илья", "Артём", "Дмитрий", "Алексей", "Максим", "Кирилл", "Никита", "Егор"
-            };
-
-            var lastNames = new[]
-            {
-                "Иванов", "Петров", "Сидоров", "Смирнов", "Кузнецов", "Попов", "Васильев", "Новиков",
-                "Фёдоров", "Морозов", "Волков", "Соколов", "Лебедев", "Козлов", "Степанов", "Павлов"
-            };
-
-            var patronymics = new[]
-            {
-                "Иванович", "Петрович", "Алексеевич", "Дмитриевич", "Сергеевич", "Андреевич",
-                "Ивановна", "Петровна", "Алексеевна", "Дмитриевна", "Сергеевна", "Андреевна"
-            };
-
             var students = new List<StudentMockModel>();
             var studentId = 1;
-            var bookNumber = 240001;
 
-            foreach (var group in StudentGroups.OrderBy(g => g.Id))
+            foreach (var group in StudentGroups.OrderBy(x => x.Id))
             {
-                var count = StudentCountByGroupId.TryGetValue(group.Id, out var value)
-                    ? value
-                    : 0;
-
-                for (var i = 0; i < count; i++)
+                for (var i = 0; i < 4; i++)
                 {
-                    var firstName = firstNames[(studentId - 1) % firstNames.Length];
-                    var lastName = lastNames[(studentId - 1) % lastNames.Length];
-                    var patronymic = patronymics[(studentId - 1) % patronymics.Length];
+                    var isFemale = i % 2 == 0;
+
+                    var firstName = isFemale
+                        ? femaleFirstNames[(studentId - 1) % femaleFirstNames.Length]
+                        : maleFirstNames[(studentId - 1) % maleFirstNames.Length];
+
+                    var baseLastName = lastNames[(studentId - 1) % lastNames.Length];
+                    var lastName = isFemale
+                        ? ToFemaleLastName(baseLastName)
+                        : baseLastName;
+
+                    var patronymic = isFemale
+                        ? femalePatronymics[(studentId - 1) % femalePatronymics.Length]
+                        : malePatronymics[(studentId - 1) % malePatronymics.Length];
 
                     students.Add(new StudentMockModel
                     {
                         Id = studentId,
                         StudentGroupId = group.Id,
-                        NumberOfBook = bookNumber.ToString(),
+                        NumberOfBook = $"22{studentId:000}",
                         FirstName = firstName,
                         LastName = lastName,
                         Patronymic = patronymic,
-                        Email = $"student{studentId}@university.ru",
+                        Email = $"student{studentId}@university.local",
                         StudentState = StudentState.Учится,
-                        Description = i == 0 ? "Староста группы" : string.Empty,
+                        Description = string.Empty,
                         IsSteward = i == 0
                     });
 
                     studentId++;
-                    bookNumber++;
                 }
             }
 
@@ -1026,233 +1054,229 @@ namespace DepartmentOneCMockApi.Data
             return marks[(student.Id + disciplineId) % marks.Length];
         }
 
-        public static List<StudentOrderMockModel> StudentOrders => new()
+        private sealed class StudentOrderEvent
         {
-            new StudentOrderMockModel
+            public int StudentId { get; init; }
+            public StudentOrderType Type { get; init; }
+            public DateTime Date { get; init; }
+            public int? GroupFromId { get; init; }
+            public int? GroupToId { get; init; }
+        }
+
+        private static DateTime GetEnrollmentDateByCourse(int course)
+        {
+            return course switch
             {
-                Id = 1,
-                OrderNumber = "201-к",
-                OrderDate = new DateTime(2022, 9, 1),
-                StudentOrderType = StudentOrderType.Зачисление,
-                Blocks = new List<StudentOrderBlockMockModel>
+                1 => new DateTime(2025, 9, 1),
+                2 => new DateTime(2024, 9, 1),
+                3 => new DateTime(2023, 9, 1),
+                4 => new DateTime(2022, 9, 1),
+                _ => new DateTime(2025, 9, 1)
+            };
+        }
+
+        private static int FindTransferTargetGroupId(StudentGroupMockModel currentGroup)
+        {
+            var candidate = StudentGroups
+                .Where(x =>
+                    x.Id != currentGroup.Id &&
+                    x.Course == currentGroup.Course &&
+                    x.EducationDirectionId == currentGroup.EducationDirectionId)
+                .OrderBy(x => x.Id)
+                .FirstOrDefault();
+
+            return candidate?.Id ?? currentGroup.Id;
+        }
+
+        private static readonly Dictionary<int, List<StudentOrderEvent>> OrderOverrides = new()
+        {
+            [7] = new()
+            {
+                new StudentOrderEvent
                 {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 1,
-                        StudentOrderId = 1,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.Зачисление,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 1, StudentOrderBlockId = 1, StudentId = 1, StudentGroupFromId = null, StudentGroupToId = 1 },
-                            new() { Id = 2, StudentOrderBlockId = 1, StudentId = 2, StudentGroupFromId = null, StudentGroupToId = 1 },
-                            new() { Id = 3, StudentOrderBlockId = 1, StudentId = 3, StudentGroupFromId = null, StudentGroupToId = 1 },
-                            new() { Id = 4, StudentOrderBlockId = 1, StudentId = 4, StudentGroupFromId = null, StudentGroupToId = 1 }
-                        }
-                    }
+                    StudentId = 7,
+                    Type = StudentOrderType.Зачисление,
+                    Date = new DateTime(2023, 9, 1),
+                    GroupToId = 2
+                },
+                new StudentOrderEvent
+                {
+                    StudentId = 7,
+                    Type = StudentOrderType.Академ,
+                    Date = new DateTime(2025, 2, 10),
+                    GroupFromId = 2,
+                    GroupToId = 2
                 }
             },
 
-            new StudentOrderMockModel
+            [16] = new()
             {
-                Id = 2,
-                OrderNumber = "57-лс",
-                OrderDate = new DateTime(2023, 2, 10),
-                StudentOrderType = StudentOrderType.ВАкадем,
-                Blocks = new List<StudentOrderBlockMockModel>
+                new StudentOrderEvent
                 {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 2,
-                        StudentOrderId = 2,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ВАкадем,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 5, StudentOrderBlockId = 2, StudentId = 7, StudentGroupFromId = 2, StudentGroupToId = null }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 3,
-                OrderNumber = "74-лс",
-                OrderDate = new DateTime(2023, 9, 1),
-                StudentOrderType = StudentOrderType.ИзАкадема,
-                Blocks = new List<StudentOrderBlockMockModel>
+                    StudentId = 16,
+                    Type = StudentOrderType.Зачисление,
+                    Date = new DateTime(2021, 9, 1),
+                    GroupToId = 4
+                },
+                new StudentOrderEvent
                 {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 3,
-                        StudentOrderId = 3,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ИзАкадема,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 6, StudentOrderBlockId = 3, StudentId = 7, StudentGroupFromId = null, StudentGroupToId = 2 }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 4,
-                OrderNumber = "88-п",
-                OrderDate = new DateTime(2024, 1, 20),
-                StudentOrderType = StudentOrderType.ПереводВГруппу,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 4,
-                        StudentOrderId = 4,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ПереводВГруппу,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 7, StudentOrderBlockId = 4, StudentId = 12, StudentGroupFromId = 3, StudentGroupToId = 2 },
-                            new() { Id = 8, StudentOrderBlockId = 4, StudentId = 10, StudentGroupFromId = 3, StudentGroupToId = 4 }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 5,
-                OrderNumber = "96-в",
-                OrderDate = new DateTime(2024, 2, 5),
-                StudentOrderType = StudentOrderType.Восстановить,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 5,
-                        StudentOrderId = 5,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.Восстановить,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 9, StudentOrderBlockId = 5, StudentId = 15, StudentGroupFromId = null, StudentGroupToId = 4 }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 6,
-                OrderNumber = "103-лс",
-                OrderDate = new DateTime(2024, 3, 15),
-                StudentOrderType = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 6,
-                        StudentOrderId = 6,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 10, StudentOrderBlockId = 6, StudentId = 16, StudentGroupFromId = 4, StudentGroupToId = null }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 7,
-                OrderNumber = "111-лс",
-                OrderDate = new DateTime(2024, 4, 1),
-                StudentOrderType = StudentOrderType.ОтчислитьПоСобственному,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 7,
-                        StudentOrderId = 7,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ОтчислитьПоСобственному,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 11, StudentOrderBlockId = 7, StudentId = 8, StudentGroupFromId = 2, StudentGroupToId = null }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 8,
-                OrderNumber = "125-комб",
-                OrderDate = new DateTime(2024, 5, 20),
-                StudentOrderType = StudentOrderType.ПереводВГруппу,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 8,
-                        StudentOrderId = 8,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ПереводВГруппу,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 12, StudentOrderBlockId = 8, StudentId = 5, StudentGroupFromId = 2, StudentGroupToId = 3 },
-                            new() { Id = 13, StudentOrderBlockId = 8, StudentId = 6, StudentGroupFromId = 2, StudentGroupToId = 3 }
-                        }
-                    },
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 9,
-                        StudentOrderId = 8,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ВАкадем,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 14, StudentOrderBlockId = 9, StudentId = 11, StudentGroupFromId = 3, StudentGroupToId = null }
-                        }
-                    },
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 10,
-                        StudentOrderId = 8,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 15, StudentOrderBlockId = 10, StudentId = 10, StudentGroupFromId = 4, StudentGroupToId = null }
-                        }
-                    }
-                }
-            },
-
-            new StudentOrderMockModel
-            {
-                Id = 9,
-                OrderNumber = "131-р",
-                OrderDate = new DateTime(2024, 9, 1),
-                StudentOrderType = StudentOrderType.ПереводВГруппу,
-                Blocks = new List<StudentOrderBlockMockModel>
-                {
-                    new StudentOrderBlockMockModel
-                    {
-                        Id = 11,
-                        StudentOrderId = 9,
-                        EducationDirectionId = 1,
-                        StudentOrderType = StudentOrderType.ПереводВГруппу,
-                        Students = new List<StudentOrderBlockStudentMockModel>
-                        {
-                            new() { Id = 16, StudentOrderBlockId = 11, StudentId = 1, StudentGroupFromId = 1, StudentGroupToId = 2 },
-                            new() { Id = 17, StudentOrderBlockId = 11, StudentId = 2, StudentGroupFromId = 1, StudentGroupToId = 2 }
-                        }
-                    }
+                    StudentId = 16,
+                    Type = StudentOrderType.Отчисление,
+                    Date = new DateTime(2024, 3, 15),
+                    GroupFromId = 4
                 }
             }
         };
+
+        private static List<StudentOrderEvent> BuildStudentTimeline(
+            StudentMockModel student,
+            StudentGroupMockModel currentGroup)
+        {
+            if (OrderOverrides.TryGetValue(student.Id, out var overrideEvents))
+            {
+                return overrideEvents
+                    .OrderBy(x => x.Date)
+                    .ToList();
+            }
+
+            var enrollmentDate = GetEnrollmentDateByCourse(currentGroup.Course);
+
+            var events = new List<StudentOrderEvent>
+            {
+                new StudentOrderEvent
+                {
+                    StudentId = student.Id,
+                    Type = StudentOrderType.Зачисление,
+                    Date = enrollmentDate,
+                    GroupToId = currentGroup.Id
+                }
+            };
+
+            if (student.Id % 9 == 0)
+            {
+                var targetGroupId = FindTransferTargetGroupId(currentGroup);
+
+                if (targetGroupId != currentGroup.Id)
+                {
+                    events.Add(new StudentOrderEvent
+                    {
+                        StudentId = student.Id,
+                        Type = StudentOrderType.Перевод,
+                        Date = enrollmentDate.AddYears(1).AddMonths(5),
+                        GroupFromId = currentGroup.Id,
+                        GroupToId = targetGroupId
+                    });
+                }
+            }
+
+            if (student.StudentState == StudentState.Академ)
+            {
+                events.Add(new StudentOrderEvent
+                {
+                    StudentId = student.Id,
+                    Type = StudentOrderType.Академ,
+                    Date = enrollmentDate.AddYears(1).AddMonths(5),
+                    GroupFromId = currentGroup.Id,
+                    GroupToId = currentGroup.Id
+                });
+            }
+
+            if (student.StudentState == StudentState.Отчислен)
+            {
+                events.Add(new StudentOrderEvent
+                {
+                    StudentId = student.Id,
+                    Type = StudentOrderType.Отчисление,
+                    Date = enrollmentDate.AddYears(2).AddMonths(6),
+                    GroupFromId = currentGroup.Id
+                });
+            }
+
+            return events
+                .OrderBy(x => x.Date)
+                .ToList();
+        }
+
+        private static string BuildOrderNumber(
+            StudentOrderType type,
+            DateTime date,
+            Dictionary<int, int> yearCounters)
+        {
+            if (!yearCounters.ContainsKey(date.Year))
+            {
+                yearCounters[date.Year] = 0;
+            }
+
+            yearCounters[date.Year]++;
+
+            var suffix = type switch
+            {
+                StudentOrderType.Зачисление => "к",
+                StudentOrderType.Перевод => "п",
+                StudentOrderType.Академ => "а",
+                StudentOrderType.Отчисление => "лс",
+                _ => "лс"
+            };
+
+            return $"{yearCounters[date.Year]:000}-{suffix}";
+        }
+
+        private static (
+            List<StudentOrderMockModel> Orders,
+            List<StudentOrderBlockMockModel> Blocks,
+            List<StudentOrderBlockStudentMockModel> BlockStudents)
+        GenerateStudentOrdersData()
+        {
+            var orders = new List<StudentOrderMockModel>();
+            var blocks = new List<StudentOrderBlockMockModel>();
+            var blockStudents = new List<StudentOrderBlockStudentMockModel>();
+
+            var orderId = 1;
+            var blockId = 1;
+            var blockStudentId = 1;
+
+            var yearCounters = new Dictionary<int, int>();
+
+            foreach (var student in Students.OrderBy(x => x.Id))
+            {
+                var group = StudentGroups.First(x => x.Id == student.StudentGroupId);
+                var timeline = BuildStudentTimeline(student, group);
+
+                foreach (var evt in timeline)
+                {
+                    var order = new StudentOrderMockModel
+                    {
+                        Id = orderId++,
+                        OrderNumber = BuildOrderNumber(evt.Type, evt.Date, yearCounters),
+                        OrderDate = evt.Date
+                    };
+
+                    orders.Add(order);
+
+                    var block = new StudentOrderBlockMockModel
+                    {
+                        Id = blockId,
+                        StudentOrderId = order.Id,
+                        StudentOrderType = evt.Type,
+                        EducationDirectionId = group.EducationDirectionId
+                    };
+
+                    blocks.Add(block);
+
+                    blockStudents.Add(new StudentOrderBlockStudentMockModel
+                    {
+                        Id = blockStudentId++,
+                        StudentOrderBlockId = blockId,
+                        StudentId = evt.StudentId,
+                        StudentGroupFromId = evt.GroupFromId,
+                        StudentGroupToId = evt.GroupToId
+                    });
+
+                    blockId++;
+                }
+            }
+
+            return (orders, blocks, blockStudents);
+        }
     }
 }
