@@ -1224,29 +1224,35 @@ namespace DepartmentOneCMockApi.Data
                     {
                         Id = orderId++,
                         OrderNumber = BuildOrderNumber(evt.Type, evt.Date, yearCounters),
-                        OrderDate = evt.Date
+                        StudentOrderType = evt.Type,
+                        OrderDate = evt.Date,
+                        Blocks = new List<StudentOrderBlockMockModel>()
                     };
-
-                    orders.Add(order);
 
                     var block = new StudentOrderBlockMockModel
                     {
                         Id = blockId,
                         StudentOrderId = order.Id,
                         StudentOrderType = evt.Type,
-                        EducationDirectionId = group.EducationDirectionId
+                        EducationDirectionId = group.EducationDirectionId,
+                        Students = new List<StudentOrderBlockStudentMockModel>()
                     };
 
-                    blocks.Add(block);
-
-                    blockStudents.Add(new StudentOrderBlockStudentMockModel
+                    var blockStudent = new StudentOrderBlockStudentMockModel
                     {
                         Id = blockStudentId++,
                         StudentOrderBlockId = blockId,
                         StudentId = evt.StudentId,
                         StudentGroupFromId = evt.GroupFromId,
                         StudentGroupToId = evt.GroupToId
-                    });
+                    };
+
+                    block.Students.Add(blockStudent);
+                    order.Blocks.Add(block);
+
+                    orders.Add(order);
+                    blocks.Add(block);
+                    blockStudents.Add(blockStudent);
 
                     blockId++;
                 }
