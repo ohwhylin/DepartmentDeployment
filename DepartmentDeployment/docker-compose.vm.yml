@@ -156,6 +156,8 @@ services:
       - core-api
     ports:
       - "127.0.0.1:7305:8080"
+    volumes:
+      - load-dpkeys:/keys
     restart: unless-stopped
 
   lab-web:
@@ -183,3 +185,4 @@ volumes:
   mol-db-data:
   schedule-db-data:
   load-db-data:
+  load-dpkeys:  
