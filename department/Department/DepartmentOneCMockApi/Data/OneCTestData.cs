@@ -1032,6 +1032,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 1,
                 OrderNumber = "201-к",
+                OrderDate = new DateTime(2022, 9, 1),
                 StudentOrderType = StudentOrderType.Зачисление,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1056,6 +1057,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 2,
                 OrderNumber = "57-лс",
+                OrderDate = new DateTime(2023, 2, 10),
                 StudentOrderType = StudentOrderType.ВАкадем,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1077,6 +1079,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 3,
                 OrderNumber = "74-лс",
+                OrderDate = new DateTime(2023, 9, 1),
                 StudentOrderType = StudentOrderType.ИзАкадема,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1098,6 +1101,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 4,
                 OrderNumber = "88-п",
+                OrderDate = new DateTime(2024, 1, 20),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1120,6 +1124,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 5,
                 OrderNumber = "96-в",
+                OrderDate = new DateTime(2024, 2, 5),
                 StudentOrderType = StudentOrderType.Восстановить,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1141,6 +1146,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 6,
                 OrderNumber = "103-лс",
+                OrderDate = new DateTime(2024, 3, 15),
                 StudentOrderType = StudentOrderType.ОтчислитьЗаНеуспевамость,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1162,6 +1168,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 7,
                 OrderNumber = "111-лс",
+                OrderDate = new DateTime(2024, 4, 1),
                 StudentOrderType = StudentOrderType.ОтчислитьПоСобственному,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1183,6 +1190,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 8,
                 OrderNumber = "125-комб",
+                OrderDate = new DateTime(2024, 5, 20),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -1227,6 +1235,7 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 9,
                 OrderNumber = "131-р",
+                OrderDate = new DateTime(2024, 9, 1),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
