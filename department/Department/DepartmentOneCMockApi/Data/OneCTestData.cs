@@ -288,17 +288,6 @@ namespace DepartmentOneCMockApi.Data
     "Игоревич", "Павлович", "Дмитриевич", "Олегович"
 };
 
-        private static string ToFemaleLastName(string lastName)
-        {
-            if (lastName.EndsWith("ов") || lastName.EndsWith("ев") || lastName.EndsWith("ин"))
-                return lastName + "а";
-
-            if (lastName.EndsWith("ый") || lastName.EndsWith("ой") || lastName.EndsWith("ий"))
-                return lastName[..^2] + "ая";
-
-            return lastName;
-        }
-
         private static List<StudentMockModel> GenerateStudents()
         {
             var students = new List<StudentMockModel>();
@@ -308,7 +297,11 @@ namespace DepartmentOneCMockApi.Data
 
             foreach (var group in StudentGroups.OrderBy(x => x.Id))
             {
-                for (var i = 0; i < 4; i++)
+                var studentCount = StudentCountByGroupId.TryGetValue(group.Id, out var count)
+                    ? count
+                    : 4;
+
+                for (var i = 0; i < studentCount; i++)
                 {
                     var isFemale = i % 2 == 0;
 
