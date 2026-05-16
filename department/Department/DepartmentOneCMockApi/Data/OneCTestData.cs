@@ -251,35 +251,35 @@ namespace DepartmentOneCMockApi.Data
 
         public static List<StudentMockModel> Students => GenerateStudents();
 
-        private static readonly string[] femaleFirstNames =
-        {
-            "Алина", "Мария", "Екатерина", "Анна",
-            "Дарья", "Виктория", "Полина", "София"
-        };
+        private static readonly string[] FemaleFirstNames =
+{
+    "Алина", "Мария", "Екатерина", "Анна",
+    "Дарья", "Виктория", "Полина", "София"
+};
 
-        private static readonly string[] maleFirstNames =
+        private static readonly string[] MaleFirstNames =
         {
-            "Илья", "Даниил", "Артем", "Кирилл",
-            "Степан", "Максим", "Павел", "Егор"
-        };
+    "Илья", "Даниил", "Артем", "Кирилл",
+    "Степан", "Максим", "Павел", "Егор"
+};
 
-        private static readonly string[] lastNames =
+        private static readonly string[] LastNames =
         {
-            "Иванов", "Петров", "Сидоров", "Кузнецов",
-            "Смирнов", "Орлов", "Волков", "Попов"
-        };
+    "Иванов", "Петров", "Сидоров", "Кузнецов",
+    "Смирнов", "Орлов", "Волков", "Попов"
+};
 
-        private static readonly string[] femalePatronymics =
+        private static readonly string[] FemalePatronymics =
         {
-            "Сергеевна", "Андреевна", "Игоревна", "Павловна",
-            "Дмитриевна", "Олеговна", "Романовна", "Ильинична"
-        };
+    "Ивановна", "Петровна", "Сергеевна", "Андреевна",
+    "Игоревна", "Павловна", "Дмитриевна", "Олеговна"
+};
 
-        private static readonly string[] malePatronymics =
+        private static readonly string[] MalePatronymics =
         {
-            "Сергеевич", "Андреевич", "Игоревич", "Павлович",
-            "Дмитриевич", "Олегович", "Романович", "Ильич"
-        };
+    "Иванович", "Петрович", "Сергеевич", "Андреевич",
+    "Игоревич", "Павлович", "Дмитриевич", "Олегович"
+};
 
         private static string ToFemaleLastName(string lastName)
         {
@@ -296,6 +296,8 @@ namespace DepartmentOneCMockApi.Data
         {
             var students = new List<StudentMockModel>();
             var studentId = 1;
+            var femaleIndex = 0;
+            var maleIndex = 0;
 
             foreach (var group in StudentGroups.OrderBy(x => x.Id))
             {
@@ -303,18 +305,24 @@ namespace DepartmentOneCMockApi.Data
                 {
                     var isFemale = i % 2 == 0;
 
-                    var firstName = isFemale
-                        ? femaleFirstNames[(studentId - 1) % femaleFirstNames.Length]
-                        : maleFirstNames[(studentId - 1) % maleFirstNames.Length];
+                    string firstName;
+                    string lastName;
+                    string patronymic;
 
-                    var baseLastName = lastNames[(studentId - 1) % lastNames.Length];
-                    var lastName = isFemale
-                        ? ToFemaleLastName(baseLastName)
-                        : baseLastName;
-
-                    var patronymic = isFemale
-                        ? femalePatronymics[(studentId - 1) % femalePatronymics.Length]
-                        : malePatronymics[(studentId - 1) % malePatronymics.Length];
+                    if (isFemale)
+                    {
+                        firstName = FemaleFirstNames[femaleIndex % FemaleFirstNames.Length];
+                        lastName = ToFemaleLastName(LastNames[femaleIndex % LastNames.Length]);
+                        patronymic = FemalePatronymics[femaleIndex % FemalePatronymics.Length];
+                        femaleIndex++;
+                    }
+                    else
+                    {
+                        firstName = MaleFirstNames[maleIndex % MaleFirstNames.Length];
+                        lastName = LastNames[maleIndex % LastNames.Length];
+                        patronymic = MalePatronymics[maleIndex % MalePatronymics.Length];
+                        maleIndex++;
+                    }
 
                     students.Add(new StudentMockModel
                     {
@@ -1059,8 +1067,10 @@ namespace DepartmentOneCMockApi.Data
             public int StudentId { get; init; }
             public StudentOrderType Type { get; init; }
             public DateTime Date { get; init; }
+            public int EducationDirectionId { get; init; }
             public int? GroupFromId { get; init; }
             public int? GroupToId { get; init; }
+            public string DocumentKey { get; init; } = string.Empty;
         }
 
         private static DateTime GetEnrollmentDateByCourse(int course)
@@ -1088,69 +1098,24 @@ namespace DepartmentOneCMockApi.Data
             return candidate?.Id ?? currentGroup.Id;
         }
 
-        private static readonly Dictionary<int, List<StudentOrderEvent>> OrderOverrides = new()
-        {
-            [7] = new()
-            {
-                new StudentOrderEvent
-                {
-                    StudentId = 7,
-                    Type = StudentOrderType.Зачисление,
-                    Date = new DateTime(2023, 9, 1),
-                    GroupToId = 2
-                },
-                new StudentOrderEvent
-                {
-                    StudentId = 7,
-                    Type = StudentOrderType.ВАкадем,
-                    Date = new DateTime(2025, 2, 10),
-                    GroupFromId = 2,
-                    GroupToId = 2
-                }
-            },
-
-            [16] = new()
-            {
-                new StudentOrderEvent
-                {
-                    StudentId = 16,
-                    Type = StudentOrderType.Зачисление,
-                    Date = new DateTime(2021, 9, 1),
-                    GroupToId = 4
-                },
-                new StudentOrderEvent
-                {
-                    StudentId = 16,
-                    Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                    Date = new DateTime(2024, 3, 15),
-                    GroupFromId = 4
-                }
-            }
-        };
-
         private static List<StudentOrderEvent> BuildStudentTimeline(
             StudentMockModel student,
             StudentGroupMockModel currentGroup)
         {
-            if (OrderOverrides.TryGetValue(student.Id, out var overrideEvents))
-            {
-                return overrideEvents
-                    .OrderBy(x => x.Date)
-                    .ToList();
-            }
-
             var enrollmentDate = GetEnrollmentDateByCourse((int)currentGroup.Course);
 
             var events = new List<StudentOrderEvent>
-            {
-                new StudentOrderEvent
-                {
-                    StudentId = student.Id,
-                    Type = StudentOrderType.Зачисление,
-                    Date = enrollmentDate,
-                    GroupToId = currentGroup.Id
-                }
-            };
+    {
+        new StudentOrderEvent
+        {
+            StudentId = student.Id,
+            Type = StudentOrderType.Зачисление,
+            Date = enrollmentDate,
+            EducationDirectionId = currentGroup.EducationDirectionId,
+            GroupToId = currentGroup.Id,
+            DocumentKey = $"ENROLL-{currentGroup.Id}-{enrollmentDate:yyyyMMdd}"
+        }
+    };
 
             if (student.Id % 9 == 0)
             {
@@ -1158,37 +1123,50 @@ namespace DepartmentOneCMockApi.Data
 
                 if (targetGroupId != currentGroup.Id)
                 {
+                    var transferDate = enrollmentDate.AddYears(1).AddMonths(5);
+
                     events.Add(new StudentOrderEvent
                     {
                         StudentId = student.Id,
                         Type = StudentOrderType.ПереводВГруппу,
-                        Date = enrollmentDate.AddYears(1).AddMonths(5),
+                        Date = transferDate,
+                        EducationDirectionId = currentGroup.EducationDirectionId,
                         GroupFromId = currentGroup.Id,
-                        GroupToId = targetGroupId
+                        GroupToId = targetGroupId,
+                        DocumentKey = $"MOVE-{transferDate:yyyyMMdd}"
                     });
                 }
             }
 
             if (student.StudentState == StudentState.Академ)
             {
+                var academicDate = enrollmentDate.AddYears(1).AddMonths(5);
+
                 events.Add(new StudentOrderEvent
                 {
                     StudentId = student.Id,
                     Type = StudentOrderType.ВАкадем,
-                    Date = enrollmentDate.AddYears(1).AddMonths(5),
+                    Date = academicDate,
+                    EducationDirectionId = currentGroup.EducationDirectionId,
                     GroupFromId = currentGroup.Id,
-                    GroupToId = currentGroup.Id
+                    GroupToId = null,
+                    DocumentKey = $"MOVE-{academicDate:yyyyMMdd}"
                 });
             }
 
             if (student.StudentState == StudentState.Отчислен)
             {
+                var dismissalDate = enrollmentDate.AddYears(2).AddMonths(6);
+
                 events.Add(new StudentOrderEvent
                 {
                     StudentId = student.Id,
                     Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                    Date = enrollmentDate.AddYears(2).AddMonths(6),
-                    GroupFromId = currentGroup.Id
+                    Date = dismissalDate,
+                    EducationDirectionId = currentGroup.EducationDirectionId,
+                    GroupFromId = currentGroup.Id,
+                    GroupToId = null,
+                    DocumentKey = $"MOVE-{dismissalDate:yyyyMMdd}"
                 });
             }
 
@@ -1197,74 +1175,22 @@ namespace DepartmentOneCMockApi.Data
                 .ToList();
         }
 
-        private static (
-            List<StudentOrderMockModel> Orders,
-            List<StudentOrderBlockMockModel> Blocks,
-            List<StudentOrderBlockStudentMockModel> BlockStudents)
-        GenerateStudentOrdersData()
+        private static StudentOrderType ResolveDocumentType(List<StudentOrderEvent> events)
         {
-            var orders = new List<StudentOrderMockModel>();
-            var blocks = new List<StudentOrderBlockMockModel>();
-            var blockStudents = new List<StudentOrderBlockStudentMockModel>();
+            var types = events
+                .Select(x => x.Type)
+                .Distinct()
+                .ToList();
 
-            var orderId = 1;
-            var blockId = 1;
-            var blockStudentId = 1;
-
-            var yearCounters = new Dictionary<int, int>();
-
-            foreach (var student in Students.OrderBy(x => x.Id))
-            {
-                var group = StudentGroups.First(x => x.Id == student.StudentGroupId);
-                var timeline = BuildStudentTimeline(student, group);
-
-                foreach (var evt in timeline)
-                {
-                    var order = new StudentOrderMockModel
-                    {
-                        Id = orderId++,
-                        OrderNumber = BuildOrderNumber(evt.Type, evt.Date, yearCounters),
-                        StudentOrderType = evt.Type,
-                        OrderDate = evt.Date,
-                        Blocks = new List<StudentOrderBlockMockModel>()
-                    };
-
-                    var block = new StudentOrderBlockMockModel
-                    {
-                        Id = blockId,
-                        StudentOrderId = order.Id,
-                        StudentOrderType = evt.Type,
-                        EducationDirectionId = group.EducationDirectionId,
-                        Students = new List<StudentOrderBlockStudentMockModel>()
-                    };
-
-                    var blockStudent = new StudentOrderBlockStudentMockModel
-                    {
-                        Id = blockStudentId++,
-                        StudentOrderBlockId = blockId,
-                        StudentId = evt.StudentId,
-                        StudentGroupFromId = evt.GroupFromId,
-                        StudentGroupToId = evt.GroupToId
-                    };
-
-                    block.Students.Add(blockStudent);
-                    order.Blocks.Add(block);
-
-                    orders.Add(order);
-                    blocks.Add(block);
-                    blockStudents.Add(blockStudent);
-
-                    blockId++;
-                }
-            }
-
-            return (orders, blocks, blockStudents);
+            return types.Count == 1
+                ? types[0]
+                : StudentOrderType.Движение;
         }
 
         private static string BuildOrderNumber(
-            StudentOrderType type,
-            DateTime date,
-            Dictionary<int, int> yearCounters)
+    StudentOrderType type,
+    DateTime date,
+    Dictionary<int, int> yearCounters)
         {
             if (!yearCounters.ContainsKey(date.Year))
             {
@@ -1278,18 +1204,114 @@ namespace DepartmentOneCMockApi.Data
                 StudentOrderType.Зачисление => "к",
                 StudentOrderType.ПереводВГруппу => "п",
                 StudentOrderType.ВАкадем => "а",
+                StudentOrderType.ИзАкадема => "лс",
+                StudentOrderType.Восстановить => "в",
                 StudentOrderType.ОтчислитьЗаНеуспевамость => "лс",
+                StudentOrderType.ОтчислитьПоСобственному => "лс",
+                StudentOrderType.Движение => "комб",
                 _ => "лс"
             };
 
             return $"{yearCounters[date.Year]:000}-{suffix}";
         }
 
+        private static (
+    List<StudentOrderMockModel> Orders,
+    List<StudentOrderBlockMockModel> Blocks,
+    List<StudentOrderBlockStudentMockModel> BlockStudents)
+GenerateStudentOrdersData()
+        {
+            var allEvents = new List<StudentOrderEvent>();
+
+            foreach (var student in Students.OrderBy(x => x.Id))
+            {
+                var group = StudentGroups.First(x => x.Id == student.StudentGroupId);
+                allEvents.AddRange(BuildStudentTimeline(student, group));
+            }
+
+            var orders = new List<StudentOrderMockModel>();
+            var blocks = new List<StudentOrderBlockMockModel>();
+            var blockStudents = new List<StudentOrderBlockStudentMockModel>();
+
+            var orderId = 1;
+            var blockId = 1;
+            var blockStudentId = 1;
+            var yearCounters = new Dictionary<int, int>();
+
+            var documentGroups = allEvents
+                .GroupBy(x => x.DocumentKey)
+                .OrderBy(x => x.Min(e => e.Date));
+
+            foreach (var documentGroup in documentGroups)
+            {
+                var eventList = documentGroup
+                    .OrderBy(x => x.Date)
+                    .ThenBy(x => x.StudentId)
+                    .ToList();
+
+                var orderDate = eventList.Min(x => x.Date);
+                var documentType = ResolveDocumentType(eventList);
+
+                var order = new StudentOrderMockModel
+                {
+                    Id = orderId++,
+                    OrderNumber = BuildOrderNumber(documentType, orderDate, yearCounters),
+                    StudentOrderType = documentType,
+                    OrderDate = orderDate,
+                    Blocks = new List<StudentOrderBlockMockModel>()
+                };
+
+                var blockGroups = eventList
+                    .GroupBy(x => new
+                    {
+                        x.Type,
+                        x.EducationDirectionId
+                    })
+                    .OrderBy(x => x.Key.Type)
+                    .ThenBy(x => x.Key.EducationDirectionId);
+
+                foreach (var blockGroup in blockGroups)
+                {
+                    var block = new StudentOrderBlockMockModel
+                    {
+                        Id = blockId,
+                        StudentOrderId = order.Id,
+                        EducationDirectionId = blockGroup.Key.EducationDirectionId,
+                        StudentOrderType = blockGroup.Key.Type,
+                        Students = new List<StudentOrderBlockStudentMockModel>()
+                    };
+
+                    foreach (var evt in blockGroup.OrderBy(x => x.StudentId))
+                    {
+                        var blockStudent = new StudentOrderBlockStudentMockModel
+                        {
+                            Id = blockStudentId++,
+                            StudentOrderBlockId = blockId,
+                            StudentId = evt.StudentId,
+                            StudentGroupFromId = evt.GroupFromId,
+                            StudentGroupToId = evt.GroupToId
+                        };
+
+                        block.Students.Add(blockStudent);
+                        blockStudents.Add(blockStudent);
+                    }
+
+                    order.Blocks.Add(block);
+                    blocks.Add(block);
+                    blockId++;
+                }
+
+                orders.Add(order);
+            }
+
+            return (orders, blocks, blockStudents);
+        }
+
         private static readonly Lazy<(
-            List<StudentOrderMockModel> Orders,
-            List<StudentOrderBlockMockModel> Blocks,
-            List<StudentOrderBlockStudentMockModel> BlockStudents)> GeneratedOrders
-            = new(GenerateStudentOrdersData);
+    List<StudentOrderMockModel> Orders,
+    List<StudentOrderBlockMockModel> Blocks,
+    List<StudentOrderBlockStudentMockModel> BlockStudents)> GeneratedOrders
+    = new(GenerateStudentOrdersData);
 
         public static List<StudentOrderMockModel> StudentOrders => GeneratedOrders.Value.Orders;
         public static List<StudentOrderBlockMockModel> StudentOrderBlocks => GeneratedOrders.Value.Blocks;
