@@ -1,433 +1,12 @@
 ﻿using DepartmentDataModels.Enums;
 using DepartmentOneCMockApi.Models;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace DepartmentOneCMockApi.Data
 {
     public static class OneCTestData
     {
-        public static List<AcademicPlanMockModel> AcademicPlans => new()
-        {
-            new AcademicPlanMockModel
-            {
-                Id = 1,
-                EducationDirectionId = 1,
-                EducationForm = EducationForm.Очная,
-                AcademicCourses = AcademicCourse.Course_1,
-                Year = "2022-2026",
-                AcademicPlanRecords = new List<AcademicPlanRecordMockModel>
-                {
-                    new()
-                    {
-                        Id = 1,
-                        AcademicPlanId = 1,
-                        DisciplineId = 1,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Программная инженерия и разработка ПО",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "Программирование",
-                        DisciplineDescription = "Основы программирования на C#",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.01",
-                        Name = "Программирование",
-                        Semester = 1,
-                        Zet = 4,
-                        AcademicHours = 144,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 48,
-                        LaboratoryHours = 48,
-                        PracticalHours = 48
-                    },
-                    new()
-                    {
-                        Id = 2,
-                        AcademicPlanId = 1,
-                        DisciplineId = 2,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Фундаментальная и математическая подготовка",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "Матан",
-                        DisciplineDescription = "Базовый курс математического анализа",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.02",
-                        Name = "Математический анализ",
-                        Semester = 1,
-                        Zet = 3,
-                        AcademicHours = 108,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 36,
-                        LaboratoryHours = 0,
-                        PracticalHours = 72
-                    },
-                    new()
-                    {
-                        Id = 3,
-                        AcademicPlanId = 1,
-                        DisciplineId = 3,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Фундаментальная и математическая подготовка",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "БД",
-                        DisciplineDescription = "Введение в реляционные базы данных",
-                        HasExam = false,
-                        HasCredit = true,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.03",
-                        Name = "Базы данных",
-                        Semester = 2,
-                        Zet = 4,
-                        AcademicHours = 144,
-                        Exam = null,
-                        Pass = 1,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 48,
-                        LaboratoryHours = 48,
-                        PracticalHours = 48
-                    }
-                }
-            },
-
-            new AcademicPlanMockModel
-            {
-                Id = 2,
-                EducationDirectionId = 1,
-                EducationForm = EducationForm.Очная,
-                AcademicCourses = AcademicCourse.Course_2,
-                Year = "2022-2026",
-                AcademicPlanRecords = new List<AcademicPlanRecordMockModel>
-                {
-                    new()
-                    {
-                        Id = 4,
-                        AcademicPlanId = 2,
-                        DisciplineId = 4,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Программная инженерия и разработка ПО",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "Алгоритмы",
-                        DisciplineDescription = "Алгоритмы и структуры данных",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.04",
-                        Name = "Алгоритмы и структуры данных",
-                        Semester = 1,
-                        Zet = 4,
-                        AcademicHours = 144,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 48,
-                        LaboratoryHours = 48,
-                        PracticalHours = 48
-                    },
-                    new()
-                    {
-                        Id = 5,
-                        AcademicPlanId = 2,
-                        DisciplineId = 5,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Программная инженерия и разработка ПО",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "ООП",
-                        DisciplineDescription = "Объектно-ориентированное программирование",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = true,
-                        HasCourseProject = false,
-                        Index = "Б1.О.05",
-                        Name = "Объектно-ориентированное программирование",
-                        Semester = 1,
-                        Zet = 5,
-                        AcademicHours = 180,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = 1,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 60,
-                        LaboratoryHours = 60,
-                        PracticalHours = 60
-                    },
-                    new()
-                    {
-                        Id = 6,
-                        AcademicPlanId = 2,
-                        DisciplineId = 6,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Системное и сетевое администрирование",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "ОС",
-                        DisciplineDescription = "Операционные системы",
-                        HasExam = false,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.06",
-                        Name = "Операционные системы",
-                        Semester = 2,
-                        Zet = 3,
-                        AcademicHours = 108,
-                        Exam = null,
-                        Pass = null,
-                        GradedPass = 1,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 36,
-                        LaboratoryHours = 36,
-                        PracticalHours = 36
-                    }
-                }
-            },
-
-            new AcademicPlanMockModel
-            {
-                Id = 3,
-                EducationDirectionId = 1,
-                EducationForm = EducationForm.Очная,
-                AcademicCourses = AcademicCourse.Course_3,
-                Year = "2022-2026",
-                AcademicPlanRecords = new List<AcademicPlanRecordMockModel>
-                {
-                    new()
-                    {
-                        Id = 7,
-                        AcademicPlanId = 3,
-                        DisciplineId = 7,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Системное и сетевое администрирование",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "Сети",
-                        DisciplineDescription = "Сетевые технологии",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = true,
-                        Index = "Б1.О.07",
-                        Name = "Сетевые технологии",
-                        Semester = 1,
-                        Zet = 5,
-                        AcademicHours = 180,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = 1,
-                        Rgr = null,
-                        Lectures = 60,
-                        LaboratoryHours = 60,
-                        PracticalHours = 60
-                    },
-                    new()
-                    {
-                        Id = 8,
-                        AcademicPlanId = 3,
-                        DisciplineId = 8,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Системное и сетевое администрирование",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "ИБ",
-                        DisciplineDescription = "Информационная безопасность",
-                        HasExam = false,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.08",
-                        Name = "Информационная безопасность",
-                        Semester = 1,
-                        Zet = 3,
-                        AcademicHours = 108,
-                        Exam = null,
-                        Pass = null,
-                        GradedPass = 1,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 36,
-                        LaboratoryHours = 36,
-                        PracticalHours = 36
-                    },
-                    new()
-                    {
-                        Id = 9,
-                        AcademicPlanId = 3,
-                        DisciplineId = 9,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Программная инженерия и разработка ПО",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "Проектирование ИС",
-                        DisciplineDescription = "Проектирование информационных систем",
-                        HasExam = false,
-                        HasCredit = true,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.09",
-                        Name = "Проектирование информационных систем",
-                        Semester = 2,
-                        Zet = 4,
-                        AcademicHours = 144,
-                        Exam = null,
-                        Pass = 1,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = 1,
-                        Lectures = 48,
-                        LaboratoryHours = 48,
-                        PracticalHours = 48
-                    }
-                }
-            },
-
-            new AcademicPlanMockModel
-            {
-                Id = 4,
-                EducationDirectionId = 1,
-                EducationForm = EducationForm.Очная,
-                AcademicCourses = AcademicCourse.Course_4,
-                Year = "2022-2026",
-                AcademicPlanRecords = new List<AcademicPlanRecordMockModel>
-                {
-                    new()
-                    {
-                        Id = 10,
-                        AcademicPlanId = 4,
-                        DisciplineId = 10,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Программная инженерия и разработка ПО",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "ML",
-                        DisciplineDescription = "Машинное обучение",
-                        HasExam = true,
-                        HasCredit = false,
-                        HasCourseWork = true,
-                        HasCourseProject = false,
-                        Index = "Б1.О.10",
-                        Name = "Машинное обучение",
-                        Semester = 1,
-                        Zet = 6,
-                        AcademicHours = 216,
-                        Exam = 1,
-                        Pass = null,
-                        GradedPass = null,
-                        CourseWork = 1,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 72,
-                        LaboratoryHours = 72,
-                        PracticalHours = 72
-                    },
-                    new()
-                    {
-                        Id = 11,
-                        AcademicPlanId = 4,
-                        DisciplineId = 11,
-                        DisciplineBlockId = 1,
-                        DisciplineBlockTitle = "Управление и проектная деятельность",
-                        DisciplineBlockBlueAsteriskName = "",
-                        DisciplineBlockUseForGrouping = true,
-                        DisciplineBlockOrder = 1,
-                        DisciplineShortName = "ИТ-проекты",
-                        DisciplineDescription = "Управление ИТ-проектами",
-                        HasExam = false,
-                        HasCredit = false,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "Б1.О.11",
-                        Name = "Управление ИТ-проектами",
-                        Semester = 2,
-                        Zet = 4,
-                        AcademicHours = 144,
-                        Exam = null,
-                        Pass = null,
-                        GradedPass = 1,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 48,
-                        LaboratoryHours = 0,
-                        PracticalHours = 96
-                    },
-                    new()
-                    {
-                        Id = 12,
-                        AcademicPlanId = 4,
-                        DisciplineId = 12,
-                        DisciplineBlockId = 2,
-                        DisciplineBlockTitle = "Факультативные дисциплины",
-                        DisciplineBlockBlueAsteriskName = "*",
-                        DisciplineBlockUseForGrouping = false,
-                        DisciplineBlockOrder = 2,
-                        DisciplineShortName = "Cloud",
-                        DisciplineDescription = "Облачные технологии",
-                        HasExam = false,
-                        HasCredit = true,
-                        HasCourseWork = false,
-                        HasCourseProject = false,
-                        Index = "ФТД.01",
-                        Name = "Облачные технологии",
-                        Semester = 2,
-                        Zet = 3,
-                        AcademicHours = 108,
-                        Exam = null,
-                        Pass = 1,
-                        GradedPass = null,
-                        CourseWork = null,
-                        CourseProject = null,
-                        Rgr = null,
-                        Lectures = 36,
-                        LaboratoryHours = 36,
-                        PracticalHours = 36
-                    }
-                }
-            }
-        };
-
         public static List<StudentGroupMockModel> StudentGroups => new()
         {
             new()
@@ -443,53 +22,930 @@ namespace DepartmentOneCMockApi.Data
                 Id = 2,
                 EducationDirectionId = 1,
                 CuratorId = 2,
-                GroupName = "ПИбд-21",
-                Course = AcademicCourse.Course_2
+                GroupName = "ПИбд-12",
+                Course = AcademicCourse.Course_1
             },
             new()
             {
                 Id = 3,
                 EducationDirectionId = 1,
                 CuratorId = 2,
-                GroupName = "ПИбд-31",
-                Course = AcademicCourse.Course_3
+                GroupName = "ПИбд-13",
+                Course = AcademicCourse.Course_1
             },
             new()
             {
                 Id = 4,
                 EducationDirectionId = 1,
                 CuratorId = 3,
+                GroupName = "ПИбд-14",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 5,
+                EducationDirectionId = 1,
+                CuratorId = 1,
+                GroupName = "ПИбд-21",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 6,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-22",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 7,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-23",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 8,
+                EducationDirectionId = 1,
+                CuratorId = 3,
+                GroupName = "ПИбд-24",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 9,
+                EducationDirectionId = 1,
+                CuratorId = 1,
+                GroupName = "ПИбд-31",
+                Course = AcademicCourse.Course_3
+            },
+            new()
+            {
+                Id = 10,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-32",
+                Course = AcademicCourse.Course_3
+            },
+            new()
+            {
+                Id = 11,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-33",
+                Course = AcademicCourse.Course_3
+            },
+            new()
+            {
+                Id = 12,
+                EducationDirectionId = 1,
+                CuratorId = 1,
                 GroupName = "ПИбд-41",
                 Course = AcademicCourse.Course_4
-            }
+            },
+            new()
+            {
+                Id = 13,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-42",
+                Course = AcademicCourse.Course_4
+            },
+            new()
+            {
+                Id = 14,
+                EducationDirectionId = 1,
+                CuratorId = 2,
+                GroupName = "ПИбд-43",
+                Course = AcademicCourse.Course_4
+            },
+            new()
+            {
+                Id = 15,
+                EducationDirectionId = 2,
+                CuratorId = 2,
+                GroupName = "ИСЭбд-11",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 16,
+                EducationDirectionId = 2,
+                CuratorId = 1,
+                GroupName = "ИСЭбд-12",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 17,
+                EducationDirectionId = 2,
+                CuratorId = 2,
+                GroupName = "ИСЭбд-21",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 18,
+                EducationDirectionId = 2,
+                CuratorId = 1,
+                GroupName = "ИСЭбд-22",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 19,
+                EducationDirectionId = 2,
+                CuratorId = 2,
+                GroupName = "ИСЭбд-31",
+                Course = AcademicCourse.Course_3
+            },
+            new()
+            {
+                Id = 20,
+                EducationDirectionId = 2,
+                CuratorId = 1,
+                GroupName = "ИСЭбд-41",
+                Course = AcademicCourse.Course_4
+            },
+            new()
+            {
+                Id = 21,
+                EducationDirectionId = 3,
+                CuratorId = 2,
+                GroupName = "БИмд-11",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 22,
+                EducationDirectionId = 3,
+                CuratorId = 2,
+                GroupName = "БИмд-21",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 23,
+                EducationDirectionId = 4,
+                CuratorId = 2,
+                GroupName = "ИИПАмд-11",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 24,
+                EducationDirectionId = 4,
+                CuratorId = 2,
+                GroupName = "ИИПАмд-21",
+                Course = AcademicCourse.Course_2
+            },
+            new()
+            {
+                Id = 25,
+                EducationDirectionId = 5,
+                CuratorId = 2,
+                GroupName = "ИИБАмд-11",
+                Course = AcademicCourse.Course_1
+            },
+            new()
+            {
+                Id = 26,
+                EducationDirectionId = 5,
+                CuratorId = 2,
+                GroupName = "ИИБАмд-21",
+                Course = AcademicCourse.Course_2
+            },
         };
 
-        public static List<StudentMockModel> Students => new()
+        private static readonly Dictionary<int, int> StudentCountByGroupId = new()
         {
-            // ПИбд-11
-            new() { Id = 1, StudentGroupId = 1, NumberOfBook = "22001", FirstName = "Алина", LastName = "Кузнецова", Patronymic = "Сергеевна", Email = "a.kuznetsova@university.ru", StudentState = StudentState.Учится, Description = "Староста группы", IsSteward = true },
-            new() { Id = 2, StudentGroupId = 1, NumberOfBook = "22002", FirstName = "Илья", LastName = "Громов", Patronymic = "Андреевич", Email = "i.gromov@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 3, StudentGroupId = 1, NumberOfBook = "22003", FirstName = "Полина", LastName = "Фролова", Patronymic = "Олеговна", Email = "p.frolova@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 4, StudentGroupId = 1, NumberOfBook = "22004", FirstName = "Егор", LastName = "Савельев", Patronymic = "Игоревич", Email = "e.saveliev@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-
-            // ПИбд-21
-            new() { Id = 5, StudentGroupId = 2, NumberOfBook = "21001", FirstName = "Мария", LastName = "Орлова", Patronymic = "Павловна", Email = "m.orlova@university.ru", StudentState = StudentState.Учится, Description = "Староста группы", IsSteward = true },
-            new() { Id = 6, StudentGroupId = 2, NumberOfBook = "21002", FirstName = "Даниил", LastName = "Мельников", Patronymic = "Ильич", Email = "d.melnikov@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 7, StudentGroupId = 2, NumberOfBook = "21003", FirstName = "Виктория", LastName = "Ершова", Patronymic = "Максимовна", Email = "v.ershova@university.ru", StudentState = StudentState.Академ, Description = "Академический отпуск с весеннего семестра", IsSteward = false },
-            new() { Id = 8, StudentGroupId = 2, NumberOfBook = "21004", FirstName = "Артем", LastName = "Белов", Patronymic = "Денисович", Email = "a.belov@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-
-            // ПИбд-31
-            new() { Id = 9, StudentGroupId = 3, NumberOfBook = "20001", FirstName = "Наталья", LastName = "Соколова", Patronymic = "Игоревна", Email = "n.sokolova@university.ru", StudentState = StudentState.Учится, Description = "Староста группы", IsSteward = true },
-            new() { Id = 10, StudentGroupId = 3, NumberOfBook = "20002", FirstName = "Кирилл", LastName = "Поляков", Patronymic = "Романович", Email = "k.polyakov@university.ru", StudentState = StudentState.Учится, Description = "Есть академическая задолженность", IsSteward = false },
-            new() { Id = 11, StudentGroupId = 3, NumberOfBook = "20003", FirstName = "Елизавета", LastName = "Комарова", Patronymic = "Васильевна", Email = "e.komarova@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 12, StudentGroupId = 3, NumberOfBook = "20004", FirstName = "Степан", LastName = "Жуков", Patronymic = "Петрович", Email = "s.zhukov@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-
-            // ПИбд-41
-            new() { Id = 13, StudentGroupId = 4, NumberOfBook = "19001", FirstName = "Анна", LastName = "Тарасова", Patronymic = "Дмитриевна", Email = "a.tarasova@university.ru", StudentState = StudentState.Учится, Description = "Староста группы", IsSteward = true },
-            new() { Id = 14, StudentGroupId = 4, NumberOfBook = "19002", FirstName = "Максим", LastName = "Киселев", Patronymic = "Алексеевич", Email = "m.kiselev@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 15, StudentGroupId = 4, NumberOfBook = "19003", FirstName = "Дарья", LastName = "Миронова", Patronymic = "Станиславовна", Email = "d.mironova@university.ru", StudentState = StudentState.Учится, Description = "", IsSteward = false },
-            new() { Id = 16, StudentGroupId = 4, NumberOfBook = "19004", FirstName = "Павел", LastName = "Логинов", Patronymic = "Евгеньевич", Email = "p.loginov@university.ru", StudentState = StudentState.Учится, Description = "Фигурирует в приказе на отчисление", IsSteward = false }
+            { 1, 30 },
+            { 2, 29 },
+            { 3, 28 },
+            { 4, 19 },
+            { 5, 30 },
+            { 6, 30 },
+            { 7, 29 },
+            { 8, 19 },
+            { 9, 32 },
+            { 10, 32 },
+            { 11, 31 },
+            { 12, 32 },
+            { 13, 31 },
+            { 14, 29 },
+            { 15, 27 },
+            { 16, 25 },
+            { 17, 31 },
+            { 18, 28 },
+            { 19, 32 },
+            { 20, 25 },
+            { 21, 4 },
+            { 22, 4 },
+            { 23, 24 },
+            { 24, 29 },
+            { 25, 15 },
+            { 26, 27 }
         };
+
+        public static List<StudentMockModel> Students => GenerateStudents();
+
+        private static List<StudentMockModel> GenerateStudents()
+        {
+            var firstNames = new[]
+            {
+                "Алина", "Мария", "Екатерина", "Анна", "Дарья", "Виктория", "Полина", "София",
+                "Илья", "Артём", "Дмитрий", "Алексей", "Максим", "Кирилл", "Никита", "Егор"
+            };
+
+            var lastNames = new[]
+            {
+                "Иванов", "Петров", "Сидоров", "Смирнов", "Кузнецов", "Попов", "Васильев", "Новиков",
+                "Фёдоров", "Морозов", "Волков", "Соколов", "Лебедев", "Козлов", "Степанов", "Павлов"
+            };
+
+            var patronymics = new[]
+            {
+                "Иванович", "Петрович", "Алексеевич", "Дмитриевич", "Сергеевич", "Андреевич",
+                "Ивановна", "Петровна", "Алексеевна", "Дмитриевна", "Сергеевна", "Андреевна"
+            };
+
+            var students = new List<StudentMockModel>();
+            var studentId = 1;
+            var bookNumber = 240001;
+
+            foreach (var group in StudentGroups.OrderBy(g => g.Id))
+            {
+                var count = StudentCountByGroupId.TryGetValue(group.Id, out var value)
+                    ? value
+                    : 0;
+
+                for (var i = 0; i < count; i++)
+                {
+                    var firstName = firstNames[(studentId - 1) % firstNames.Length];
+                    var lastName = lastNames[(studentId - 1) % lastNames.Length];
+                    var patronymic = patronymics[(studentId - 1) % patronymics.Length];
+
+                    students.Add(new StudentMockModel
+                    {
+                        Id = studentId,
+                        StudentGroupId = group.Id,
+                        NumberOfBook = bookNumber.ToString(),
+                        FirstName = firstName,
+                        LastName = lastName,
+                        Patronymic = patronymic,
+                        Email = $"student{studentId}@university.ru",
+                        StudentState = StudentState.Учится,
+                        Description = i == 0 ? "Староста группы" : string.Empty,
+                        IsSteward = i == 0
+                    });
+
+                    studentId++;
+                    bookNumber++;
+                }
+            }
+
+            return students;
+        }
+
+
+        private static (int blockId, string blockTitle, string blueAsteriskName, bool useForGrouping, int blockOrder) GetBlockInfo(PlanSeed seed)
+        {
+            if (seed.Index.StartsWith("Б3"))
+            {
+                return (3, "Государственная итоговая аттестация", "", false, 3);
+            }
+
+            if (seed.Index.StartsWith("Б2"))
+            {
+                return (2, "Практики", "", false, 2);
+            }
+
+            return (1, "Дисциплины (модули)", "", true, 1);
+        }
+
+        private sealed class PlanSeed
+        {
+            public string Index { get; set; } = "";
+            public string Name { get; set; } = "";
+            public int Semester { get; set; }
+            public int Zet { get; set; }
+            public int AcademicHours { get; set; }
+
+            public int? Exam { get; set; }
+            public int? Pass { get; set; }
+            public int? GradedPass { get; set; }
+            public int? CourseWork { get; set; }
+            public int? CourseProject { get; set; }
+            public int? Rgr { get; set; }
+
+            public int Lectures { get; set; }
+            public int LaboratoryHours { get; set; }
+            public int PracticalHours { get; set; }
+
+            public bool IsSpecialBlock { get; set; }
+
+            public PlanSeed Clone()
+            {
+                return new PlanSeed
+                {
+                    Index = Index,
+                    Name = Name,
+                    Semester = Semester,
+                    Zet = Zet,
+                    AcademicHours = AcademicHours,
+                    Exam = Exam,
+                    Pass = Pass,
+                    GradedPass = GradedPass,
+                    CourseWork = CourseWork,
+                    CourseProject = CourseProject,
+                    Rgr = Rgr,
+                    Lectures = Lectures,
+                    LaboratoryHours = LaboratoryHours,
+                    PracticalHours = PracticalHours,
+                    IsSpecialBlock = IsSpecialBlock
+                };
+            }
+        }
+
+        private static int _recordId = 1;
+        private static int _disciplineId = 1;
+
+        private static PlanSeed D(
+            string index,
+            string name,
+            int semester,
+            int zet,
+            int lectures,
+            int laboratoryHours,
+            int practicalHours,
+            int? exam = null,
+            int? pass = null,
+            int? gradedPass = null,
+            int? courseWork = null,
+            int? courseProject = null,
+            int? rgr = null)
+        {
+            return new PlanSeed
+            {
+                Index = index,
+                Name = name,
+                Semester = semester,
+                Zet = zet,
+                AcademicHours = lectures + laboratoryHours + practicalHours,
+                Exam = exam,
+                Pass = pass,
+                GradedPass = gradedPass,
+                CourseWork = courseWork,
+                CourseProject = courseProject,
+                Rgr = rgr,
+                Lectures = lectures,
+                LaboratoryHours = laboratoryHours,
+                PracticalHours = practicalHours,
+                IsSpecialBlock = false
+            };
+        }
+
+        private static PlanSeed P(
+            string index,
+            string name,
+            int semester,
+            int zet = 3,
+            int academicHours = 108)
+        {
+            return new PlanSeed
+            {
+                Index = index,
+                Name = name,
+                Semester = semester,
+                Zet = zet,
+                AcademicHours = academicHours,
+                IsSpecialBlock = true
+            };
+        }
+
+        private static List<PlanSeed> Copy(List<PlanSeed> source)
+        {
+            return source.Select(x => x.Clone()).ToList();
+        }
+
+        private static void Move(List<PlanSeed> plan, string index, int newSemester)
+        {
+            var item = plan.First(x => x.Index == index);
+            item.Semester = newSemester;
+        }
+
+        private static void SetHours(List<PlanSeed> plan, string index, int lectures, int laboratoryHours, int practicalHours)
+        {
+            var item = plan.First(x => x.Index == index);
+            item.Lectures = lectures;
+            item.LaboratoryHours = laboratoryHours;
+            item.PracticalHours = practicalHours;
+            item.AcademicHours = lectures + laboratoryHours + practicalHours;
+        }
+
+        private static void Remove(List<PlanSeed> plan, string index)
+        {
+            var item = plan.FirstOrDefault(x => x.Index == index);
+            if (item != null)
+                plan.Remove(item);
+        }
+
+        private static void Add(List<PlanSeed> plan, PlanSeed item)
+        {
+            plan.Add(item);
+        }
+
+        private static AcademicPlanMockModel BuildPlan(
+    int planId,
+    int educationDirectionId,
+    string year,
+    List<PlanSeed> seeds)
+        {
+            var records = new List<AcademicPlanRecordMockModel>();
+
+            foreach (var seed in seeds)
+            {
+                var block = GetBlockInfo(seed);
+
+                records.Add(new AcademicPlanRecordMockModel
+                {
+                    Id = _recordId++,
+                    AcademicPlanId = planId,
+                    DisciplineId = _disciplineId++,
+
+                    DisciplineBlockId = block.blockId,
+                    DisciplineBlockTitle = block.blockTitle,
+                    DisciplineBlockBlueAsteriskName = block.blueAsteriskName,
+                    DisciplineBlockUseForGrouping = block.useForGrouping,
+                    DisciplineBlockOrder = block.blockOrder,
+
+                    DisciplineShortName = seed.Name,
+                    DisciplineDescription = seed.Name,
+
+                    HasExam = seed.Exam.HasValue,
+                    HasCredit = seed.Pass.HasValue || seed.GradedPass.HasValue,
+                    HasCourseWork = seed.CourseWork.HasValue,
+                    HasCourseProject = seed.CourseProject.HasValue,
+
+                    Index = seed.Index,
+                    Name = seed.Name,
+                    Semester = seed.Semester,
+                    Zet = seed.Zet,
+                    AcademicHours = seed.AcademicHours,
+
+                    Exam = seed.Exam,
+                    Pass = seed.Pass,
+                    GradedPass = seed.GradedPass,
+                    CourseWork = seed.CourseWork,
+                    CourseProject = seed.CourseProject,
+                    Rgr = seed.Rgr,
+
+                    Lectures = seed.IsSpecialBlock ? 0 : seed.Lectures,
+                    LaboratoryHours = seed.IsSpecialBlock ? 0 : seed.LaboratoryHours,
+                    PracticalHours = seed.IsSpecialBlock ? 0 : seed.PracticalHours
+                });
+            }
+
+            return new AcademicPlanMockModel
+            {
+                Id = planId,
+                EducationDirectionId = educationDirectionId,
+                EducationForm = EducationForm.Очная,
+                AcademicCourses = AcademicCourse.Course_1,
+                Year = year,
+                AcademicPlanRecords = records
+            };
+        }
+
+        //
+        // 09.03.04 — EducationDirectionId = 1
+        //
+
+        private static List<PlanSeed> Base090304()
+        {
+            return new List<PlanSeed>
+            {
+                D("Б1.О.13", "Введение в программную инженерию", 1, 2, 16, 0, 16, pass: 1),
+                D("Б1.О.22", "Информационные системы и технологии", 1, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.23", "Теоретические основы информатики", 1, 2, 16, 0, 16, pass: 1, rgr: 1),
+
+                D("Б1.О.14", "Организация ЭВМ и системы", 2, 2, 16, 32, 0, exam: 1),
+                P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
+
+                D("Б1.О.15", "Базы данных", 3, 2, 16, 32, 0, exam: 1, courseProject: 1),
+                D("Б1.О.16", "Системы управления базами данных", 3, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.О.20", "Методы моделирования", 4, 2, 16, 0, 16, pass: 1),
+                D("Б1.О.21", "Технологии программирования", 4, 3, 16, 64, 0, exam: 1, courseWork: 1),
+
+                D("Б1.О.33", "Алгоритмы и структуры данных", 5, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.01", "Проектирование и архитектура программных систем", 5, 2, 16, 32, 0, pass: 1, courseProject: 1),
+                D("Б1.В.03", "Методы искусственного интеллекта", 5, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.05", "Интернет-программирование", 6, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.07", "Программирование на Java", 6, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.12", "Тестирование программного обеспечения", 7, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.13", "Конструирование программного обеспечения", 7, 2, 16, 32, 0, exam: 1, courseWork: 1),
+                P("Б2.О.02(П)", "Научно-исследовательская работа", 7, 3, 108),
+
+                P("Б1.О.24", "Проектный практикум", 8, 3, 108),
+                P("Б2.О.03(П)", "Технологическая (проектно-технологическая) практика", 8, 3, 108),
+                P("Б2.В.01(П)", "Преддипломная практика", 8, 3, 108),
+                P("Б3.01", "Подготовка к сдаче и сдача государственного экзамена", 8, 3, 108),
+                P("Б3.02", "Выполнение и защита выпускной квалификационной работы", 8, 3, 108)
+            };
+        }
+
+        private static List<PlanSeed> Plan090304_2022_2026()
+        {
+            return Copy(Base090304());
+        }
+
+        private static List<PlanSeed> Plan090304_2023_2027()
+        {
+            var plan = Copy(Base090304());
+
+            Move(plan, "Б1.В.05", 5);
+            Move(plan, "Б1.В.03", 6);
+
+            SetHours(plan, "Б1.О.22", 16, 64, 0);
+            SetHours(plan, "Б1.О.21", 16, 32, 0);
+            SetHours(plan, "Б1.В.07", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090304_2024_2028()
+        {
+            var plan = Copy(Base090304());
+
+            Move(plan, "Б1.О.20", 3);
+            Move(plan, "Б1.О.16", 4);
+            Move(plan, "Б1.В.12", 6);
+            Move(plan, "Б1.В.07", 7);
+
+            SetHours(plan, "Б1.О.15", 16, 64, 0);
+            SetHours(plan, "Б1.В.12", 16, 32, 0);
+            SetHours(plan, "Б1.В.13", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090304_2025_2029()
+        {
+            var plan = Copy(Base090304());
+
+            Remove(plan, "Б1.В.07");
+            Add(plan, D("Б1.В.14", "Разработка веб-приложений", 6, 2, 16, 32, 0, exam: 1));
+
+            Move(plan, "Б1.В.03", 6);
+            Move(plan, "Б1.В.05", 5);
+
+            SetHours(plan, "Б1.О.14", 16, 64, 0);
+            SetHours(plan, "Б1.В.01", 16, 64, 0);
+            SetHours(plan, "Б1.В.03", 16, 32, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090304_2026_2030()
+        {
+            var plan = Copy(Base090304());
+
+            Move(plan, "Б1.В.01", 4);
+            Move(plan, "Б1.О.33", 6);
+            Move(plan, "Б1.В.05", 5);
+            Move(plan, "Б1.В.03", 6);
+
+            SetHours(plan, "Б1.О.33", 16, 64, 0);
+            SetHours(plan, "Б1.О.20", 16, 0, 16);
+            SetHours(plan, "Б1.В.13", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<AcademicPlanMockModel> Build090304Plans()
+        {
+            return new List<AcademicPlanMockModel>
+            {
+                BuildPlan(1, 1, "2022-2026", Plan090304_2022_2026()),
+                BuildPlan(2, 1, "2023-2027", Plan090304_2023_2027()),
+                BuildPlan(3, 1, "2024-2028", Plan090304_2024_2028()),
+                BuildPlan(4, 1, "2025-2029", Plan090304_2025_2029()),
+                BuildPlan(5, 1, "2026-2030", Plan090304_2026_2030())
+            };
+        }
+
+        //
+        // 09.03.03 — EducationDirectionId = 2
+        //
+
+        private static List<PlanSeed> Base090303()
+        {
+            return new List<PlanSeed>
+            {
+                D("Б1.О.01", "Программирование", 1, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.02", "Основы алгоритмизации и программирования", 1, 2, 16, 0, 16, pass: 1),
+                D("Б1.О.03", "Основы информационных технологий", 1, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.О.16", "Основы прикладной информатики", 2, 2, 16, 0, 16, pass: 1, rgr: 1),
+                D("Б1.О.17", "Организация вычислительных машин и систем", 2, 2, 16, 32, 0, exam: 1),
+                P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
+
+                D("Б1.О.18", "Базы данных", 3, 2, 16, 32, 0, exam: 1, courseProject: 1),
+                D("Б1.О.19", "Системы управления базами данных", 3, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.28", "Алгоритмы и структуры данных", 3, 2, 16, 32, 0, exam: 1),
+
+                D("Б1.О.22", "Методы моделирования", 4, 2, 16, 0, 16, pass: 1, courseWork: 1),
+                D("Б1.О.23", "Операционные системы", 4, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.24", "Проектирование информационных систем", 4, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.01", "Интернет-программирование", 5, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.02", "Построение информационных систем", 5, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.03", "Методы искусственного интеллекта", 5, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.07", "Экспертные системы", 6, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.08", "Сетевые технологии в экономике", 6, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.ДВ.03.01", "Теория и практика экономических информационных систем", 7, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.ДВ.03.02", "Сервис-ориентированное программирование", 7, 2, 16, 32, 0, exam: 1),
+                P("Б2.О.02(П)", "Научно-исследовательская работа", 7, 3, 108),
+
+                P("Б2.О.03(П)", "Технологическая (проектно-технологическая) практика", 8, 3, 108),
+                P("Б2.В.01(П)", "Преддипломная практика", 8, 3, 108),
+                P("Б3.01", "Подготовка к сдаче и сдача государственного экзамена", 8, 3, 108),
+                P("Б3.02", "Выполнение и защита выпускной квалификационной работы", 8, 3, 108)
+            };
+        }
+
+        private static List<PlanSeed> Plan090303_2022_2026()
+        {
+            return Copy(Base090303());
+        }
+
+        private static List<PlanSeed> Plan090303_2023_2027()
+        {
+            var plan = Copy(Base090303());
+
+            Move(plan, "Б1.В.03", 6);
+            Move(plan, "Б1.В.08", 5);
+
+            SetHours(plan, "Б1.О.17", 16, 64, 0);
+            SetHours(plan, "Б1.В.01", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090303_2024_2028()
+        {
+            var plan = Copy(Base090303());
+
+            Move(plan, "Б1.О.22", 3);
+            Move(plan, "Б1.О.19", 4);
+
+            SetHours(plan, "Б1.О.18", 16, 64, 0);
+            SetHours(plan, "Б1.В.07", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090303_2025_2029()
+        {
+            var plan = Copy(Base090303());
+
+            Move(plan, "Б1.В.01", 6);
+            Move(plan, "Б1.В.07", 5);
+
+            SetHours(plan, "Б1.О.24", 16, 64, 0);
+            SetHours(plan, "Б1.В.03", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090303_2026_2030()
+        {
+            var plan = Copy(Base090303());
+
+            Move(plan, "Б1.О.28", 4);
+            Move(plan, "Б1.О.22", 5);
+
+            SetHours(plan, "Б1.О.16", 16, 0, 16);
+            SetHours(plan, "Б1.В.ДВ.03.02", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<AcademicPlanMockModel> Build090303Plans()
+        {
+            return new List<AcademicPlanMockModel>
+            {
+                BuildPlan(6, 2, "2022-2026", Plan090303_2022_2026()),
+                BuildPlan(7, 2, "2023-2027", Plan090303_2023_2027()),
+                BuildPlan(8, 2, "2024-2028", Plan090303_2024_2028()),
+                BuildPlan(9, 2, "2025-2029", Plan090303_2025_2029()),
+                BuildPlan(10, 2, "2026-2030", Plan090303_2026_2030())
+            };
+        }
+
+        //
+        // 09.04.04 — EducationDirectionId = 4
+        //
+
+        private static List<PlanSeed> Base090404()
+        {
+            return new List<PlanSeed>
+            {
+                D("Б1.О.04", "Управление проектами в области искусственного интеллекта", 1, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.05", "Методы анализа данных в предиктивной аналитике", 1, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.О.08", "Методы интеллектуального анализа естественного языка", 2, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.09", "Методы глубокого обучения и трансформеры", 2, 2, 16, 64, 0, pass: 1),
+                P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
+
+                D("Б1.В.01", "Технологии обработки и анализа больших данных в предиктивной аналитике", 3, 2, 16, 64, 0, exam: 1),
+                D("Б1.В.03", "Методы искусственного интеллекта в предиктивной аналитике", 3, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.В.ДВ.01.01", "Проектирование интеллектуальных систем", 4, 2, 16, 64, 0, pass: 1),
+                P("Б2.О.02(П)", "Научно-исследовательская работа", 4, 3, 108),
+                P("Б2.В.01(П)", "Преддипломная практика", 4, 3, 108),
+                P("Б3.02", "Выполнение и защита выпускной квалификационной работы", 4, 3, 108)
+            };
+        }
+
+        private static List<PlanSeed> Plan090404_2022_2024()
+        {
+            return Copy(Base090404());
+        }
+
+        private static List<PlanSeed> Plan090404_2023_2025()
+        {
+            var plan = Copy(Base090404());
+
+            Move(plan, "Б1.О.05", 2);
+            Move(plan, "Б1.О.08", 1);
+
+            SetHours(plan, "Б1.О.09", 16, 32, 0);
+            SetHours(plan, "Б1.В.01", 16, 32, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090404_2024_2026()
+        {
+            var plan = Copy(Base090404());
+
+            Move(plan, "Б1.В.03", 4);
+            Remove(plan, "Б1.В.ДВ.01.01");
+            Add(plan, D("Б1.В.02", "Анализ многомерных данных", 3, 2, 16, 32, 0, pass: 1));
+            Add(plan, D("Б1.В.ДВ.02.01", "Интеллектуальные САПР", 4, 2, 16, 64, 0, pass: 1));
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090404_2025_2027()
+        {
+            var plan = Copy(Base090404());
+
+            Remove(plan, "Б1.В.ДВ.01.01");
+            Add(plan, D("Б1.В.ДВ.02.02", "Математическое моделирование информационных систем", 4, 2, 16, 64, 0, pass: 1));
+
+            SetHours(plan, "Б1.О.05", 16, 64, 0);
+            SetHours(plan, "Б1.В.03", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090404_2026_2028()
+        {
+            var plan = Copy(Base090404());
+
+            Move(plan, "Б1.В.01", 2);
+            Move(plan, "Б1.О.09", 3);
+
+            SetHours(plan, "Б1.В.01", 16, 64, 0);
+            SetHours(plan, "Б1.О.08", 16, 32, 0);
+
+            return plan;
+        }
+
+        private static List<AcademicPlanMockModel> Build090404Plans()
+        {
+            return new List<AcademicPlanMockModel>
+            {
+                BuildPlan(11, 4, "2022-2024", Plan090404_2022_2024()),
+                BuildPlan(12, 4, "2023-2025", Plan090404_2023_2025()),
+                BuildPlan(13, 4, "2024-2026", Plan090404_2024_2026()),
+                BuildPlan(14, 4, "2025-2027", Plan090404_2025_2027()),
+                BuildPlan(15, 4, "2026-2028", Plan090404_2026_2028())
+            };
+        }
+
+        //
+        // 09.04.03 — EducationDirectionId = 5
+        //
+
+        private static List<PlanSeed> Base090403()
+        {
+            return new List<PlanSeed>
+            {
+                D("Б1.О.05", "Методы анализа данных в бизнес-аналитике", 1, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.08", "Методы интеллектуального анализа естественного языка", 1, 2, 16, 32, 0, pass: 1),
+
+                D("Б1.О.09", "Методы глубокого обучения в бизнес-аналитике", 2, 2, 16, 64, 0, exam: 1),
+                P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
+
+                D("Б1.В.01", "Системы и технологии Web-аналитики", 3, 2, 16, 64, 0, pass: 1),
+                D("Б1.В.03", "Методы искусственного интеллекта в бизнес-аналитике", 3, 2, 16, 32, 0, exam: 1),
+
+                D("Б1.В.ДВ.01.01", "Интеллектуальные информационно-аналитические системы", 4, 2, 16, 64, 0, pass: 1),
+                P("Б2.О.02(П)", "Научно-исследовательская работа", 4, 3, 108),
+                P("Б2.В.01(П)", "Преддипломная практика", 4, 3, 108),
+                P("Б3.02", "Выполнение и защита выпускной квалификационной работы", 4, 3, 108)
+            };
+        }
+
+        private static List<PlanSeed> Plan090403_2022_2024()
+        {
+            return Copy(Base090403());
+        }
+
+        private static List<PlanSeed> Plan090403_2023_2025()
+        {
+            var plan = Copy(Base090403());
+
+            Add(plan, D("Б1.О.04", "Управление проектами в области искусственного интеллекта", 1, 2, 16, 32, 0, pass: 1));
+            Move(plan, "Б1.О.08", 2);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090403_2024_2026()
+        {
+            var plan = Copy(Base090403());
+
+            Remove(plan, "Б1.В.ДВ.01.01");
+            Add(plan, D("Б1.В.ДВ.01.02", "Обработка больших данных в бизнес-аналитике", 4, 2, 16, 64, 0, pass: 1));
+
+            SetHours(plan, "Б1.О.09", 16, 32, 0);
+            SetHours(plan, "Б1.В.01", 16, 32, 0);
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090403_2025_2027()
+        {
+            var plan = Copy(Base090403());
+
+            Move(plan, "Б1.В.03", 4);
+            Add(plan, D("Б1.В.ДВ.02.02", "Интеллектуальные информационные системы на основе хранилищ данных", 3, 2, 16, 64, 0, pass: 1));
+
+            return plan;
+        }
+
+        private static List<PlanSeed> Plan090403_2026_2028()
+        {
+            var plan = Copy(Base090403());
+
+            Move(plan, "Б1.О.05", 2);
+            Remove(plan, "Б1.В.ДВ.01.01");
+            Add(plan, D("Б1.В.ДВ.02.01", "Интеллектуальные информационные системы", 4, 2, 16, 64, 0, pass: 1));
+
+            SetHours(plan, "Б1.О.05", 16, 64, 0);
+            SetHours(plan, "Б1.В.03", 16, 64, 0);
+
+            return plan;
+        }
+
+        private static List<AcademicPlanMockModel> Build090403Plans()
+        {
+            return new List<AcademicPlanMockModel>
+            {
+                BuildPlan(16, 5, "2022-2024", Plan090403_2022_2024()),
+                BuildPlan(17, 5, "2023-2025", Plan090403_2023_2025()),
+                BuildPlan(18, 5, "2024-2026", Plan090403_2024_2026()),
+                BuildPlan(19, 5, "2025-2027", Plan090403_2025_2027()),
+                BuildPlan(20, 5, "2026-2028", Plan090403_2026_2028())
+            };
+        }
+
+        private static List<AcademicPlanMockModel> BuildAllAcademicPlans()
+        {
+            _recordId = 1;
+            _disciplineId = 1;
+
+            var result = new List<AcademicPlanMockModel>();
+            result.AddRange(Build090304Plans());
+            result.AddRange(Build090303Plans());
+            result.AddRange(Build090404Plans());
+            result.AddRange(Build090403Plans());
+
+            return result;
+        }
+
+        public static List<AcademicPlanMockModel> AcademicPlans => BuildAllAcademicPlans();
 
         public static List<DisciplineStudentRecordMockModel> DisciplineStudentRecords => GenerateDisciplineStudentRecords();
 
@@ -570,14 +1026,12 @@ namespace DepartmentOneCMockApi.Data
             return marks[(student.Id + disciplineId) % marks.Length];
         }
 
-
         public static List<StudentOrderMockModel> StudentOrders => new()
         {
             new StudentOrderMockModel
             {
                 Id = 1,
                 OrderNumber = "201-к",
-                OrderDate = new DateTime(2022, 9, 1),
                 StudentOrderType = StudentOrderType.Зачисление,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -602,7 +1056,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 2,
                 OrderNumber = "57-лс",
-                OrderDate = new DateTime(2023, 2, 10),
                 StudentOrderType = StudentOrderType.ВАкадем,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -624,7 +1077,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 3,
                 OrderNumber = "74-лс",
-                OrderDate = new DateTime(2023, 9, 1),
                 StudentOrderType = StudentOrderType.ИзАкадема,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -646,7 +1098,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 4,
                 OrderNumber = "88-п",
-                OrderDate = new DateTime(2024, 1, 20),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -665,12 +1116,10 @@ namespace DepartmentOneCMockApi.Data
                 }
             },
 
-            // 5. Восстановление студента
             new StudentOrderMockModel
             {
                 Id = 5,
                 OrderNumber = "96-в",
-                OrderDate = new DateTime(2024, 2, 5),
                 StudentOrderType = StudentOrderType.Восстановить,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -692,7 +1141,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 6,
                 OrderNumber = "103-лс",
-                OrderDate = new DateTime(2024, 3, 15),
                 StudentOrderType = StudentOrderType.ОтчислитьЗаНеуспевамость,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -714,7 +1162,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 7,
                 OrderNumber = "111-лс",
-                OrderDate = new DateTime(2024, 4, 1),
                 StudentOrderType = StudentOrderType.ОтчислитьПоСобственному,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -736,7 +1183,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 8,
                 OrderNumber = "125-комб",
-                OrderDate = new DateTime(2024, 5, 20),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
@@ -781,7 +1227,6 @@ namespace DepartmentOneCMockApi.Data
             {
                 Id = 9,
                 OrderNumber = "131-р",
-                OrderDate = new DateTime(2024, 9, 1),
                 StudentOrderType = StudentOrderType.ПереводВГруппу,
                 Blocks = new List<StudentOrderBlockMockModel>
                 {
