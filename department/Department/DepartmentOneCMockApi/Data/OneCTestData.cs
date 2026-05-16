@@ -1102,7 +1102,7 @@ namespace DepartmentOneCMockApi.Data
                 new StudentOrderEvent
                 {
                     StudentId = 7,
-                    Type = StudentOrderType.Академ,
+                    Type = StudentOrderType.ВАкадем,
                     Date = new DateTime(2025, 2, 10),
                     GroupFromId = 2,
                     GroupToId = 2
@@ -1121,7 +1121,7 @@ namespace DepartmentOneCMockApi.Data
                 new StudentOrderEvent
                 {
                     StudentId = 16,
-                    Type = StudentOrderType.Отчисление,
+                    Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
                     Date = new DateTime(2024, 3, 15),
                     GroupFromId = 4
                 }
@@ -1139,7 +1139,7 @@ namespace DepartmentOneCMockApi.Data
                     .ToList();
             }
 
-            var enrollmentDate = GetEnrollmentDateByCourse(currentGroup.Course);
+            var enrollmentDate = GetEnrollmentDateByCourse((int)currentGroup.Course);
 
             var events = new List<StudentOrderEvent>
             {
@@ -1161,7 +1161,7 @@ namespace DepartmentOneCMockApi.Data
                     events.Add(new StudentOrderEvent
                     {
                         StudentId = student.Id,
-                        Type = StudentOrderType.Перевод,
+                        Type = StudentOrderType.ПереводВГруппу,
                         Date = enrollmentDate.AddYears(1).AddMonths(5),
                         GroupFromId = currentGroup.Id,
                         GroupToId = targetGroupId
@@ -1174,7 +1174,7 @@ namespace DepartmentOneCMockApi.Data
                 events.Add(new StudentOrderEvent
                 {
                     StudentId = student.Id,
-                    Type = StudentOrderType.Академ,
+                    Type = StudentOrderType.ВАкадем,
                     Date = enrollmentDate.AddYears(1).AddMonths(5),
                     GroupFromId = currentGroup.Id,
                     GroupToId = currentGroup.Id
@@ -1186,7 +1186,7 @@ namespace DepartmentOneCMockApi.Data
                 events.Add(new StudentOrderEvent
                 {
                     StudentId = student.Id,
-                    Type = StudentOrderType.Отчисление,
+                    Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
                     Date = enrollmentDate.AddYears(2).AddMonths(6),
                     GroupFromId = currentGroup.Id
                 });
@@ -1195,30 +1195,6 @@ namespace DepartmentOneCMockApi.Data
             return events
                 .OrderBy(x => x.Date)
                 .ToList();
-        }
-
-        private static string BuildOrderNumber(
-            StudentOrderType type,
-            DateTime date,
-            Dictionary<int, int> yearCounters)
-        {
-            if (!yearCounters.ContainsKey(date.Year))
-            {
-                yearCounters[date.Year] = 0;
-            }
-
-            yearCounters[date.Year]++;
-
-            var suffix = type switch
-            {
-                StudentOrderType.Зачисление => "к",
-                StudentOrderType.Перевод => "п",
-                StudentOrderType.Академ => "а",
-                StudentOrderType.Отчисление => "лс",
-                _ => "лс"
-            };
-
-            return $"{yearCounters[date.Year]:000}-{suffix}";
         }
 
         private static (
@@ -1278,5 +1254,39 @@ namespace DepartmentOneCMockApi.Data
 
             return (orders, blocks, blockStudents);
         }
+
+        private static string BuildOrderNumber(
+            StudentOrderType type,
+            DateTime date,
+            Dictionary<int, int> yearCounters)
+        {
+            if (!yearCounters.ContainsKey(date.Year))
+            {
+                yearCounters[date.Year] = 0;
+            }
+
+            yearCounters[date.Year]++;
+
+            var suffix = type switch
+            {
+                StudentOrderType.Зачисление => "к",
+                StudentOrderType.ПереводВГруппу => "п",
+                StudentOrderType.ВАкадем => "а",
+                StudentOrderType.ОтчислитьЗаНеуспевамость => "лс",
+                _ => "лс"
+            };
+
+            return $"{yearCounters[date.Year]:000}-{suffix}";
+        }
+
+        private static readonly Lazy<(
+            List<StudentOrderMockModel> Orders,
+            List<StudentOrderBlockMockModel> Blocks,
+            List<StudentOrderBlockStudentMockModel> BlockStudents)> GeneratedOrders
+            = new(GenerateStudentOrdersData);
+
+        public static List<StudentOrderMockModel> StudentOrders => GeneratedOrders.Value.Orders;
+        public static List<StudentOrderBlockMockModel> StudentOrderBlocks => GeneratedOrders.Value.Blocks;
+        public static List<StudentOrderBlockStudentMockModel> StudentOrderBlockStudents => GeneratedOrders.Value.BlockStudents;
     }
 }
