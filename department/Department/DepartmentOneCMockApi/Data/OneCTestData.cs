@@ -263,12 +263,19 @@ namespace DepartmentOneCMockApi.Data
     "Степан", "Максим", "Павел", "Егор"
 };
 
-        private static readonly string[] LastNames =
-        {
+        private static readonly string[] MaleLastNames =
+{
     "Иванов", "Петров", "Сидоров", "Кузнецов",
-    "Смирнов", "Орлов", "Волков", "Попов"
+    "Смирнов", "Орлов", "Волков", "Попов",
+    "Васильев"
 };
 
+        private static readonly string[] FemaleLastNames =
+        {
+    "Иванова", "Петрова", "Сидорова", "Кузнецова",
+    "Смирнова", "Орлова", "Волкова", "Попова",
+    "Васильева"
+};
         private static readonly string[] FemalePatronymics =
         {
     "Ивановна", "Петровна", "Сергеевна", "Андреевна",
@@ -312,14 +319,14 @@ namespace DepartmentOneCMockApi.Data
                     if (isFemale)
                     {
                         firstName = FemaleFirstNames[femaleIndex % FemaleFirstNames.Length];
-                        lastName = ToFemaleLastName(LastNames[femaleIndex % LastNames.Length]);
+                        lastName = FemaleLastNames[femaleIndex % FemaleLastNames.Length];
                         patronymic = FemalePatronymics[femaleIndex % FemalePatronymics.Length];
                         femaleIndex++;
                     }
                     else
                     {
                         firstName = MaleFirstNames[maleIndex % MaleFirstNames.Length];
-                        lastName = LastNames[maleIndex % LastNames.Length];
+                        lastName = MaleLastNames[maleIndex % MaleLastNames.Length];
                         patronymic = MalePatronymics[maleIndex % MalePatronymics.Length];
                         maleIndex++;
                     }
