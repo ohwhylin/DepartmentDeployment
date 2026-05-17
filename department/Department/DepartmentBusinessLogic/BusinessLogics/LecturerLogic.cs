@@ -106,37 +106,51 @@ namespace DepartmentBusinessLogic.BusinessLogics
 
         private void CheckModel(LecturerBindingModel model, bool withParams = true)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-            if (!withParams) return;
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
 
-            if (string.IsNullOrEmpty(model.FirstName))
-                throw new ArgumentNullException("", nameof(model.FirstName));
-            if (string.IsNullOrEmpty(model.LastName))
-                throw new ArgumentNullException("", nameof(model.LastName));
-            if (string.IsNullOrEmpty(model.Patronymic))
-                throw new ArgumentNullException("", nameof(model.Patronymic));
+            if (!withParams)
+                return;
 
-            if (string.IsNullOrEmpty(model.Address))
-                throw new ArgumentNullException("", nameof(model.Address));
-            if (string.IsNullOrEmpty(model.Email))
-                throw new ArgumentNullException("", nameof(model.Email));
-            if (string.IsNullOrEmpty(model.MobileNumber))
-                throw new ArgumentNullException("", nameof(model.MobileNumber));
-            if (string.IsNullOrEmpty(model.HomeNumber))
-                throw new ArgumentNullException("", nameof(model.HomeNumber));
-            if (string.IsNullOrEmpty(model.Description))
-                throw new ArgumentNullException("", nameof(model.Description));
+            if (string.IsNullOrWhiteSpace(model.FirstName))
+                throw new ArgumentException("Не заполнено имя", nameof(model.FirstName));
+
+            if (string.IsNullOrWhiteSpace(model.LastName))
+                throw new ArgumentException("Не заполнена фамилия", nameof(model.LastName));
+
+            if (string.IsNullOrWhiteSpace(model.Patronymic))
+                throw new ArgumentException("Не заполнено отчество", nameof(model.Patronymic));
+
+            if (string.IsNullOrWhiteSpace(model.Address))
+                throw new ArgumentException("Не заполнен адрес", nameof(model.Address));
+
+            if (string.IsNullOrWhiteSpace(model.Email))
+                throw new ArgumentException("Не заполнен email", nameof(model.Email));
+
+            if (string.IsNullOrWhiteSpace(model.MobileNumber))
+                throw new ArgumentException("Не заполнен мобильный телефон", nameof(model.MobileNumber));
+
+            if (string.IsNullOrWhiteSpace(model.HomeNumber))
+                throw new ArgumentException("Не заполнен домашний телефон", nameof(model.HomeNumber));
+
+            if (string.IsNullOrWhiteSpace(model.Description))
+                throw new ArgumentException("Не заполнено описание", nameof(model.Description));
+
             if (model.LecturerStudyPostId <= 0)
-                throw new ArgumentNullException("", nameof(model.LecturerStudyPostId));
+                throw new ArgumentException("Не выбрана учебная должность", nameof(model.LecturerStudyPostId));
+
             if (model.LecturerDepartmentPostId <= 0)
-                throw new ArgumentNullException("", nameof(model.LecturerDepartmentPostId));
+                throw new ArgumentException("Не выбрана кафедральная должность", nameof(model.LecturerDepartmentPostId));
 
             var element = _LecturerStorage.GetElement(new LecturerSearchModel
             {
-                FirstName = model.FirstName
+                FirstName = model.FirstName?.Trim(),
+                LastName = model.LastName?.Trim(),
+                Patronymic = model.Patronymic?.Trim()
             });
+
             if (element != null && element.Id != model.Id)
-                throw new InvalidOperationException("");
+                throw new InvalidOperationException("Преподаватель с таким ФИО уже существует");
         }
     }
 }
