@@ -186,3 +186,11 @@ volumes:
   schedule-db-data:
   load-db-data:
   load-dpkeys:  
+  
+networks:
+  default:
+    name: polina_default_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24
