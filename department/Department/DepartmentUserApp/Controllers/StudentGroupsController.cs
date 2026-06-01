@@ -15,6 +15,7 @@ namespace DepartmentUserApp.Controllers
             {
                 ViewBag.StudentGroupsList = APIClient.GetRequest<List<StudentGroupViewModel>>("api/core/StudentGroups/GetStudentGroupList");
                 ViewBag.StudentsList = APIClient.GetRequest<List<StudentViewModel>>("api/core/Students/GetStudentList");
+                ViewBag.DisciplineStudentRecordsList = APIClient.GetRequest<List<DisciplineStudentRecordViewModel>>("api/core/DisciplineStudentRecords/GetDisciplineStudentRecordList");
                 ViewBag.EducationDirectionsList = APIClient.GetRequest<List<EducationDirectionViewModel>>("api/core/EducationDirections/GetEducationDirectionList");
                 ViewBag.LecturersList = APIClient.GetRequest<List<LecturerViewModel>>("api/core/Lecturers/GetLecturerList");
                 return View();
@@ -24,6 +25,7 @@ namespace DepartmentUserApp.Controllers
                 TempData["Error"] = ex.Message;
                 ViewBag.StudentGroupsList = new List<StudentGroupViewModel>();
                 ViewBag.StudentsList = new List<StudentViewModel>();
+                ViewBag.DisciplineStudentRecordsList = new List<DisciplineStudentRecordViewModel>();
                 ViewBag.EducationDirectionsList = new List<EducationDirectionViewModel>();
                 ViewBag.LecturersList = new List<LecturerViewModel>();
                 return View();

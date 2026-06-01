@@ -7,6 +7,45 @@
 
     var groups = ViewBag.StudentGroupsList as List<StudentGroupViewModel> ?? new List<StudentGroupViewModel>();
     var students = ViewBag.StudentsList as List<StudentViewModel> ?? new List<StudentViewModel>();
+    var disciplineStudentRecords = ViewBag.DisciplineStudentRecordsList as List<DisciplineStudentRecordViewModel>
+    ?? new List<DisciplineStudentRecordViewModel>();
+
+    int GetMaxSemesterForCourse(AcademicCourse course) => course switch
+    {
+        AcademicCourse.Course_1 => 2,
+        AcademicCourse.Course_2 => 4,
+        AcademicCourse.Course_3 => 6,
+        AcademicCourse.Course_4 => 8,
+        _ => 0
+    };
+
+    string GetSemesterName(Semesters semester) => semester switch
+    {
+        Semesters.Первый => "1 семестр",
+        Semesters.Второй => "2 семестр",
+        Semesters.Третий => "3 семестр",
+        Semesters.Четвертый => "4 семестр",
+        Semesters.Пятый => "5 семестр",
+        Semesters.Шестой => "6 семестр",
+        Semesters.Седьмой => "7 семестр",
+        Semesters.Восьмой => "8 семестр",
+        _ => semester.ToString()
+    };
+
+    int GetDebtAgeInSemesters(AcademicCourse course, Semesters debtSemester)
+    {
+        var currentMaxSemester = GetMaxSemesterForCourse(course);
+        var age = currentMaxSemester - (int)debtSemester;
+        return age < 0 ? 0 : age;
+    }
+
+    // по вашему уточнению:
+    // неявка НЕ считается долгом
+    // повышенный риск: долг старше двух семестров
+    bool IsHighRiskDebt(AcademicCourse course, Semesters debtSemester)
+    {
+        return GetDebtAgeInSemesters(course, debtSemester) > 2;
+    }
 
     string GetCourseName(AcademicCourse course) => course switch
     {
@@ -93,6 +132,31 @@
                 .ThenBy(x => x.Patronymic)
                 .ToList();
 
+            var groupStudentIds = groupStudents
+            .Select(x => x.Id)
+            .ToHashSet();
+
+            var groupDebtRecords = disciplineStudentRecords
+            .Where(x =>
+            groupStudentIds.Contains(x.StudentId) &&
+            x.MarkType == MarkType.Неудовлетворительно)
+            .ToList();
+
+            var studentsWithDebts = groupStudents
+            .Select(student => new
+            {
+                Student = student,
+                Debts = groupDebtRecords
+            .Where(x => x.StudentId == student.Id)
+            .OrderBy(x => x.Semester)
+            .ToList()
+            })
+            .Where(x => x.Debts.Any())
+            .ToList();
+
+            var highRiskStudentsCount = studentsWithDebts
+            .Count(x => x.Debts.Any(d => IsHighRiskDebt(item.Course, d.Semester)));
+
             var collapseId = $"groupStudents_{item.Id}";
             var buttonId = $"toggleBtn_{item.Id}";
 
@@ -109,6 +173,23 @@
                                 <div><strong>Направление:</strong> @item.EducationDirection</div>
                                 <div><strong>Курс:</strong> @GetCourseName(item.Course)</div>
                                 <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
+                                @if (studentsWithDebts.Any())
+                                {
+                                    <div class="mt-2">
+                                        <div class="alert @(highRiskStudentsCount > 0 ? "alert-danger" : "alert-warning") py-2 mb-0">
+                                            <strong>Внимание:</strong>
+                                            в группе есть студенты с академическими задолженностями —
+                                            @studentsWithDebts.Count чел.
+                                            @if (highRiskStudentsCount > 0)
+                                            {
+                                                <span>
+                                                    Из них у @highRiskStudentsCount чел. долги старше двух семестров.
+                                                    Возможен риск отчисления.
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
 
                                 @if (!string.IsNullOrWhiteSpace(item.Curator))
                                 {
@@ -147,6 +228,13 @@
                             @foreach (var student in groupStudents)
                             {
                                 var studentSearch = $"{student.LastName} {student.FirstName} {student.Patronymic}".ToLowerInvariant();
+                                var studentDebtRecords = groupDebtRecords
+                                .Where(x => x.StudentId == student.Id)
+                                .OrderBy(x => x.Semester)
+                                .ToList();
+
+                                var hasHighRiskDebt = studentDebtRecords
+                                .Any(x => IsHighRiskDebt(item.Course, x.Semester));
 
                                 <div class="group-student-item"
                                      data-student-name="@studentSearch">
@@ -172,6 +260,42 @@
                                             @if (!string.IsNullOrWhiteSpace(student.Description))
                                             {
                                                 <div><strong>Примечание:</strong> @student.Description</div>
+                                            }
+
+                                            @if (studentDebtRecords.Any())
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="alert @(hasHighRiskDebt ? "alert-danger" : "alert-warning") py-2 mb-0">
+                                                        <div>
+                                                            <strong>Академические задолженности:</strong>
+                                                        </div>
+
+                                                        <ul class="mb-0 mt-1 ps-3">
+                                                            @foreach (var debt in studentDebtRecords)
+                                                            {
+                                                                var ageInSemesters = GetDebtAgeInSemesters(item.Course, debt.Semester);
+
+                                                                <li>
+                                                                    @(string.IsNullOrWhiteSpace(debt.Discipline) ? "Неизвестная дисциплина" : debt.Discipline)
+                                                                    — @GetSemesterName(debt.Semester)
+
+                                                                    @if (IsHighRiskDebt(item.Course, debt.Semester))
+                                                                    {
+                                                                        <span class="text-danger">
+                                                                            (долг старше двух семестров, возможен риск отчисления)
+                                                                        </span>
+                                                                    }
+                                                                    else if (ageInSemesters > 0)
+                                                                    {
+                                                                        <span class="text-muted">
+                                                                            (долг сохраняется @ageInSemesters сем.)
+                                                                        </span>
+                                                                    }
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                </div>
                                             }
                                         </div>
                                     </div>
@@ -398,5 +522,7 @@
                 });
             }
         });
+
+
     </script>
 }
