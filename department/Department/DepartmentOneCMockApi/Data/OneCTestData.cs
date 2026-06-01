@@ -1024,7 +1024,7 @@ namespace DepartmentOneCMockApi.Data
                         ? Semesters.Первый
                         : Semesters.Второй;
 
-                    var mark = GetDemoMark(student, disciplineId);
+                    var mark = GetDemoMark(student, disciplineId, semester);
 
                     result.Add(new DisciplineStudentRecordMockModel
                     {
@@ -1042,22 +1042,47 @@ namespace DepartmentOneCMockApi.Data
             return result;
         }
 
-        private static MarkType GetDemoMark(StudentMockModel student, int disciplineId)
+        private static readonly Lazy<HashSet<int>> HighRiskDebtStudentIds = new(() =>
+    Students
+        .Where(student =>
+        {
+            var group = StudentGroups.First(x => x.Id == student.StudentGroupId);
+            return group.Course == AcademicCourse.Course_4;
+        })
+        .Take(1)
+        .Select(x => x.Id)
+        .ToHashSet());
+
+        private static readonly Lazy<HashSet<int>> RegularDebtStudentIds = new(() =>
+            Students
+                .Where(student =>
+                {
+                    var group = StudentGroups.First(x => x.Id == student.StudentGroupId);
+                    return group.Course == AcademicCourse.Course_3;
+                })
+                .Take(1)
+                .Select(x => x.Id)
+                .ToHashSet());
+
+        private static MarkType GetDemoMark(StudentMockModel student, int disciplineId, Semesters semester)
         {
             if (student.StudentState == StudentState.Академ && disciplineId >= 5)
                 return MarkType.Неявка;
 
-            if (student.Id == 10 && (disciplineId == 5 || disciplineId == 8))
+            if (HighRiskDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
+                return MarkType.Неудовлетворительно;
+
+            if (RegularDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
                 return MarkType.Неудовлетворительно;
 
             var marks = new[]
             {
-                MarkType.Отлично,
-                MarkType.Хорошо,
-                MarkType.Удовлетворительно,
-                MarkType.Хорошо,
-                MarkType.Отлично
-            };
+        MarkType.Отлично,
+        MarkType.Хорошо,
+        MarkType.Удовлетворительно,
+        MarkType.Хорошо,
+        MarkType.Отлично
+    };
 
             return marks[(student.Id + disciplineId) % marks.Length];
         }
