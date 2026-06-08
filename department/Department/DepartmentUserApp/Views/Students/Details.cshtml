@@ -8,6 +8,45 @@
     var movementHistory = ViewBag.StudentMovementHistory as List<StudentMovementHistoryViewModel>
         ?? new List<StudentMovementHistoryViewModel>();
 
+    var studentRecords = ViewBag.StudentDisciplineRecords as List<DisciplineStudentRecordViewModel>
+?? new List<DisciplineStudentRecordViewModel>();
+
+    var debtRecords = studentRecords
+        .Where(x => x.MarkType == MarkType.Неудовлетворительно)
+        .OrderBy(x => x.Semester)
+        .ThenBy(x => x.Discipline)
+        .ToList();
+
+    string GetSemesterName(Semesters semester) => semester switch
+    {
+        Semesters.Первый => "1 семестр",
+        Semesters.Второй => "2 семестр",
+        Semesters.Третий => "3 семестр",
+        Semesters.Четвертый => "4 семестр",
+        Semesters.Пятый => "5 семестр",
+        Semesters.Шестой => "6 семестр",
+        Semesters.Седьмой => "7 семестр",
+        Semesters.Восьмой => "8 семестр",
+        _ => semester.ToString()
+    };
+
+    string GetMarkName(MarkType mark) => mark switch
+    {
+        MarkType.Отлично => "Отлично",
+        MarkType.Хорошо => "Хорошо",
+        MarkType.Удовлетворительно => "Удовлетворительно",
+        MarkType.Неудовлетворительно => "Неудовлетворительно",
+        MarkType.Неявка => "Неявка",
+        _ => mark.ToString()
+    };
+
+    string FormatMarkDate(DateTime? markDate)
+    {
+        return markDate.HasValue
+            ? markDate.Value.ToString("dd.MM.yyyy")
+            : "—";
+    }
+
     string GetStudentStateName(StudentState state) => state switch
     {
         StudentState.Учится => "Обучается",
@@ -162,6 +201,62 @@
                         </td>
                     </tr>
                                         }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="app-card mt-3">
+    <div class="app-card-header">
+        <h3 class="app-card-title mb-0">Академические задолженности</h3>
+    </div>
+
+    <div class="p-3">
+        @if (debtRecords.Count == 0)
+        {
+            <div class="alert alert-success mb-0">
+                Академические задолженности отсутствуют.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger">
+                У студента есть академические задолженности: @debtRecords.Count
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Дисциплина</th>
+                            <th>Семестр</th>
+                            <th>Вариант</th>
+                            <th>Оценка</th>
+                            <th>Дата выставления</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in debtRecords)
+                        {
+                            <tr>
+                                <td>@(string.IsNullOrWhiteSpace(item.Discipline) ? "—" : item.Discipline)</td>
+                                <td>@GetSemesterName(item.Semester)</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Variant) ? "—" : item.Variant)</td>
+                                <td>@GetMarkName(item.MarkType)</td>
+                                <td>@FormatMarkDate(item.MarkDate)</td>
+                                <td>
+                                    <a class="btn btn-sm btn-app-outline"
+                                       asp-controller="DisciplineStudentRecords"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id">
+                                        Подробнее
+                                    </a>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>

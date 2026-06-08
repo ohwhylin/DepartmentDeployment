@@ -50,6 +50,16 @@ namespace DepartmentUserApp.Controllers
                     APIClient.GetRequest<List<StudentMovementHistoryViewModel>>(
                         $"api/core/StudentOrderBlockStudents/GetStudentMovementHistory?studentId={id}");
 
+                ViewBag.StudentDisciplineRecords =
+                (APIClient.GetRequest<List<DisciplineStudentRecordViewModel>>(
+                    "api/core/DisciplineStudentRecords/GetDisciplineStudentRecordList")
+                 ?? new List<DisciplineStudentRecordViewModel>())
+                .Where(x => x.StudentId == id)
+                .OrderBy(x => x.Semester)
+                .ThenBy(x => x.Discipline)
+                .ThenBy(x => x.Variant)
+                .ToList();
+
                 return View(item);
             }
             catch (Exception ex)

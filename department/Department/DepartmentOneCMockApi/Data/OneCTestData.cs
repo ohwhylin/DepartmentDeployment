@@ -1033,9 +1033,7 @@ namespace DepartmentOneCMockApi.Data
                         planRecord.Pass == 1 ? "Зачет" :
                         "Аттестация";
 
-                    var semester = planRecord.Semester % 2 == 1
-    ? Semesters.Первый
-    : Semesters.Второй;
+                    var semester = (Semesters)planRecord.Semester;
 
                     var mark = GetDemoMark(student, disciplineId, semester);
                     var markDate = GetDemoMarkDate(student, planRecord.Semester);
@@ -1087,7 +1085,7 @@ namespace DepartmentOneCMockApi.Data
             if (HighRiskDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
                 return MarkType.Неудовлетворительно;
 
-            if (RegularDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
+            if (RegularDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Четвертый)
                 return MarkType.Неудовлетворительно;
 
             var marks = new[]

@@ -37,6 +37,26 @@
         MarkType.Неявка => "Неявка",
         _ => mark.ToString()
     };
+
+    string GetSemesterName(Semesters semester) => semester switch
+    {
+        Semesters.Первый => "1 семестр",
+        Semesters.Второй => "2 семестр",
+        Semesters.Третий => "3 семестр",
+        Semesters.Четвертый => "4 семестр",
+        Semesters.Пятый => "5 семестр",
+        Semesters.Шестой => "6 семестр",
+        Semesters.Седьмой => "7 семестр",
+        Semesters.Восьмой => "8 семестр",
+        _ => semester.ToString()
+    };
+
+    string FormatMarkDate(DateTime? markDate)
+    {
+        return markDate.HasValue
+            ? markDate.Value.ToString("dd.MM.yyyy")
+            : "—";
+    }
 }
 
 <div class="list-shell">
@@ -111,6 +131,15 @@
             .Where(x => groupStudentIds.Contains(x.StudentId))
             .ToList();
 
+            var groupDebtRecords = groupRecords
+            .Where(x => x.MarkType == MarkType.Неудовлетворительно)
+            .ToList();
+
+            var groupDebtStudentsCount = groupDebtRecords
+            .Select(x => x.StudentId)
+            .Distinct()
+            .Count();
+
             var groupDisciplineIds = groupRecords
             .Select(x => x.DisciplineId)
             .Distinct()
@@ -137,6 +166,16 @@
                                 <div><strong>Курс:</strong> @GetCourseName(group.Course)</div>
                                 <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
                                 <div><strong>Количество дисциплин:</strong> @groupDisciplines.Count</div>
+                                @if (groupDebtStudentsCount > 0)
+                                {
+                                    <div class="mt-2">
+                                        <div class="alert alert-warning py-2 mb-0">
+                                            <strong>Внимание:</strong>
+                                            в группе есть студенты с академическими задолженностями —
+                                            @groupDebtStudentsCount чел.
+                                        </div>
+                                    </div>
+                                }
                                 @if (!string.IsNullOrWhiteSpace(group.Curator))
                                 {
                                     <div><strong>Куратор:</strong> @group.Curator</div>
@@ -233,11 +272,11 @@
                                                             <div class="mark-list">
                                                                 @foreach (var record in cellRecords)
                                                                 {
-                                                                    <a class="mark-link"
-                                           asp-controller="DisciplineStudentRecords"
-                                           asp-action="Details"
-                                           asp-route-id="@record.Id"
-                                           title="Семестр: @record.Semester | Вариант: @record.Variant | Подгруппа: @record.SubGroup">
+                                                                    <a class="@(record.MarkType == MarkType.Неудовлетворительно ? "mark-link debt-mark-link" : "mark-link")"
+                                                                       asp-controller="DisciplineStudentRecords"
+                                                                       asp-action="Details"
+                                                                       asp-route-id="@record.Id"
+                                                                       title="Семестр: @GetSemesterName(record.Semester) | Вариант: @record.Variant | Подгруппа: @record.SubGroup | Дата: @FormatMarkDate(record.MarkDate)">
                                                                         @GetMarkName(record.MarkType)
                                                                     </a>
                                                                 }
@@ -389,6 +428,19 @@
         .student-record-row.student-match td {
             background: #eef6ff;
         }
+
+        .debt-mark-link {
+            background: #fff3cd;
+            border-color: #f1aeb5;
+            color: #842029;
+        }
+
+            .debt-mark-link:hover,
+            .debt-mark-link:focus {
+                background: #842029;
+                border-color: #842029;
+                color: #fff;
+            }
     </style>
 }
 
