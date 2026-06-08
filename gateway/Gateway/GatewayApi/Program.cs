@@ -61,6 +61,16 @@ static Task DenyAsync(HttpContext context)
     return Task.CompletedTask;
 }
 
+static bool IsLessonTimeWritePath(PathString path)
+{
+    var value = path.Value ?? string.Empty;
+
+    return value.StartsWith("/lab/LessonTime/Create", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/lab/LessonTime/Update", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/lab/LessonTime/Edit", StringComparison.OrdinalIgnoreCase)
+        || value.StartsWith("/lab/LessonTime/Delete", StringComparison.OrdinalIgnoreCase);
+}
+
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
@@ -116,12 +126,35 @@ app.Use(async (context, next) =>
                 return;
             }
         }
+        // время занятий: смотреть могут все авторизованные, менять — только с правом дежурств
+        else if (path.StartsWithSegments("/lab/LessonTime"))
+        {
+            if (IsLessonTimeWritePath(path))
+            {
+                if (!HasPermission(context, "Lab.DutySchedule.Access"))
+                {
+                    await DenyAsync(context);
+                    return;
+                }
+            }
+            else
+            {
+                var canViewLessonTime =
+                    HasPermission(context, "Lab.Schedule.View") ||
+                    HasPermission(context, "Lab.DutySchedule.Access");
+
+                if (!canViewLessonTime)
+                {
+                    await DenyAsync(context);
+                    return;
+                }
+            }
+        }
         // график дежурств
         else if (StartsWithAny(path,
                      "/lab/DutyPerson",
                      "/lab/DutySchedule",
                      "/lab/Group",
-                     "/lab/LessonTime",
                      "/lab/Teacher"))
         {
             if (!HasPermission(context, "Lab.DutySchedule.Access"))
