@@ -1,30 +1,100 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentDataModels.Enums;
+using DepartmentUserApp.ViewModels.AcademicPlans;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class AcademicPlansController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(
+    AcademicCourse? course,
+    string? year,
+    EducationDirectionQualification? qualification,
+    int page = 1,
+    int pageSize = 10)
         {
             try
             {
-                ViewBag.AcademicPlansList = APIClient.GetRequest<List<AcademicPlanViewModel>>("api/core/AcademicPlans/GetAcademicPlanList");
-                ViewBag.AcademicPlanRecordsList = APIClient.GetRequest<List<AcademicPlanRecordViewModel>>("api/core/AcademicPlanRecords/GetAcademicPlanRecordList");
-                ViewBag.EducationDirectionsList = APIClient.GetRequest<List<EducationDirectionViewModel>>("api/core/EducationDirections/GetEducationDirectionList");
-                return View();
+                if (page < 1)
+                {
+                    page = 1;
+                }
+
+                if (pageSize <= 0)
+                {
+                    pageSize = 10;
+                }
+
+                var queryParts = new List<string>();
+
+                if (course.HasValue)
+                {
+                    queryParts.Add($"AcademicCourses={(int)course.Value}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(year))
+                {
+                    queryParts.Add($"Year={Uri.EscapeDataString(year.Trim())}");
+                }
+
+                if (qualification.HasValue)
+                {
+                    queryParts.Add($"Qualification={(int)qualification.Value}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var plansUrl =
+                    $"api/core/AcademicPlans/GetAcademicPlanPage?{string.Join("&", queryParts)}";
+
+                var pagedPlans =
+                    APIClient.GetRequest<PagedResult<AcademicPlanViewModel>>(plansUrl)
+                    ?? new PagedResult<AcademicPlanViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    };
+
+                var records =
+                    APIClient.GetRequest<List<AcademicPlanRecordViewModel>>(
+                        "api/core/AcademicPlanRecords/GetAcademicPlanRecordList")
+                    ?? new List<AcademicPlanRecordViewModel>();
+
+                var model = new AcademicPlanListPageViewModel
+                {
+                    Course = course,
+                    Year = year?.Trim() ?? string.Empty,
+                    Qualification = qualification,
+                    Result = pagedPlans,
+                    Records = records
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.AcademicPlansList = new List<AcademicPlanViewModel>();
-                ViewBag.AcademicPlanRecordsList = new List<AcademicPlanRecordViewModel>();
-                ViewBag.EducationDirectionsList = new List<EducationDirectionViewModel>();
-                return View();
+
+                return View(new AcademicPlanListPageViewModel
+                {
+                    Course = course,
+                    Year = year?.Trim() ?? string.Empty,
+                    Qualification = qualification,
+                    Result = new PagedResult<AcademicPlanViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    },
+                    Records = new List<AcademicPlanRecordViewModel>()
+                });
             }
         }
 

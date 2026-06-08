@@ -21,16 +21,54 @@ namespace DepartmentRestApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAcademicPlanList()
+        public IActionResult GetAcademicPlanList([FromQuery] AcademicPlanSearchModel model)
         {
             try
             {
-                var list = _academicPlan.ReadList(null);
+                var hasFilters =
+                    model.Id.HasValue ||
+                    model.EducationDirectionId.HasValue ||
+                    model.AcademicCourses.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Year) ||
+                    model.Qualification.HasValue;
+
+                var list = _academicPlan.ReadList(hasFilters ? model : null);
                 return Ok(list);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during loading list of academicPlans");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetAcademicPlanPage([FromQuery] AcademicPlanSearchModel model)
+        {
+            try
+            {
+                model ??= new AcademicPlanSearchModel();
+
+                var hasFilters =
+                    model.Id.HasValue ||
+                    model.EducationDirectionId.HasValue ||
+                    model.AcademicCourses.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Year) ||
+                    model.Qualification.HasValue;
+
+                var list = _academicPlan.ReadList(hasFilters ? model : null)
+                    ?? new List<AcademicPlanViewModel>();
+
+                var result = PagedResult<AcademicPlanViewModel>.Create(
+                    list,
+                    model.Page,
+                    model.PageSize);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading page of academicPlans");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }
