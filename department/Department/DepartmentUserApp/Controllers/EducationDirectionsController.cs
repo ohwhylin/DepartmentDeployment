@@ -1,29 +1,81 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentDataModels.Enums;
+using DepartmentUserApp.ViewModels.EducationDirections;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class EducationDirectionsController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(string? search, EducationDirectionQualification? qualification, int page = 1, int pageSize = 10)
         {
             try
             {
-                ViewBag.EducationDirectionsList =
-                    APIClient.GetRequest<List<EducationDirectionViewModel>>(
-                        "api/core/EducationDirections/GetEducationDirectionList");
+                if (page < 1)
+                {
+                    page = 1;
+                }
 
-                return View();
+                if (pageSize <= 0)
+                {
+                    pageSize = 10;
+                }
+
+                var queryParts = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    queryParts.Add($"Search={Uri.EscapeDataString(search.Trim())}");
+                }
+
+                if (qualification.HasValue)
+                {
+                    queryParts.Add($"Qualification={(int)qualification.Value}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var requestUrl =
+                    $"api/core/EducationDirections/GetEducationDirectionPage?{string.Join("&", queryParts)}";
+
+                var result =
+                    APIClient.GetRequest<PagedResult<EducationDirectionViewModel>>(requestUrl)
+                    ?? new PagedResult<EducationDirectionViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    };
+
+                var model = new EducationDirectionListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Qualification = qualification,
+                    Result = result
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.EducationDirectionsList = new List<EducationDirectionViewModel>();
-                return View();
+
+                return View(new EducationDirectionListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Qualification = qualification,
+                    Result = new PagedResult<EducationDirectionViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    }
+                });
             }
         }
 

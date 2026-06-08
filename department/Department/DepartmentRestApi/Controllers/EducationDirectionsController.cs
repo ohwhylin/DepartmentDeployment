@@ -21,16 +21,60 @@ namespace DepartmentRestApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetEducationDirectionList()
+        public IActionResult GetEducationDirectionList([FromQuery] EducationDirectionSearchModel model)
         {
             try
             {
-                var list = _educationDirection.ReadList(null);
+                var hasFilters =
+                    model.Id.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Search) ||
+                    !string.IsNullOrWhiteSpace(model.Cipher) ||
+                    !string.IsNullOrWhiteSpace(model.ShortName) ||
+                    !string.IsNullOrWhiteSpace(model.Title) ||
+                    model.Qualification.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Profile) ||
+                    !string.IsNullOrWhiteSpace(model.Description);
+
+                var list = _educationDirection.ReadList(hasFilters ? model : null);
                 return Ok(list);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during loading list of educationDirections");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetEducationDirectionPage([FromQuery] EducationDirectionSearchModel model)
+        {
+            try
+            {
+                model ??= new EducationDirectionSearchModel();
+
+                var hasFilters =
+                    model.Id.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Search) ||
+                    !string.IsNullOrWhiteSpace(model.Cipher) ||
+                    !string.IsNullOrWhiteSpace(model.ShortName) ||
+                    !string.IsNullOrWhiteSpace(model.Title) ||
+                    model.Qualification.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Profile) ||
+                    !string.IsNullOrWhiteSpace(model.Description);
+
+                var list = _educationDirection.ReadList(hasFilters ? model : null)
+                    ?? new List<EducationDirectionViewModel>();
+
+                var result = PagedResult<EducationDirectionViewModel>.Create(
+                    list,
+                    model.Page,
+                    model.PageSize);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading page of educationDirections");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }
