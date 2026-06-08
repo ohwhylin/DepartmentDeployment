@@ -982,6 +982,19 @@ namespace DepartmentOneCMockApi.Data
         }
 
         public static List<AcademicPlanMockModel> AcademicPlans => BuildAllAcademicPlans();
+        private static DateTime? GetDemoMarkDate(StudentMockModel student, int studySemesterNumber)
+        {
+            if (!student.StudentGroupId.HasValue)
+                return null;
+
+            var group = StudentGroups.First(x => x.Id == student.StudentGroupId.Value);
+            var enrollmentDate = GetEnrollmentDateByCourse((int)group.Course);
+
+            var semesterStart = enrollmentDate.AddMonths((studySemesterNumber - 1) * 6);
+            var markDate = semesterStart.AddMonths(4).AddDays((student.Id % 20) + 1);
+
+            return DateTime.SpecifyKind(markDate, DateTimeKind.Utc);
+        }
 
         public static List<DisciplineStudentRecordMockModel> DisciplineStudentRecords => GenerateDisciplineStudentRecords();
 
@@ -1020,11 +1033,12 @@ namespace DepartmentOneCMockApi.Data
                         planRecord.Pass == 1 ? "Зачет" :
                         "Аттестация";
 
-                    var semester = planRecord.Semester == 1
-                        ? Semesters.Первый
-                        : Semesters.Второй;
+                    var semester = planRecord.Semester % 2 == 1
+    ? Semesters.Первый
+    : Semesters.Второй;
 
                     var mark = GetDemoMark(student, disciplineId, semester);
+                    var markDate = GetDemoMarkDate(student, planRecord.Semester);
 
                     result.Add(new DisciplineStudentRecordMockModel
                     {
@@ -1034,7 +1048,8 @@ namespace DepartmentOneCMockApi.Data
                         Semester = semester,
                         Variant = variant,
                         SubGroup = ((student.Id - 1) % 2) + 1,
-                        MarkType = mark
+                        MarkType = mark,
+                        MarkDate = markDate
                     });
                 }
             }

@@ -13,5 +13,6 @@ namespace DepartmentContracts.SearchModels
         public string? Variant { get; set; }
         public int? SubGroup { get; set; }
         public MarkType? MarkType { get; set; }
+        public DateTime? MarkDate { get; set; }
     }
 }

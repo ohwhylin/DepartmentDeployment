@@ -60,6 +60,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     Variant = oneCRecord.Variant,
                     SubGroup = oneCRecord.SubGroup,
                     MarkType = oneCRecord.MarkType,
+                    MarkDate = oneCRecord.MarkDate,
                 };
 
                 if (existingRecord == null)
@@ -75,6 +76,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                         Variant = model.Variant,
                         SubGroup = model.SubGroup,
                         MarkType = model.MarkType,
+                        MarkDate = model.MarkDate,
                     });
                 }
                 else
@@ -85,7 +87,8 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                         existingRecord.Semester != oneCRecord.Semester ||
                         existingRecord.Variant != oneCRecord.Variant ||
                         existingRecord.SubGroup != oneCRecord.SubGroup ||
-                        existingRecord.MarkType != oneCRecord.MarkType;
+                        existingRecord.MarkType != oneCRecord.MarkType ||
+                        existingRecord.MarkDate != oneCRecord.MarkDate;
 
                     if (needUpdate)
                     {
@@ -97,6 +100,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                         existingRecord.Variant = model.Variant;
                         existingRecord.SubGroup = model.SubGroup;
                         existingRecord.MarkType = model.MarkType;
+                        existingRecord.MarkDate = model.MarkDate;
                     }
                 }
             }

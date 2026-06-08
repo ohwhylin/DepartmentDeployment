@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
 using DepartmentContracts.BindingModels;
@@ -35,9 +36,13 @@ namespace DepartmentDatabaseImplement.Models
         [DataMember]
         [Required]
         public int SubGroup { get; private set; }
+
         [DataMember]
         [Required]
         public MarkType MarkType { get; private set; }
+
+        [DataMember]
+        public DateTime? MarkDate { get; private set; }
 
         public static DisciplineStudentRecord? Create(DisciplineStudentRecordBindingModel model)
         {
@@ -51,6 +56,7 @@ namespace DepartmentDatabaseImplement.Models
                 Variant = model.Variant,
                 SubGroup = model.SubGroup,
                 MarkType = model.MarkType,
+                MarkDate = model.MarkDate,
             };
         }
 
@@ -63,6 +69,7 @@ namespace DepartmentDatabaseImplement.Models
             Variant = model.Variant;
             SubGroup = model.SubGroup;
             MarkType = model.MarkType;
+            MarkDate = model.MarkDate;
         }
 
         public DisciplineStudentRecordViewModel GetViewModel => new()
@@ -74,6 +81,7 @@ namespace DepartmentDatabaseImplement.Models
             Variant = Variant,
             SubGroup = SubGroup,
             MarkType = MarkType,
+            MarkDate = MarkDate,
         };
     }
 }

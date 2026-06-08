@@ -14,5 +14,6 @@ namespace DepartmentDataModels.Models
         string Variant { get; }
         int SubGroup { get; }
         MarkType MarkType { get; }
+        DateTime? MarkDate { get; }
     }
 }
