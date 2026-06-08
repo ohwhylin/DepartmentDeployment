@@ -61,6 +61,21 @@ static Task DenyAsync(HttpContext context)
     return Task.CompletedTask;
 }
 
+static bool IsWritePath(PathString path)
+{
+    var value = path.Value ?? string.Empty;
+
+    return value.Contains("/Create", StringComparison.OrdinalIgnoreCase)
+        || value.Contains("/Update", StringComparison.OrdinalIgnoreCase)
+        || value.Contains("/Edit", StringComparison.OrdinalIgnoreCase)
+        || value.Contains("/Delete", StringComparison.OrdinalIgnoreCase);
+}
+
+static bool CanViewScheduleDictionary(HttpContext context) =>
+    HasPermission(context, "Lab.Schedule.View") ||
+    HasPermission(context, "Lab.DutySchedule.Access") ||
+    HasPermission(context, "Lab.Inventory.Access");
+
 static bool IsLessonTimeWritePath(PathString path)
 {
     var value = path.Value ?? string.Empty;
@@ -105,13 +120,11 @@ app.Use(async (context, next) =>
         return;
     }
 
-    // лабораторный модуль
     if (path.StartsWithSegments("/lab"))
     {
         // ћќЋ Ч только завлаб / developer
         if (StartsWithAny(path,
                 "/lab/Mol",
-                "/lab/Classroom",
                 "/lab/EquipmentMovementHistory",
                 "/lab/InventoryReport",
                 "/lab/MaterialResponsiblePerson",
@@ -126,10 +139,37 @@ app.Use(async (context, next) =>
                 return;
             }
         }
-        // врем€ зан€тий: смотреть могут все авторизованные, мен€ть Ч только с правом дежурств
-        else if (path.StartsWithSegments("/lab/LessonTime"))
+        // аудитории:
+        // смотреть и синхронизировать могут все, у кого есть просмотр расписани€
+        // мен€ть Ч только с правом ћќЋ
+        else if (path.StartsWithSegments("/lab/Classroom"))
         {
-            if (IsLessonTimeWritePath(path))
+            if (IsWritePath(path))
+            {
+                if (!HasPermission(context, "Lab.Inventory.Access"))
+                {
+                    await DenyAsync(context);
+                    return;
+                }
+            }
+            else
+            {
+                if (!CanViewScheduleDictionary(context))
+                {
+                    await DenyAsync(context);
+                    return;
+                }
+            }
+        }
+        // преподаватели / группы / врем€ зан€тий:
+        // смотреть и синхронизировать могут все, у кого есть просмотр расписани€
+        // мен€ть Ч только с правом дежурств
+        else if (StartsWithAny(path,
+                     "/lab/Group",
+                     "/lab/LessonTime",
+                     "/lab/Teacher"))
+        {
+            if (IsWritePath(path))
             {
                 if (!HasPermission(context, "Lab.DutySchedule.Access"))
                 {
@@ -139,11 +179,7 @@ app.Use(async (context, next) =>
             }
             else
             {
-                var canViewLessonTime =
-                    HasPermission(context, "Lab.Schedule.View") ||
-                    HasPermission(context, "Lab.DutySchedule.Access");
-
-                if (!canViewLessonTime)
+                if (!CanViewScheduleDictionary(context))
                 {
                     await DenyAsync(context);
                     return;
@@ -153,9 +189,7 @@ app.Use(async (context, next) =>
         // график дежурств
         else if (StartsWithAny(path,
                      "/lab/DutyPerson",
-                     "/lab/DutySchedule",
-                     "/lab/Group",
-                     "/lab/Teacher"))
+                     "/lab/DutySchedule"))
         {
             if (!HasPermission(context, "Lab.DutySchedule.Access"))
             {
