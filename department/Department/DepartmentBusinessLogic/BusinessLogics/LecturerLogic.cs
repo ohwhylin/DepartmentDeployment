@@ -51,7 +51,6 @@ namespace DepartmentBusinessLogic.BusinessLogics
         public bool Create(LecturerBindingModel model)
         {
             model.Abbreviation = BuildAbbreviation(model.LastName, model.FirstName, model.Patronymic);
-            model.Rank = Rank.Отсуствует;
             model.DateBirth = DateTime.SpecifyKind(model.DateBirth.Date, DateTimeKind.Utc);
 
             CheckModel(model);
@@ -66,7 +65,6 @@ namespace DepartmentBusinessLogic.BusinessLogics
         public bool Update(LecturerBindingModel model)
         {
             model.Abbreviation = BuildAbbreviation(model.LastName, model.FirstName, model.Patronymic);
-            model.Rank = Rank.Отсуствует;
             model.DateBirth = DateTime.SpecifyKind(model.DateBirth.Date, DateTimeKind.Utc);
 
             CheckModel(model);
@@ -141,6 +139,12 @@ namespace DepartmentBusinessLogic.BusinessLogics
 
             if (model.LecturerDepartmentPostId <= 0)
                 throw new ArgumentException("Не выбрана кафедральная должность", nameof(model.LecturerDepartmentPostId));
+
+            var hasDegree = Convert.ToInt32(model.Rank2) != 0;
+            var hasAcademicTitle = model.Rank != Rank.Отсуствует;
+
+            if (hasAcademicTitle && !hasDegree)
+                throw new InvalidOperationException("Учёное звание можно указать только при наличии учёной степени.");
 
             var element = _LecturerStorage.GetElement(new LecturerSearchModel
             {
