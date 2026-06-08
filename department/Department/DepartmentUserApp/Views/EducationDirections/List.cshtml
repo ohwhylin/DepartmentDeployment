@@ -121,44 +121,73 @@
 
         @if (Model.Result.TotalPages > 1)
         {
-            <div class="p-3 pt-2">
-                <nav aria-label="Пагинация">
+            <div class="app-pagination-wrap">
+                <nav class="app-pagination" aria-label="Пагинация">
                     <ul class="pagination mb-0">
-                        <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link"
-                               asp-action="List"
-                               asp-route-search="@Model.Search"
-                               asp-route-qualification="@qualificationRouteValue"
-                               asp-route-page="@(Model.Result.Page - 1)"
-                               asp-route-pageSize="@Model.Result.PageSize">
-                                Назад
-                            </a>
-                        </li>
 
-                        @for (var p = startPage; p <= endPage; p++)
+                        @if (Model.Result.HasPreviousPage)
                         {
-                            <li class="page-item @(p == Model.Result.Page ? "active" : "")">
-                                <a class="page-link"
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
                                    asp-action="List"
                                    asp-route-search="@Model.Search"
                                    asp-route-qualification="@qualificationRouteValue"
-                                   asp-route-page="@p"
+                                   asp-route-page="@(Model.Result.Page - 1)"
                                    asp-route-pageSize="@Model.Result.PageSize">
-                                    @p
+                                    Назад
                                 </a>
                             </li>
                         }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Назад</span>
+                            </li>
+                        }
 
-                        <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
-                            <a class="page-link"
-                               asp-action="List"
-                               asp-route-search="@Model.Search"
-                               asp-route-qualification="@qualificationRouteValue"
-                               asp-route-page="@(Model.Result.Page + 1)"
-                               asp-route-pageSize="@Model.Result.PageSize">
-                                Вперёд
-                            </a>
-                        </li>
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            if (p == Model.Result.Page)
+                            {
+                                <li class="page-item active">
+                                    <span class="page-link">@p</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="List"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-qualification="@qualificationRouteValue"
+                                       asp-route-page="@p"
+                                       asp-route-pageSize="@Model.Result.PageSize">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        }
+
+                        @if (Model.Result.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-qualification="@qualificationRouteValue"
+                                   asp-route-page="@(Model.Result.Page + 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Вперёд
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
                     </ul>
                 </nav>
             </div>
