@@ -21,16 +21,66 @@ namespace DepartmentRestApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDisciplineList()
+        public IActionResult GetDisciplineList([FromQuery] DisciplineSearchModel model)
         {
             try
             {
-                var list = _discipline.ReadList(null);
+                var hasFilters =
+                    model.Id.HasValue ||
+                    model.DisciplineBlockId.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Search) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineName) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineShortName) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineDescription) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineBlockBlueAsteriskName) ||
+                    model.HasExam.HasValue ||
+                    model.HasCredit.HasValue ||
+                    model.HasCourseWork.HasValue ||
+                    model.HasCourseProject.HasValue;
+
+                var list = _discipline.ReadList(hasFilters ? model : null);
                 return Ok(list);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during loading list of disciplines");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetDisciplinePage([FromQuery] DisciplineSearchModel model)
+        {
+            try
+            {
+                model ??= new DisciplineSearchModel();
+
+                var hasFilters =
+                    model.Id.HasValue ||
+                    model.DisciplineBlockId.HasValue ||
+                    !string.IsNullOrWhiteSpace(model.Search) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineName) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineShortName) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineDescription) ||
+                    !string.IsNullOrWhiteSpace(model.DisciplineBlockBlueAsteriskName) ||
+                    model.HasExam.HasValue ||
+                    model.HasCredit.HasValue ||
+                    model.HasCourseWork.HasValue ||
+                    model.HasCourseProject.HasValue;
+
+                var list = _discipline.ReadList(hasFilters ? model : null)
+                    ?? new List<DisciplineViewModel>();
+
+                var result = PagedResult<DisciplineViewModel>.Create(
+                    list,
+                    model.Page,
+                    model.PageSize);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading page of disciplines");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }

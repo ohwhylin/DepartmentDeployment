@@ -1,28 +1,73 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentUserApp.ViewModels.Disciplines;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class DisciplinesController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(string? search, int page = 1, int pageSize = 10)
         {
             try
             {
-                ViewBag.DisciplinesList = APIClient.GetRequest<List<DisciplineViewModel>>("api/core/Disciplines/GetDisciplineList");
-                ViewBag.DisciplineBlocksList = APIClient.GetRequest<List<DisciplineBlockViewModel>>("api/core/DisciplineBlocks/GetDisciplineBlockList");
-                return View();
+                if (page < 1)
+                {
+                    page = 1;
+                }
+
+                if (pageSize <= 0)
+                {
+                    pageSize = 10;
+                }
+
+                var queryParts = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    queryParts.Add($"Search={Uri.EscapeDataString(search.Trim())}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var requestUrl =
+                    $"api/core/Disciplines/GetDisciplinePage?{string.Join("&", queryParts)}";
+
+                var result =
+                    APIClient.GetRequest<PagedResult<DisciplineViewModel>>(requestUrl)
+                    ?? new PagedResult<DisciplineViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    };
+
+                var model = new DisciplineListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Result = result
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.DisciplinesList = new List<DisciplineViewModel>();
-                ViewBag.DisciplineBlocksList = new List<DisciplineBlockViewModel>();
-                return View();
+
+                return View(new DisciplineListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Result = new PagedResult<DisciplineViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    }
+                });
             }
         }
 
