@@ -509,7 +509,7 @@ namespace DepartmentOneCMockApi.Data
                 {
                     Id = _recordId++,
                     AcademicPlanId = planId,
-                    DisciplineId = _disciplineId++,
+                    DisciplineId = GetOrCreateDisciplineId(seed.Name),
 
                     DisciplineBlockId = block.blockId,
                     DisciplineBlockTitle = block.blockTitle,
@@ -971,6 +971,7 @@ namespace DepartmentOneCMockApi.Data
         {
             _recordId = 1;
             _disciplineId = 1;
+            _disciplineIds.Clear();
 
             var result = new List<AcademicPlanMockModel>();
             result.AddRange(Build090304Plans());
@@ -979,6 +980,32 @@ namespace DepartmentOneCMockApi.Data
             result.AddRange(Build090403Plans());
 
             return result;
+        }
+
+        private static readonly Dictionary<string, int> _disciplineIds =
+    new(StringComparer.OrdinalIgnoreCase);
+
+        private static string NormalizeDisciplineKey(string value)
+        {
+            return string.Join(
+                " ",
+                value.Trim()
+                     .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .ToLowerInvariant();
+        }
+
+        private static int GetOrCreateDisciplineId(string disciplineName)
+        {
+            var key = NormalizeDisciplineKey(disciplineName);
+
+            if (_disciplineIds.TryGetValue(key, out var existingId))
+            {
+                return existingId;
+            }
+
+            var newId = _disciplineId++;
+            _disciplineIds[key] = newId;
+            return newId;
         }
 
         public static List<AcademicPlanMockModel> AcademicPlans => BuildAllAcademicPlans();

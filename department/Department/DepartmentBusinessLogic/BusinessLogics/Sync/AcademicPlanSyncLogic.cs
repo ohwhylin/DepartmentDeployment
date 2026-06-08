@@ -49,8 +49,16 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                 foreach (var oneCRecord in oneCPlan.AcademicPlanRecords)
                 {
                     SyncDisciplineBlock(oneCRecord, currentDisciplineBlocks);
-                    SyncDiscipline(oneCRecord, currentDisciplines, currentDisciplineBlocks);
-                    SyncAcademicPlanRecord(oneCRecord, currentAcademicPlanRecords);
+
+                    var disciplineId = SyncDiscipline(
+                        oneCRecord,
+                        currentDisciplines,
+                        currentDisciplineBlocks);
+
+                    SyncAcademicPlanRecord(
+                        oneCRecord,
+                        currentAcademicPlanRecords,
+                        disciplineId);
                 }
             }
 
@@ -197,10 +205,10 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
             }
         }
 
-        private void SyncDiscipline(
-            DepartmentContracts.Dtos.OneC.AcademicPlanRecordOneCDto oneCRecord,
-            List<DisciplineViewModel> currentDisciplines,
-            List<DisciplineBlockViewModel> currentDisciplineBlocks)
+        private int SyncDiscipline(
+    DepartmentContracts.Dtos.OneC.AcademicPlanRecordOneCDto oneCRecord,
+    List<DisciplineViewModel> currentDisciplines,
+    List<DisciplineBlockViewModel> currentDisciplineBlocks)
         {
             var existingBlock = currentDisciplineBlocks.FirstOrDefault(x => x.Id == oneCRecord.DisciplineBlockId);
             if (existingBlock == null)
@@ -215,14 +223,18 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     $"У записи учебного плана Id = {oneCRecord.Id} отсутствует DisciplineId.");
             }
 
-            var existingDiscipline = currentDisciplines.FirstOrDefault(x => x.Id == oneCRecord.DisciplineId.Value);
+            var normalizedName = NormalizeDisciplineName(oneCRecord.Name);
+
+            var existingDiscipline =
+                currentDisciplines.FirstOrDefault(x => x.Id == oneCRecord.DisciplineId.Value)
+                ?? currentDisciplines.FirstOrDefault(x =>
+                    NormalizeDisciplineName(x.DisciplineName) == normalizedName);
 
             var disciplineModel = new DisciplineBindingModel
             {
                 Id = oneCRecord.DisciplineId.Value,
                 DisciplineBlockId = oneCRecord.DisciplineBlockId,
 
-                // ГЛАВНОЕ ПРАВИЛО:
                 DisciplineName = oneCRecord.Name,
 
                 DisciplineShortName = string.IsNullOrWhiteSpace(oneCRecord.DisciplineShortName)
@@ -258,40 +270,65 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     HasCourseWork = disciplineModel.HasCourseWork,
                     HasCourseProject = disciplineModel.HasCourseProject
                 });
+
+                return disciplineModel.Id;
             }
             else
             {
+                var canonicalDisciplineId = existingDiscipline.Id;
+
+                var updateModel = new DisciplineBindingModel
+                {
+                    Id = canonicalDisciplineId,
+                    DisciplineBlockId = oneCRecord.DisciplineBlockId,
+                    DisciplineName = oneCRecord.Name,
+                    DisciplineShortName = string.IsNullOrWhiteSpace(oneCRecord.DisciplineShortName)
+                        ? oneCRecord.Name
+                        : oneCRecord.DisciplineShortName,
+                    DisciplineDescription = string.IsNullOrWhiteSpace(oneCRecord.DisciplineDescription)
+                        ? oneCRecord.Name
+                        : oneCRecord.DisciplineDescription,
+                    DisciplineBlockBlueAsteriskName = oneCRecord.DisciplineBlockBlueAsteriskName,
+                    HasExam = oneCRecord.HasExam,
+                    HasCredit = oneCRecord.HasCredit,
+                    HasCourseWork = oneCRecord.HasCourseWork,
+                    HasCourseProject = oneCRecord.HasCourseProject
+                };
+
                 var needUpdate =
-                    existingDiscipline.DisciplineBlockId != disciplineModel.DisciplineBlockId ||
-                    existingDiscipline.DisciplineName != disciplineModel.DisciplineName ||
-                    existingDiscipline.DisciplineShortName != disciplineModel.DisciplineShortName ||
-                    existingDiscipline.DisciplineDescription != disciplineModel.DisciplineDescription ||
-                    existingDiscipline.DisciplineBlockBlueAsteriskName != disciplineModel.DisciplineBlockBlueAsteriskName ||
-                    existingDiscipline.HasExam != disciplineModel.HasExam ||
-                    existingDiscipline.HasCredit != disciplineModel.HasCredit ||
-                    existingDiscipline.HasCourseWork != disciplineModel.HasCourseWork ||
-                    existingDiscipline.HasCourseProject != disciplineModel.HasCourseProject;
+                    existingDiscipline.DisciplineBlockId != updateModel.DisciplineBlockId ||
+                    existingDiscipline.DisciplineName != updateModel.DisciplineName ||
+                    existingDiscipline.DisciplineShortName != updateModel.DisciplineShortName ||
+                    existingDiscipline.DisciplineDescription != updateModel.DisciplineDescription ||
+                    existingDiscipline.DisciplineBlockBlueAsteriskName != updateModel.DisciplineBlockBlueAsteriskName ||
+                    existingDiscipline.HasExam != updateModel.HasExam ||
+                    existingDiscipline.HasCredit != updateModel.HasCredit ||
+                    existingDiscipline.HasCourseWork != updateModel.HasCourseWork ||
+                    existingDiscipline.HasCourseProject != updateModel.HasCourseProject;
 
                 if (needUpdate)
                 {
-                    _disciplineStorage.Update(disciplineModel);
+                    _disciplineStorage.Update(updateModel);
 
-                    existingDiscipline.DisciplineBlockId = disciplineModel.DisciplineBlockId;
-                    existingDiscipline.DisciplineName = disciplineModel.DisciplineName;
-                    existingDiscipline.DisciplineShortName = disciplineModel.DisciplineShortName;
-                    existingDiscipline.DisciplineDescription = disciplineModel.DisciplineDescription;
-                    existingDiscipline.DisciplineBlockBlueAsteriskName = disciplineModel.DisciplineBlockBlueAsteriskName;
-                    existingDiscipline.HasExam = disciplineModel.HasExam;
-                    existingDiscipline.HasCredit = disciplineModel.HasCredit;
-                    existingDiscipline.HasCourseWork = disciplineModel.HasCourseWork;
-                    existingDiscipline.HasCourseProject = disciplineModel.HasCourseProject;
+                    existingDiscipline.DisciplineBlockId = updateModel.DisciplineBlockId;
+                    existingDiscipline.DisciplineName = updateModel.DisciplineName;
+                    existingDiscipline.DisciplineShortName = updateModel.DisciplineShortName;
+                    existingDiscipline.DisciplineDescription = updateModel.DisciplineDescription;
+                    existingDiscipline.DisciplineBlockBlueAsteriskName = updateModel.DisciplineBlockBlueAsteriskName;
+                    existingDiscipline.HasExam = updateModel.HasExam;
+                    existingDiscipline.HasCredit = updateModel.HasCredit;
+                    existingDiscipline.HasCourseWork = updateModel.HasCourseWork;
+                    existingDiscipline.HasCourseProject = updateModel.HasCourseProject;
                 }
+
+                return canonicalDisciplineId;
             }
         }
 
         private void SyncAcademicPlanRecord(
-            DepartmentContracts.Dtos.OneC.AcademicPlanRecordOneCDto oneCRecord,
-            List<AcademicPlanRecordViewModel> currentAcademicPlanRecords)
+    DepartmentContracts.Dtos.OneC.AcademicPlanRecordOneCDto oneCRecord,
+    List<AcademicPlanRecordViewModel> currentAcademicPlanRecords,
+    int disciplineId)
         {
             var existingRecord = currentAcademicPlanRecords.FirstOrDefault(x => x.Id == oneCRecord.Id);
 
@@ -299,7 +336,7 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
             {
                 Id = oneCRecord.Id,
                 AcademicPlanId = oneCRecord.AcademicPlanId,
-                DisciplineId = oneCRecord.DisciplineId,
+                DisciplineId = disciplineId,
                 Index = oneCRecord.Index,
                 Name = oneCRecord.Name,
                 Semester = oneCRecord.Semester,
@@ -383,6 +420,16 @@ namespace DepartmentBusinessLogic.BusinessLogics.Sync
                     existingRecord.PracticalHours = recordModel.PracticalHours;
                 }
             }
+        }
+
+        private static string NormalizeDisciplineName(string? value)
+        {
+            return string.Join(
+                " ",
+                (value ?? string.Empty)
+                    .Trim()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .ToLowerInvariant();
         }
     }
 }
