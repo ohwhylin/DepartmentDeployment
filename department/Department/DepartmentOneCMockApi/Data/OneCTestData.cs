@@ -1029,8 +1029,14 @@ namespace DepartmentOneCMockApi.Data
         {
             var result = new List<DisciplineStudentRecordMockModel>();
             var recordByDisciplineId = AcademicPlans
-                .SelectMany(x => x.AcademicPlanRecords)
-                .ToDictionary(x => x.DisciplineId ?? 0, x => x);
+            .SelectMany(x => x.AcademicPlanRecords)
+            .Where(x => x.DisciplineId.HasValue)
+            .GroupBy(x => x.DisciplineId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(x => x.AcademicPlanId)
+                      .ThenBy(x => x.Semester)
+                      .First());
 
             var groupById = StudentGroups.ToDictionary(x => x.Id, x => x);
 
