@@ -114,16 +114,22 @@
                                 <span asp-validation-for="HomeNumber" class="text-danger"></span>
                             </div>
 
-                            @*<div class="mb-3">
-                                <label asp-for="Rank" class="form-label">Учёная степень</label>
-                                <select asp-for="Rank" class="form-select" asp-items="Html.GetEnumSelectList<Rank>()"></select>
-                                <span asp-validation-for="Rank" class="text-danger"></span>
-                            </div>*@
-
                             <div class="mb-3">
                                 <label asp-for="Rank2" class="form-label">Учёная степень</label>
-                                <select asp-for="Rank2" class="form-select" asp-items="Html.GetEnumSelectList<Rank2>()"></select>
+                                <select asp-for="Rank2"
+                                        class="form-select"
+                                        asp-items="Html.GetEnumSelectList<Rank2>()"
+                                        id="rank2Select"></select>
                                 <span asp-validation-for="Rank2" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Rank" class="form-label">Учёное звание</label>
+                                <select asp-for="Rank"
+                                        class="form-select"
+                                        asp-items="Html.GetEnumSelectList<Rank>()"
+                                        id="rankSelect"></select>
+                                <span asp-validation-for="Rank" class="text-danger"></span>
                             </div>
 
                             <div class="mb-3">
@@ -190,6 +196,21 @@
             const ui = document.getElementById("dateBirthUi");
             const hidden = document.getElementById("dateBirthHidden");
 
+            const degreeSelect = document.getElementById("rank2Select");
+            const titleSelect = document.getElementById("rankSelect");
+
+            function updateAcademicTitleState() {
+                if (!degreeSelect || !titleSelect) return;
+
+                const hasDegree = degreeSelect.value && degreeSelect.value !== "0";
+
+                titleSelect.disabled = !hasDegree;
+
+                if (!hasDegree) {
+                    titleSelect.value = "0";
+                }
+            }
+
             if (hidden && hidden.value) {
                 const value = hidden.value;
 
@@ -200,13 +221,21 @@
                 }
             }
 
+            updateAcademicTitleState();
+
+            if (degreeSelect) {
+                degreeSelect.addEventListener("change", updateAcademicTitleState);
+            }
+
             if (form) {
                 form.addEventListener("submit", function () {
-                    if (!ui || !hidden) return;
+                    if (ui && hidden) {
+                        hidden.value = ui.value
+                            ? `${ui.value}T00:00:00`
+                            : "";
+                    }
 
-                    hidden.value = ui.value
-                        ? `${ui.value}T00:00:00`
-                        : "";
+                    updateAcademicTitleState();
                 });
             }
         });

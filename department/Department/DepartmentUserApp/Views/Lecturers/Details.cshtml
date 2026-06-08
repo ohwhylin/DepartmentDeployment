@@ -8,7 +8,10 @@
     <div class="app-card-header">
         <h2 class="app-card-title">Подробнее о преподавателе</h2>
         <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-light" asp-controller="Lecturers" asp-action="Update">Изменить</a>
+            <a class="btn btn-sm btn-light"
+               asp-controller="Lecturers"
+               asp-action="Update"
+               asp-route-id="@Model.Id">Изменить</a>
             <a class="btn btn-sm btn-light" asp-controller="Lecturers" asp-action="List">К списку</a>
         </div>
     </div>
@@ -86,17 +89,18 @@
             <dd class="col-sm-8">
                 @Model.HomeNumber
             </dd>
-            @*<dt class="col-sm-4 text-muted">
-                Rank
-            </dt>
-            <dd class="col-sm-8">
-                @Model.Rank
-            </dd>*@
             <dt class="col-sm-4 text-muted">
-                Ученая степень
+                Учёная степень
             </dt>
             <dd class="col-sm-8">
                 @Model.Rank2
+            </dd>
+
+            <dt class="col-sm-4 text-muted">
+                Учёное звание
+            </dt>
+            <dd class="col-sm-8">
+                @(Model.Rank == Rank.Отсуствует ? "—" : Model.Rank.ToString())
             </dd>
             <dt class="col-sm-4 text-muted">
                 Описание
