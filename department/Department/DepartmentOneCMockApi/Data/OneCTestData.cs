@@ -960,17 +960,17 @@ namespace DepartmentOneCMockApi.Data
 
         private static MarkType GetDemoMark(StudentMockModel student, AcademicPlanRecordMockModel planRecord)
         {
-            var semester = (Semesters)planRecord.Semester;
+            var semester = planRecord.Semester;
             var disciplineId = planRecord.DisciplineId ?? 0;
 
-            if (student.StudentState == StudentState.Академ && planRecord.Semester >= 5)
+            if (student.Id % 17 == 0 && semester <= 2)
+                return MarkType.Неудовлетворительно;
+
+            if (student.Id % 11 == 0 && semester >= 3 && semester <= 4)
+                return MarkType.Неудовлетворительно;
+
+            if (student.Id % 13 == 0 && semester == 2)
                 return MarkType.Неявка;
-
-            if (HighRiskDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
-                return MarkType.Неудовлетворительно;
-
-            if (RegularDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Четвертый)
-                return MarkType.Неудовлетворительно;
 
             var marks = new[]
             {
