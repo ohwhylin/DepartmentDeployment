@@ -1,19 +1,8 @@
-@using System.Linq
-@using DepartmentContracts.ViewModels
+@model DepartmentUserApp.ViewModels.StudentOrders.StudentOrderListPageViewModel
 @using DepartmentDataModels.Enums
 
 @{
     ViewData["Title"] = "Сведения о приказах";
-
-    var studentOrders = ViewBag.StudentOrdersList as List<StudentOrderViewModel> ?? new List<StudentOrderViewModel>();
-    var studentOrderBlocks = ViewBag.StudentOrderBlocksList as List<StudentOrderBlockViewModel> ?? new List<StudentOrderBlockViewModel>();
-    var blockStudents = ViewBag.StudentOrderBlockStudentsList as List<StudentOrderBlockStudentViewModel> ?? new List<StudentOrderBlockStudentViewModel>();
-
-    var orderTypes = studentOrders
-        .Select(x => x.StudentOrderType)
-        .Distinct()
-        .OrderBy(x => GetOrderTypeName(x))
-        .ToList();
 
     string GetOrderTypeName(StudentOrderType type) => type switch
     {
@@ -34,6 +23,13 @@
         StudentOrderType.ОтчислитьЗаНевыходСАкадема => "Отчисление за невыход из академического отпуска",
         _ => type.ToString()
     };
+
+    var startPage = Math.Max(1, Model.Result.Page - 2);
+    var endPage = Math.Min(Model.Result.TotalPages, Model.Result.Page + 2);
+
+    var orderTypeRouteValue = Model.OrderType.HasValue
+        ? ((int)Model.OrderType.Value).ToString()
+        : null;
 }
 
 <div class="list-shell">
@@ -62,76 +58,83 @@
         </div>
     }
 
-    <div class="p-3 pb-0">
+    <form method="get" class="p-3 pb-0">
         <div class="row g-2 align-items-center">
             <div class="col-md-3">
-                <input id="orderStudentSearchInput"
+                <input name="studentSearch"
+                       value="@Model.StudentSearch"
                        type="text"
                        class="form-control"
                        placeholder="Поиск по студенту" />
             </div>
 
             <div class="col-md-3">
-                <input id="orderGroupSearchInput"
+                <input name="groupSearch"
+                       value="@Model.GroupSearch"
                        type="text"
                        class="form-control"
                        placeholder="Поиск по группе" />
             </div>
 
             <div class="col-md-3">
-                <select id="orderTypeFilter" class="form-select">
+                <select name="orderType" class="form-select">
                     <option value="">Все типы приказов</option>
-                    @foreach (var type in orderTypes)
+                    @foreach (var type in Model.OrderTypes.OrderBy(x => GetOrderTypeName(x)))
                     {
-                        <option value="@type.ToString()">@GetOrderTypeName(type)</option>
+                        if (Model.OrderType == type)
+                        {
+                            <option value="@((int)type)" selected>@GetOrderTypeName(type)</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)type)">@GetOrderTypeName(type)</option>
+                        }
                     }
                 </select>
             </div>
 
-            <div class="col-md-auto">
-                <button id="orderSearchClear"
-                        type="button"
-                        class="btn btn-app-outline">
+            <div class="col-md-2">
+                <select name="pageSize" class="form-select">
+                    @foreach (var size in new[] { 5, 10, 20, 50 })
+                    {
+                        if (Model.Result.PageSize == size)
+                        {
+                            <option value="@size" selected>По @size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">По @size</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-app-outline">Применить</button>
+
+                <a asp-controller="StudentOrders"
+                   asp-action="List"
+                   class="btn btn-app-outline">
                     Сбросить
-                </button>
+                </a>
             </div>
         </div>
+    </form>
+
+    <div class="px-3 py-2 text-muted">
+        Найдено приказов: @Model.Result.TotalCount
+        <span class="ms-3">Страница @Model.Result.Page из @Model.Result.TotalPages</span>
     </div>
 
-    <div id="studentOrdersSearchEmpty"
-         class="alert alert-secondary m-3 d-none">
-        По заданным параметрам приказы не найдены.
-    </div>
-
-    @if (studentOrders.Count > 0)
+    @if (Model.Result.Items.Count > 0)
     {
-        @foreach (var order in studentOrders)
+        @foreach (var orderItem in Model.Result.Items)
         {
-            var orderBlocks = studentOrderBlocks.Where(x => x.StudentOrderId == order.Id).ToList();
+            var order = orderItem.Order;
+            var orderBlocks = orderItem.Blocks;
             var collapseId = $"orderBlocks_{order.Id}";
 
-            var orderStudentsSearch = string.Join(" ",
-                orderBlocks.SelectMany(block =>
-                    blockStudents
-                        .Where(x => x.StudentOrderBlockId == block.Id)
-                        .Select(x => x.Student ?? string.Empty)))
-                .ToLowerInvariant();
-
-            var orderGroupsSearch = string.Join(" ",
-                orderBlocks.SelectMany(block =>
-                    blockStudents
-                        .Where(x => x.StudentOrderBlockId == block.Id)
-                        .SelectMany(x => new[]
-                        {
-                            x.StudentGroupFrom ?? string.Empty,
-                            x.StudentGroupTo ?? string.Empty
-                        })))
-                .ToLowerInvariant();
-
-            <div class="plan-block order-item"
-                 data-order-type="@order.StudentOrderType.ToString()"
-                 data-order-students-search="@orderStudentsSearch"
-                 data-order-groups-search="@orderGroupsSearch">
+            <div class="plan-block order-item">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
@@ -141,6 +144,7 @@
 
                             <div class="entity-meta d-flex flex-column gap-1">
                                 <div><strong>Тип приказа:</strong> @GetOrderTypeName(order.StudentOrderType)</div>
+                                <div><strong>Дата приказа:</strong> @order.OrderDate.ToString("dd.MM.yyyy")</div>
                                 <div><strong>Количество блоков:</strong> @orderBlocks.Count</div>
                             </div>
                         </div>
@@ -171,27 +175,12 @@
                     <div class="plan-records-wrap">
                         @if (orderBlocks.Count > 0)
                         {
-                            @foreach (var block in orderBlocks)
+                            @foreach (var blockItem in orderBlocks)
                             {
-                                var currentBlockStudents = blockStudents
-                                    .Where(x => x.StudentOrderBlockId == block.Id)
-                                    .ToList();
+                                var block = blockItem.Block;
+                                var currentBlockStudents = blockItem.Students;
 
-                                var blockStudentsSearch = string.Join(" ",
-                                    currentBlockStudents.Select(x => x.Student ?? string.Empty))
-                                    .ToLowerInvariant();
-
-                                var blockGroupsSearch = string.Join(" ",
-                                    currentBlockStudents.SelectMany(x => new[]
-                                    {
-                                        x.StudentGroupFrom ?? string.Empty,
-                                        x.StudentGroupTo ?? string.Empty
-                                    }))
-                                    .ToLowerInvariant();
-
-                                <div class="order-block-card"
-                                     data-block-students-search="@blockStudentsSearch"
-                                     data-block-groups-search="@blockGroupsSearch">
+                                <div class="order-block-card">
                                     <div class="order-block-head">
                                         <div class="order-block-info">
                                             <div class="plan-record-title">Блок приказа</div>
@@ -228,12 +217,7 @@
                                                 {
                                                     @foreach (var blockStudent in currentBlockStudents)
                                                     {
-                                                        var rowStudentSearch = (blockStudent.Student ?? string.Empty).ToLowerInvariant();
-                                                        var rowGroupSearch = $"{blockStudent.StudentGroupFrom ?? string.Empty} {blockStudent.StudentGroupTo ?? string.Empty}".ToLowerInvariant();
-
-                                                        <tr class="order-student-row"
-                                                            data-student-search="@rowStudentSearch"
-                                                            data-group-search="@rowGroupSearch">
+                                                        <tr>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)</td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupFrom) ? "—" : blockStudent.StudentGroupFrom)</td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupTo) ? "—" : blockStudent.StudentGroupTo)</td>
@@ -250,7 +234,7 @@
                                                 }
                                                 else
                                                 {
-                                                    <tr class="order-empty-row">
+                                                    <tr>
                                                         <td colspan="4" class="text-muted">
                                                             Для данного блока студенты отсутствуют.
                                                         </td>
@@ -272,11 +256,87 @@
                 </div>
             </div>
         }
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <div class="p-3 pt-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="pager-summary">
+                    Показана страница @Model.Result.Page из @Model.Result.TotalPages
+                </div>
+
+                <nav aria-label="Пагинация">
+                    <ul class="pagination app-pagination mb-0">
+                        <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-action="List"
+                               asp-route-studentSearch="@Model.StudentSearch"
+                               asp-route-groupSearch="@Model.GroupSearch"
+                               asp-route-orderType="@orderTypeRouteValue"
+                               asp-route-page="1"
+                               asp-route-pageSize="@Model.Result.PageSize">
+                                В начало
+                            </a>
+                        </li>
+
+                        <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-action="List"
+                               asp-route-studentSearch="@Model.StudentSearch"
+                               asp-route-groupSearch="@Model.GroupSearch"
+                               asp-route-orderType="@orderTypeRouteValue"
+                               asp-route-page="@(Model.Result.Page - 1)"
+                               asp-route-pageSize="@Model.Result.PageSize">
+                                Назад
+                            </a>
+                        </li>
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            <li class="page-item @(p == Model.Result.Page ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-orderType="@orderTypeRouteValue"
+                                   asp-route-page="@p"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    @p
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-action="List"
+                               asp-route-studentSearch="@Model.StudentSearch"
+                               asp-route-groupSearch="@Model.GroupSearch"
+                               asp-route-orderType="@orderTypeRouteValue"
+                               asp-route-page="@(Model.Result.Page + 1)"
+                               asp-route-pageSize="@Model.Result.PageSize">
+                                Вперёд
+                            </a>
+                        </li>
+
+                        <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-action="List"
+                               asp-route-studentSearch="@Model.StudentSearch"
+                               asp-route-groupSearch="@Model.GroupSearch"
+                               asp-route-orderType="@orderTypeRouteValue"
+                               asp-route-page="@Model.Result.TotalPages"
+                               asp-route-pageSize="@Model.Result.PageSize">
+                                В конец
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
     }
     else
     {
         <div class="alert alert-secondary m-3">
-            Данные отсутствуют. Выполните синхронизацию.
+            По заданным параметрам приказы не найдены.
         </div>
     }
 </div>
@@ -348,8 +408,35 @@
                 vertical-align: middle;
             }
 
-        .order-student-row.row-match td {
-            background: #eef6ff;
+        .app-pagination .page-link {
+            color: var(--galaxy);
+            border-color: var(--sky);
+            background: #fff;
+        }
+
+            .app-pagination .page-link:hover,
+            .app-pagination .page-link:focus {
+                color: var(--galaxy);
+                background: var(--sky);
+                border-color: var(--sky);
+                box-shadow: none;
+            }
+
+        .app-pagination .page-item.active .page-link {
+            background: var(--galaxy);
+            border-color: var(--galaxy);
+            color: #fff;
+        }
+
+        .app-pagination .page-item.disabled .page-link {
+            color: #8d99ae;
+            background: #fff;
+            border-color: var(--sky);
+        }
+
+        .pager-summary {
+            color: #6c757d;
+            font-size: .95rem;
         }
     </style>
 }
@@ -358,27 +445,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
-            const studentSearchInput = document.getElementById('orderStudentSearchInput');
-            const groupSearchInput = document.getElementById('orderGroupSearchInput');
-            const typeFilter = document.getElementById('orderTypeFilter');
-            const clearButton = document.getElementById('orderSearchClear');
-            const orderItems = document.querySelectorAll('.order-item');
-            const emptyResult = document.getElementById('studentOrdersSearchEmpty');
-
-            function getCollapseInstance(element) {
-                if (!window.bootstrap) return null;
-                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
-            }
-
-            function collapseAllOrders() {
-                orderItems.forEach(orderItem => {
-                    const collapseElement = orderItem.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    if (collapseInstance) {
-                        collapseInstance.hide();
-                    }
-                });
-            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -395,134 +461,6 @@
                     }
                 });
             });
-
-            function applyOrderFilters() {
-                const studentQuery = (studentSearchInput?.value || '').trim().toLowerCase();
-                const groupQuery = (groupSearchInput?.value || '').trim().toLowerCase();
-                const selectedType = (typeFilter?.value || '').trim();
-
-                let hasVisibleOrders = false;
-
-                orderItems.forEach(orderItem => {
-                    const orderType = orderItem.dataset.orderType || '';
-                    const orderStudentsSearch = orderItem.dataset.orderStudentsSearch || '';
-                    const orderGroupsSearch = orderItem.dataset.orderGroupsSearch || '';
-                    const collapseElement = orderItem.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    const blockCards = orderItem.querySelectorAll('.order-block-card');
-
-                    const typeMatches = !selectedType || orderType === selectedType;
-                    const orderStudentMatches = !studentQuery || orderStudentsSearch.includes(studentQuery);
-                    const orderGroupMatches = !groupQuery || orderGroupsSearch.includes(groupQuery);
-
-                    let hasVisibleBlock = false;
-
-                    blockCards.forEach(blockCard => {
-                        const blockStudentsSearch = blockCard.dataset.blockStudentsSearch || '';
-                        const blockGroupsSearch = blockCard.dataset.blockGroupsSearch || '';
-                        const rows = blockCard.querySelectorAll('.order-student-row');
-
-                        const blockStudentMatches = !studentQuery || blockStudentsSearch.includes(studentQuery);
-                        const blockGroupMatches = !groupQuery || blockGroupsSearch.includes(groupQuery);
-
-                        let hasMatchedRow = false;
-
-                        rows.forEach(row => {
-                            const rowStudentSearch = row.dataset.studentSearch || '';
-                            const rowGroupSearch = row.dataset.groupSearch || '';
-
-                            const rowStudentMatches = !studentQuery || rowStudentSearch.includes(studentQuery);
-                            const rowGroupMatches = !groupQuery || rowGroupSearch.includes(groupQuery);
-
-                            const rowVisible = rowStudentMatches && rowGroupMatches;
-
-                            row.style.display = rowVisible ? '' : 'none';
-                            row.classList.toggle('row-match',
-                                ((studentQuery && rowStudentSearch.includes(studentQuery)) ||
-                                 (groupQuery && rowGroupSearch.includes(groupQuery))) && rowVisible);
-
-                            if (rowVisible) {
-                                hasMatchedRow = true;
-                            }
-                        });
-
-                        const blockVisible = blockStudentMatches && blockGroupMatches && hasMatchedRow;
-                        blockCard.style.display = blockVisible ? '' : 'none';
-
-                        if (blockVisible) {
-                            hasVisibleBlock = true;
-                        }
-                    });
-
-                    const orderVisible = typeMatches && orderStudentMatches && orderGroupMatches && hasVisibleBlock;
-                    orderItem.style.display = orderVisible ? '' : 'none';
-
-                    if (orderVisible) {
-                        hasVisibleOrders = true;
-                    }
-
-                    if ((studentQuery || groupQuery) && orderVisible && collapseInstance) {
-                        collapseInstance.show();
-                    }
-
-                    if ((studentQuery || groupQuery) && !orderVisible && collapseInstance) {
-                        collapseInstance.hide();
-                    }
-
-                    if (!studentQuery && !groupQuery && !typeMatches && collapseInstance) {
-                        collapseInstance.hide();
-                    }
-                });
-
-                if (emptyResult) {
-                    emptyResult.classList.toggle('d-none', hasVisibleOrders);
-                }
-            }
-
-            if (studentSearchInput) {
-                studentSearchInput.addEventListener('input', applyOrderFilters);
-            }
-
-            if (groupSearchInput) {
-                groupSearchInput.addEventListener('input', applyOrderFilters);
-            }
-
-            if (typeFilter) {
-                typeFilter.addEventListener('change', applyOrderFilters);
-            }
-
-            if (clearButton) {
-                clearButton.addEventListener('click', function () {
-                    if (studentSearchInput) studentSearchInput.value = '';
-                    if (groupSearchInput) groupSearchInput.value = '';
-                    if (typeFilter) typeFilter.value = '';
-
-                    orderItems.forEach(orderItem => {
-                        orderItem.style.display = '';
-
-                        const blockCards = orderItem.querySelectorAll('.order-block-card');
-                        blockCards.forEach(blockCard => {
-                            blockCard.style.display = '';
-
-                            const rows = blockCard.querySelectorAll('.order-student-row');
-                            rows.forEach(row => {
-                                row.style.display = '';
-                                row.classList.remove('row-match');
-                            });
-                        });
-                    });
-
-                    collapseAllOrders();
-
-                    if (emptyResult) {
-                        emptyResult.classList.add('d-none');
-                    }
-
-                    if (studentSearchInput) {
-                        studentSearchInput.focus();
-                    }
-                });
-            }
         });
     </script>
 }

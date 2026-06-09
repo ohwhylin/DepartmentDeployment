@@ -87,14 +87,12 @@ namespace DepartmentBusinessLogic.BusinessLogics
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (!withParams) return;
+
             if (model.StudentOrderBlockId <= 0)
                 throw new ArgumentNullException("", nameof(model.StudentOrderBlockId));
+
             if (model.StudentId <= 0)
                 throw new ArgumentNullException("", nameof(model.StudentId));
-            if (model.StudentGroupFromId <= 0)
-                throw new ArgumentNullException("", nameof(model.StudentGroupFromId));
-            if (model.StudentGroupToId <= 0)
-                throw new ArgumentNullException("", nameof(model.StudentGroupToId));
         }
 
         public List<StudentMovementHistoryViewModel> GetStudentMovementHistory(int studentId)

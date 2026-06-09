@@ -1,40 +1,134 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentDataModels.Enums;
+using DepartmentUserApp.ViewModels.StudentOrders;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class StudentOrdersController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(
+    string? studentSearch,
+    string? groupSearch,
+    StudentOrderType? orderType,
+    int page = 1,
+    int pageSize = 10)
         {
             try
             {
-                ViewBag.StudentOrdersList =
-                    APIClient.GetRequest<List<StudentOrderViewModel>>("api/core/StudentOrders/GetStudentOrderList")
+                var studentOrders =
+                    APIClient.GetRequest<List<StudentOrderViewModel>>(
+                        "api/core/StudentOrders/GetStudentOrderList")
                     ?? new List<StudentOrderViewModel>();
 
-                ViewBag.StudentOrderBlocksList =
-                    APIClient.GetRequest<List<StudentOrderBlockViewModel>>("api/core/StudentOrderBlocks/GetStudentOrderBlockList")
+                var studentOrderBlocks =
+                    APIClient.GetRequest<List<StudentOrderBlockViewModel>>(
+                        "api/core/StudentOrderBlocks/GetStudentOrderBlockList")
                     ?? new List<StudentOrderBlockViewModel>();
 
-                ViewBag.StudentOrderBlockStudentsList =
-                    APIClient.GetRequest<List<StudentOrderBlockStudentViewModel>>("api/core/StudentOrderBlockStudents/GetStudentOrderBlockStudentList")
+                var blockStudents =
+                    APIClient.GetRequest<List<StudentOrderBlockStudentViewModel>>(
+                        "api/core/StudentOrderBlockStudents/GetStudentOrderBlockStudentList")
                     ?? new List<StudentOrderBlockStudentViewModel>();
 
-                return View();
+                var normalizedStudentSearch = studentSearch?.Trim();
+                var normalizedGroupSearch = groupSearch?.Trim();
+
+                var items = studentOrders
+                    .OrderByDescending(x => x.OrderDate)
+                    .ThenByDescending(x => x.Id)
+                    .Select(order =>
+                    {
+                        var blocks = studentOrderBlocks
+                            .Where(x => x.StudentOrderId == order.Id)
+                            .OrderBy(x => x.Id)
+                            .Select(block =>
+                            {
+                                var currentStudents = blockStudents
+                                    .Where(x => x.StudentOrderBlockId == block.Id)
+                                    .Where(x =>
+                                        string.IsNullOrWhiteSpace(normalizedStudentSearch) ||
+                                        ContainsIgnoreCase(x.Student, normalizedStudentSearch))
+                                    .Where(x =>
+                                        string.IsNullOrWhiteSpace(normalizedGroupSearch) ||
+                                        ContainsIgnoreCase(
+                                            $"{x.StudentGroupFrom ?? string.Empty} {x.StudentGroupTo ?? string.Empty}",
+                                            normalizedGroupSearch))
+                                    .ToList();
+
+                                return new StudentOrderBlockListItemViewModel
+                                {
+                                    Block = block,
+                                    Students = currentStudents
+                                };
+                            })
+                            .Where(x =>
+                                x.Students.Any() ||
+                                (string.IsNullOrWhiteSpace(normalizedStudentSearch) &&
+                                 string.IsNullOrWhiteSpace(normalizedGroupSearch)))
+                            .ToList();
+
+                        return new StudentOrderListItemViewModel
+                        {
+                            Order = order,
+                            Blocks = blocks
+                        };
+                    })
+                    .Where(x =>
+                        (!orderType.HasValue || x.Order.StudentOrderType == orderType.Value) &&
+                        ((string.IsNullOrWhiteSpace(normalizedStudentSearch) &&
+                          string.IsNullOrWhiteSpace(normalizedGroupSearch))
+                            ? true
+                            : x.Blocks.Any()))
+                    .ToList();
+
+                var model = new StudentOrderListPageViewModel
+                {
+                    StudentSearch = normalizedStudentSearch,
+                    GroupSearch = normalizedGroupSearch,
+                    OrderType = orderType,
+                    OrderTypes = studentOrders
+                        .Select(x => x.StudentOrderType)
+                        .Distinct()
+                        .OrderBy(x => (int)x)
+                        .ToList(),
+                    Result = PagedResult<StudentOrderListItemViewModel>.Create(items, page, pageSize)
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.StudentOrdersList = new List<StudentOrderViewModel>();
-                ViewBag.StudentOrderBlocksList = new List<StudentOrderBlockViewModel>();
-                ViewBag.StudentOrderBlockStudentsList = new List<StudentOrderBlockStudentViewModel>();
-                return View();
+
+                var model = new StudentOrderListPageViewModel
+                {
+                    StudentSearch = studentSearch?.Trim(),
+                    GroupSearch = groupSearch?.Trim(),
+                    OrderType = orderType,
+                    Result = PagedResult<StudentOrderListItemViewModel>.Create(
+                        new List<StudentOrderListItemViewModel>(),
+                        page,
+                        pageSize)
+                };
+
+                return View(model);
             }
+        }
+
+        private static bool ContainsIgnoreCase(string? source, string? search)
+        {
+            if (string.IsNullOrWhiteSpace(search))
+                return true;
+
+            if (string.IsNullOrWhiteSpace(source))
+                return false;
+
+            return source.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
 
