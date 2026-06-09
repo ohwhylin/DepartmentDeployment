@@ -3,37 +3,48 @@ using MOLServiceWebClient;
 using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
 QuestPDF.Settings.License = LicenseType.Community;
 
 // MVC
 builder.Services.AddControllersWithViews();
 
-
 // Schedule API
 builder.Services.AddHttpClient<IScheduleApiClient, ScheduleApiClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:ScheduleServiceUrl"]);
+    var baseUrl = builder.Configuration["ApiSettings:ScheduleServiceUrl"];
+
+    if (string.IsNullOrWhiteSpace(baseUrl))
+    {
+        throw new InvalidOperationException("Не настроен ApiSettings:ScheduleServiceUrl");
+    }
+
+    client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/");
+
+    // Синхронизация расписания может идти дольше 100 секунд,
+    // потому что обрабатываются все группы университета
+    client.Timeout = TimeSpan.FromMinutes(10);
 });
 
 // MOL API
 builder.Services.AddHttpClient<IMolApiClient, MolApiClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:MolServiceUrl"]);
+    var baseUrl = builder.Configuration["ApiSettings:MolServiceUrl"];
+
+    if (string.IsNullOrWhiteSpace(baseUrl))
+    {
+        throw new InvalidOperationException("Не настроен ApiSettings:MolServiceUrl");
+    }
+
+    client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/");
+
+    // На всякий случай, если список аудиторий/оборудования будет грузиться дольше обычного
+    client.Timeout = TimeSpan.FromMinutes(3);
 });
+
 builder.Services.AddScoped<IInventoryReportPdfService, InventoryReportPdfService>();
 
 var app = builder.Build();
-
-// РїР°С„ Р±РµР№СЃ
-var pathBase = builder.Configuration["PathBase"];
-if (!string.IsNullOrWhiteSpace(pathBase))
-{
-    app.Use((context, next) =>
-    {
-        context.Request.PathBase = pathBase;
-        return next();
-    });
-}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -50,6 +61,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

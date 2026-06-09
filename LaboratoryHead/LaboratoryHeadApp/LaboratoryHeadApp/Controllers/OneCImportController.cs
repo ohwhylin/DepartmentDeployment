@@ -14,7 +14,7 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportInventory(OneCImportBindingModel model)
         {
             if (!ModelState.IsValid)
