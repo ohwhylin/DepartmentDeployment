@@ -178,6 +178,7 @@ services:
       - "127.0.0.1:7306:8080"
     volumes:
       - ../ScheduleImport:/app/ScheduleImport
+      - lab-dpkeys:/keys
     restart: unless-stopped
 
 volumes:
@@ -185,7 +186,8 @@ volumes:
   mol-db-data:
   schedule-db-data:
   load-db-data:
-  load-dpkeys:  
+  load-dpkeys:
+  lab-dpkeys:  
   
 networks:
   default:

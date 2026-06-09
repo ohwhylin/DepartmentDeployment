@@ -1,12 +1,21 @@
 using LaboratoryHeadApp.Services;
 using MOLServiceWebClient;
 using QuestPDF.Infrastructure;
+using System.IO;
+using Microsoft.AspNetCore.DataProtection;
+using LaboratoryHeadApp.Services;
+using MOLServiceWebClient;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
+    .SetApplicationName("LaboratoryHeadApp");
 
 builder.Services.AddHttpClient<IScheduleApiClient, ScheduleApiClient>(client =>
 {
