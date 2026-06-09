@@ -24,31 +24,50 @@ namespace DepartmentUserApp.Controllers
                     pageSize = 10;
                 }
 
-                var queryParts = new List<string>();
+                var disciplines =
+                    APIClient.GetRequest<List<DisciplineViewModel>>("api/core/Disciplines/GetDisciplineList")
+                    ?? new List<DisciplineViewModel>();
 
-                if (!string.IsNullOrWhiteSpace(search))
+                var normalizedSearch = search?.Trim() ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(normalizedSearch))
                 {
-                    queryParts.Add($"Search={Uri.EscapeDataString(search.Trim())}");
+                    disciplines = disciplines
+                        .Where(x =>
+                            ContainsIgnoreCase(x.DisciplineName, normalizedSearch) ||
+                            ContainsIgnoreCase(x.DisciplineShortName, normalizedSearch) ||
+                            ContainsIgnoreCase(x.DisciplineDescription, normalizedSearch))
+                        .ToList();
                 }
 
-                queryParts.Add($"Page={page}");
-                queryParts.Add($"PageSize={pageSize}");
-
-                var requestUrl =
-                    $"api/core/Disciplines/GetDisciplinePage?{string.Join("&", queryParts)}";
-
-                var result =
-                    APIClient.GetRequest<PagedResult<DisciplineViewModel>>(requestUrl)
-                    ?? new PagedResult<DisciplineViewModel>
+                var groupedItems = disciplines
+                    .GroupBy(x => NormalizeDisciplineName(x.DisciplineName))
+                    .Select(group =>
                     {
-                        Page = 1,
-                        PageSize = pageSize,
-                        TotalCount = 0
-                    };
+                        var ordered = group.OrderBy(x => x.Id).ToList();
+                        var first = ordered.First();
+
+                        return new DisciplineCatalogItemViewModel
+                        {
+                            PrimaryId = first.Id,
+                            DisciplineName = first.DisciplineName,
+                            DisciplineShortName = ordered
+                                .Select(x => x.DisciplineShortName)
+                                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
+                            DisciplineDescription = ordered
+                                .Select(x => x.DisciplineDescription)
+                                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
+                            VariantsCount = ordered.Count
+                        };
+                    })
+                    .OrderBy(x => x.DisciplineName)
+                    .ToList();
+
+                var result = PagedResult<DisciplineCatalogItemViewModel>.Create(groupedItems, page, pageSize);
 
                 var model = new DisciplineListPageViewModel
                 {
-                    Search = search?.Trim() ?? string.Empty,
+                    Search = normalizedSearch,
                     Result = result
                 };
 
@@ -61,7 +80,7 @@ namespace DepartmentUserApp.Controllers
                 return View(new DisciplineListPageViewModel
                 {
                     Search = search?.Trim() ?? string.Empty,
-                    Result = new PagedResult<DisciplineViewModel>
+                    Result = new PagedResult<DisciplineCatalogItemViewModel>
                     {
                         Page = 1,
                         PageSize = pageSize,
@@ -69,6 +88,27 @@ namespace DepartmentUserApp.Controllers
                     }
                 });
             }
+        }
+
+        private static bool ContainsIgnoreCase(string? source, string? search)
+        {
+            if (string.IsNullOrWhiteSpace(search))
+                return true;
+
+            if (string.IsNullOrWhiteSpace(source))
+                return false;
+
+            return source.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeDisciplineName(string? value)
+        {
+            return string.Join(
+                " ",
+                (value ?? string.Empty)
+                    .Trim()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .ToLowerInvariant();
         }
 
         [HttpGet]

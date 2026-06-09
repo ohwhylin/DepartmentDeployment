@@ -860,38 +860,50 @@ namespace DepartmentOneCMockApi.Data
         private static List<DisciplineStudentRecordMockModel> GenerateDisciplineStudentRecords()
         {
             var result = new List<DisciplineStudentRecordMockModel>();
-            var recordByDisciplineId = AcademicPlans
-            .SelectMany(x => x.AcademicPlanRecords)
-            .Where(x => x.DisciplineId.HasValue)
-            .GroupBy(x => x.DisciplineId!.Value)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderBy(x => x.AcademicPlanId)
-                      .ThenBy(x => x.Semester)
-                      .First());
-
             var groupById = StudentGroups.ToDictionary(x => x.Id, x => x);
 
             int id = 1;
 
             foreach (var student in Students)
             {
-                if (!student.StudentGroupId.HasValue || !groupById.TryGetValue(student.StudentGroupId.Value, out var group))
-                    continue;
-
-                var disciplineIds = group.Course switch
+                if (!student.StudentGroupId.HasValue ||
+                    !groupById.TryGetValue(student.StudentGroupId.Value, out var group))
                 {
-                    AcademicCourse.Course_1 => Enumerable.Range(1, 3),
-                    AcademicCourse.Course_2 => Enumerable.Range(1, 6),
-                    AcademicCourse.Course_3 => Enumerable.Range(1, 9),
-                    AcademicCourse.Course_4 => Enumerable.Range(1, 12),
-                    _ => Enumerable.Empty<int>()
+                    continue;
+                }
+
+                var academicPlan = AcademicPlans
+                    .Where(x =>
+                        x.EducationDirectionId == group.EducationDirectionId &&
+                        x.AcademicCourses == group.Course)
+                    .OrderByDescending(x => ParseYear(x.Year))
+                    .ThenByDescending(x => x.Id)
+                    .FirstOrDefault();
+
+                if (academicPlan == null || academicPlan.AcademicPlanRecords == null)
+                {
+                    continue;
+                }
+
+                var maxSemester = group.Course switch
+                {
+                    AcademicCourse.Course_1 => 2,
+                    AcademicCourse.Course_2 => 4,
+                    AcademicCourse.Course_3 => 6,
+                    AcademicCourse.Course_4 => 8,
+                    _ => 0
                 };
 
-                foreach (var disciplineId in disciplineIds)
-                {
-                    var planRecord = recordByDisciplineId[disciplineId];
+                var planRecords = academicPlan.AcademicPlanRecords
+                    .Where(x => x.DisciplineId.HasValue)
+                    .Where(x => x.Semester >= 1 && x.Semester <= maxSemester)
+                    .OrderBy(x => x.Semester)
+                    .ThenBy(x => x.Index)
+                    .ThenBy(x => x.Id)
+                    .ToList();
 
+                foreach (var planRecord in planRecords)
+                {
                     var variant =
                         planRecord.Exam == 1 ? "Экзамен" :
                         planRecord.GradedPass == 1 ? "Дифф. зачет" :
@@ -900,13 +912,13 @@ namespace DepartmentOneCMockApi.Data
 
                     var semester = (Semesters)planRecord.Semester;
 
-                    var mark = GetDemoMark(student, disciplineId, semester);
+                    var mark = GetDemoMark(student, planRecord);
                     var markDate = GetDemoMarkDate(student, planRecord.Semester);
 
                     result.Add(new DisciplineStudentRecordMockModel
                     {
                         Id = id++,
-                        DisciplineId = disciplineId,
+                        DisciplineId = planRecord.DisciplineId!.Value,
                         StudentId = student.Id,
                         Semester = semester,
                         Variant = variant,
@@ -918,6 +930,10 @@ namespace DepartmentOneCMockApi.Data
             }
 
             return result;
+        }
+        private static int ParseYear(string? year)
+        {
+            return int.TryParse(year, out var value) ? value : 0;
         }
 
         private static readonly Lazy<HashSet<int>> HighRiskDebtStudentIds = new(() =>
@@ -942,9 +958,12 @@ namespace DepartmentOneCMockApi.Data
                 .Select(x => x.Id)
                 .ToHashSet());
 
-        private static MarkType GetDemoMark(StudentMockModel student, int disciplineId, Semesters semester)
+        private static MarkType GetDemoMark(StudentMockModel student, AcademicPlanRecordMockModel planRecord)
         {
-            if (student.StudentState == StudentState.Академ && disciplineId >= 5)
+            var semester = (Semesters)planRecord.Semester;
+            var disciplineId = planRecord.DisciplineId ?? 0;
+
+            if (student.StudentState == StudentState.Академ && planRecord.Semester >= 5)
                 return MarkType.Неявка;
 
             if (HighRiskDebtStudentIds.Value.Contains(student.Id) && semester == Semesters.Пятый)
