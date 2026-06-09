@@ -826,23 +826,6 @@ namespace DepartmentOneCMockApi.Data
             };
         }
 
-        //
-        // 09.04.03 — EducationDirectionId = 3
-        // планы такие же, как для EducationDirectionId = 5
-        //
-
-        private static List<AcademicPlanMockModel> Build090403Direction3Plans()
-        {
-            return new List<AcademicPlanMockModel>
-     {
-         BuildPlan(21, 3, "2022-2024", Plan090403_2022_2024()),
-         BuildPlan(22, 3, "2023-2025", Plan090403_2023_2025()),
-         BuildPlan(23, 3, "2024-2026", Plan090403_2024_2026()),
-         BuildPlan(24, 3, "2025-2027", Plan090403_2025_2027()),
-         BuildPlan(25, 3, "2026-2028", Plan090403_2026_2028())
-     };
-        }
-
         private static List<AcademicPlanMockModel> BuildAllAcademicPlans()
         {
             _recordId = 1;
@@ -853,7 +836,6 @@ namespace DepartmentOneCMockApi.Data
             result.AddRange(Build090303Plans());
             result.AddRange(Build090404Plans());
             result.AddRange(Build090403Plans());
-            result.AddRange(Build090403Direction3Plans());
 
             return result;
         }
