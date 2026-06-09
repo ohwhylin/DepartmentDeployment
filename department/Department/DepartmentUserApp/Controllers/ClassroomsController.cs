@@ -1,29 +1,99 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentDataModels.Enums;
+using DepartmentUserApp.ViewModels.Classrooms;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class ClassroomsController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(
+    string? search,
+    ClassroomTypes? type,
+    bool? hasProjector,
+    bool? useInSchedule,
+    int page = 1,
+    int pageSize = 10)
         {
             try
             {
-                ViewBag.ClassroomsList =
-                    APIClient.GetRequest<List<ClassroomViewModel>>(
-                        "api/core/Classrooms/GetClassroomList");
+                if (page < 1)
+                {
+                    page = 1;
+                }
 
-                return View();
+                if (pageSize <= 0)
+                {
+                    pageSize = 10;
+                }
+
+                var queryParts = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    queryParts.Add($"Number={Uri.EscapeDataString(search.Trim())}");
+                }
+
+                if (type.HasValue)
+                {
+                    queryParts.Add($"Type={(int)type.Value}");
+                }
+
+                if (hasProjector.HasValue)
+                {
+                    queryParts.Add($"HasProjector={hasProjector.Value.ToString().ToLowerInvariant()}");
+                }
+
+                if (useInSchedule.HasValue)
+                {
+                    queryParts.Add($"UseInSchedule={useInSchedule.Value.ToString().ToLowerInvariant()}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var url = $"api/core/Classrooms/GetClassroomPage?{string.Join("&", queryParts)}";
+
+                var result = APIClient.GetRequest<PagedResult<ClassroomViewModel>>(url)
+                    ?? new PagedResult<ClassroomViewModel>
+                    {
+                        Page = page,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    };
+
+                var model = new ClassroomListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Type = type,
+                    HasProjector = hasProjector,
+                    UseInSchedule = useInSchedule,
+                    Result = result
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.ClassroomsList = new List<ClassroomViewModel>();
-                return View();
+
+                return View(new ClassroomListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Type = type,
+                    HasProjector = hasProjector,
+                    UseInSchedule = useInSchedule,
+                    Result = new PagedResult<ClassroomViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    }
+                });
             }
         }
 

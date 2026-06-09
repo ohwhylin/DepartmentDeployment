@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using DepartmentContracts.BindingModels;
 using DepartmentContracts.BusinessLogicsContracts;
 using DepartmentContracts.SearchModels;
@@ -31,6 +33,35 @@ namespace DepartmentRestApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during loading list of classrooms");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetClassroomPage([FromQuery] ClassroomSearchModel model)
+        {
+            try
+            {
+                model ??= new ClassroomSearchModel();
+
+                if (model.Page < 1)
+                {
+                    model.Page = 1;
+                }
+
+                if (model.PageSize <= 0)
+                {
+                    model.PageSize = 10;
+                }
+
+                var list = _classroom.ReadList(model) ?? new List<ClassroomViewModel>();
+                var result = PagedResult<ClassroomViewModel>.Create(list, model.Page, model.PageSize);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading page of classrooms");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }

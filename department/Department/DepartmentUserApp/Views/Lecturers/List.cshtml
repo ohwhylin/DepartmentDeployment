@@ -1,10 +1,10 @@
-@using System.Linq
-@using DepartmentContracts.ViewModels
+@model DepartmentUserApp.ViewModels.Lecturers.LecturerListPageViewModel
 
 @{
     ViewData["Title"] = "Lecturers";
 
-    var lecturers = ViewBag.LecturersList as List<LecturerViewModel> ?? new List<LecturerViewModel>();
+    var startPage = Math.Max(1, Model.Result.Page - 2);
+    var endPage = Math.Min(Model.Result.TotalPages, Model.Result.Page + 2);
 }
 
 <div class="list-shell">
@@ -13,7 +13,11 @@
             <h2 class="list-title">Список преподавателей</h2>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-app-primary" asp-controller="Lecturers" asp-action="Create">Добавить</a>
+            <a class="btn btn-app-primary"
+               asp-controller="Lecturers"
+               asp-action="Create">
+                Добавить
+            </a>
         </div>
     </div>
 
@@ -24,25 +28,34 @@
         </div>
     }
 
-    <div class="p-3 pb-0">
-        <div class="row g-2">
-            <div class="col-md-6">
-                <input id="lecturerSearchInput"
-                       type="text"
-                       class="form-control"
-                       placeholder="Поиск" />
-            </div>
-        </div>
+    <form method="get" class="p-3 d-flex gap-2 flex-wrap">
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Поиск по ФИО, сокращению, почте, телефону"
+               style="max-width: 420px;" />
+
+        <input type="hidden" name="pageSize" value="@Model.Result.PageSize" />
+
+        <button type="submit" class="btn btn-app-outline">Применить</button>
+
+        <a class="btn btn-app-outline"
+           asp-controller="Lecturers"
+           asp-action="List">
+            Сбросить
+        </a>
+    </form>
+
+    <div class="px-3 pb-2 text-muted">
+        Найдено преподавателей: @Model.Result.TotalCount
     </div>
 
-    @if (lecturers.Count > 0)
+    @if (Model.Result.Items.Count > 0)
     {
-        @foreach (var item in lecturers)
+        @foreach (var item in Model.Result.Items)
         {
-            var searchValue = $"{item.LastName} {item.FirstName} {item.Patronymic}".ToLowerInvariant();
-
-            <div class="entity-row lecturer-row"
-         data-name="@searchValue">
+            <div class="entity-row">
                 <div class="entity-accent"></div>
 
                 <div class="entity-content">
@@ -51,7 +64,7 @@
 
                         <div class="entity-meta d-flex flex-column gap-1">
                             <div><strong>Учебная должность:</strong> @(string.IsNullOrWhiteSpace(item.LecturerStudyPost) ? "-" : item.LecturerStudyPost)</div>
-                            <div><strong>Кафедральная должность:</strong> @item.LecturerDepartmentPost</div>
+                            <div><strong>Кафедральная должность:</strong> @(string.IsNullOrWhiteSpace(item.LecturerDepartmentPost) ? "-" : item.LecturerDepartmentPost)</div>
                             <div><strong>Сокращение:</strong> @(string.IsNullOrWhiteSpace(item.Abbreviation) ? "-" : item.Abbreviation)</div>
                             <div><strong>Электронная почта:</strong> @(string.IsNullOrWhiteSpace(item.Email) ? "-" : item.Email)</div>
                             <div><strong>Мобильный номер:</strong> @(string.IsNullOrWhiteSpace(item.MobileNumber) ? "-" : item.MobileNumber)</div>
@@ -62,58 +75,189 @@
                 <div class="entity-actions">
                     <div class="actions-stack">
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Lecturers"
-                   asp-action="Details"
-                   asp-route-id="@item.Id">
+                           asp-controller="Lecturers"
+                           asp-action="Details"
+                           asp-route-id="@item.Id">
                             Подробнее
                         </a>
 
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Lecturers"
-                   asp-action="Update"
-                   asp-route-id="@item.Id">
+                           asp-controller="Lecturers"
+                           asp-action="Update"
+                           asp-route-id="@item.Id">
                             Изменить
                         </a>
 
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Lecturers"
-                   asp-action="Delete"
-                   asp-route-id="@item.Id">
+                           asp-controller="Lecturers"
+                           asp-action="Delete"
+                           asp-route-id="@item.Id">
                             Удалить
                         </a>
                     </div>
                 </div>
             </div>
         }
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Result.Page из @Model.Result.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего преподавателей: @Model.Result.TotalCount
+                </div>
+
+                <nav class="app-pagination" aria-label="Пагинация">
+                    <ul class="pagination mb-0">
+
+                        @if (Model.Result.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В начало
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В начало</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@(Model.Result.Page - 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Назад
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Назад</span>
+                            </li>
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            if (p == Model.Result.Page)
+                            {
+                                <li class="page-item active">
+                                    <span class="page-link">@p</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="List"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-page="@p"
+                                       asp-route-pageSize="@Model.Result.PageSize">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        }
+
+                        @if (endPage < Model.Result.TotalPages)
+                        {
+                            @if (endPage < Model.Result.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    @Model.Result.TotalPages
+                                </a>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@(Model.Result.Page + 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Вперёд
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.Page < Model.Result.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В конец
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В конец</span>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        }
     }
     else
     {
         <div class="alert alert-secondary m-3">
-            Преподаватели отсутствуют.
+            По выбранным параметрам преподаватели не найдены.
         </div>
     }
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('lecturerSearchInput');
-            const lecturerRows = document.querySelectorAll('.lecturer-row');
-
-            function filterLecturers() {
-                const search = (searchInput?.value || '').trim().toLowerCase();
-
-                lecturerRows.forEach(row => {
-                    const name = row.dataset.name || '';
-                    const matches = !search || name.includes(search);
-
-                    row.style.display = matches ? '' : 'none';
-                });
-            }
-
-            if (searchInput) {
-                searchInput.addEventListener('input', filterLecturers);
-            }
-        });
-    </script>
-}

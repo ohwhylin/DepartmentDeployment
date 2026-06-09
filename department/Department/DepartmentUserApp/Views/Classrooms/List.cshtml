@@ -1,16 +1,25 @@
-@using System.Linq
-@using DepartmentContracts.ViewModels
+@model DepartmentUserApp.ViewModels.Classrooms.ClassroomListPageViewModel
+@using DepartmentDataModels.Enums
 
 @{
     ViewData["Title"] = "Classrooms";
 
-    var classrooms = ViewBag.ClassroomsList as List<ClassroomViewModel> ?? new List<ClassroomViewModel>();
-    var classroomTypes = classrooms
-        .Select(x => x.Type.ToString())
-        .Where(x => !string.IsNullOrWhiteSpace(x))
-        .Distinct()
-        .OrderBy(x => x)
-        .ToList();
+    var classroomTypes = Enum.GetValues<ClassroomTypes>();
+
+    var typeRouteValue = Model.Type.HasValue
+        ? ((int)Model.Type.Value).ToString()
+        : null;
+
+    var projectorRouteValue = Model.HasProjector.HasValue
+        ? Model.HasProjector.Value.ToString().ToLowerInvariant()
+        : null;
+
+    var scheduleRouteValue = Model.UseInSchedule.HasValue
+        ? Model.UseInSchedule.Value.ToString().ToLowerInvariant()
+        : null;
+
+    var startPage = Math.Max(1, Model.Result.Page - 2);
+    var endPage = Math.Min(Model.Result.TotalPages, Model.Result.Page + 2);
 }
 
 <div class="list-shell">
@@ -19,7 +28,11 @@
             <h2 class="list-title">Список аудиторий</h2>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-app-primary" asp-controller="Classrooms" asp-action="Create">Добавить</a>
+            <a class="btn btn-app-primary"
+               asp-controller="Classrooms"
+               asp-action="Create">
+                Добавить
+            </a>
         </div>
     </div>
 
@@ -30,52 +43,91 @@
         </div>
     }
 
-    <div class="p-3 pb-0">
-        <div class="row g-2">
-            <div class="col-md-3">
-                <input id="classroomSearchInput"
-                       type="text"
-                       class="form-control"
-                       placeholder="Поиск по номеру аудитории" />
-            </div>
+    <form method="get" class="p-3 d-flex gap-2 flex-wrap">
+        <input type="text"
+               name="search"
+               value="@Model.Search"
+               class="form-control"
+               placeholder="Поиск по номеру аудитории"
+               style="max-width: 260px;" />
 
-            <div class="col-md-3">
-                <select id="classroomTypeFilter" class="form-select">
-                    <option value="">Все типы аудиторий</option>
-                    @foreach (var type in classroomTypes)
-                    {
-                        <option value="@type">@type</option>
-                    }
-                </select>
-            </div>
+        <select name="type" class="form-select" style="max-width: 240px;">
+            <option value="">Все типы аудиторий</option>
+            @foreach (var type in classroomTypes)
+            {
+                if (Model.Type == type)
+                {
+                    <option value="@((int)type)" selected>@type</option>
+                }
+                else
+                {
+                    <option value="@((int)type)">@type</option>
+                }
+            }
+        </select>
 
-            <div class="col-md-3">
-                <select id="classroomProjectorFilter" class="form-select">
-                    <option value="">Проектор: все</option>
-                    <option value="true">Только с проектором</option>
-                    <option value="false">Только без проектора</option>
-                </select>
-            </div>
+        <select name="hasProjector" class="form-select" style="max-width: 220px;">
+            <option value="">Проектор: все</option>
+            @if (Model.HasProjector == true)
+            {
+                <option value="true" selected>Только с проектором</option>
+            }
+            else
+            {
+                <option value="true">Только с проектором</option>
+            }
 
-            <div class="col-md-3">
-                <select id="classroomScheduleFilter" class="form-select">
-                    <option value="">Расписание: все</option>
-                    <option value="true">Только участвующие в расписании</option>
-                    <option value="false">Только не участвующие в расписании</option>
-                </select>
-            </div>
-        </div>
+            @if (Model.HasProjector == false)
+            {
+                <option value="false" selected>Только без проектора</option>
+            }
+            else
+            {
+                <option value="false">Только без проектора</option>
+            }
+        </select>
+
+        <select name="useInSchedule" class="form-select" style="max-width: 260px;">
+            <option value="">Расписание: все</option>
+            @if (Model.UseInSchedule == true)
+            {
+                <option value="true" selected>Только участвующие в расписании</option>
+            }
+            else
+            {
+                <option value="true">Только участвующие в расписании</option>
+            }
+
+            @if (Model.UseInSchedule == false)
+            {
+                <option value="false" selected>Только не участвующие в расписании</option>
+            }
+            else
+            {
+                <option value="false">Только не участвующие в расписании</option>
+            }
+        </select>
+
+        <input type="hidden" name="pageSize" value="@Model.Result.PageSize" />
+
+        <button type="submit" class="btn btn-app-outline">Применить</button>
+
+        <a class="btn btn-app-outline"
+           asp-controller="Classrooms"
+           asp-action="List">
+            Сбросить
+        </a>
+    </form>
+
+    <div class="px-3 pb-2 text-muted">
+        Найдено аудиторий: @Model.Result.TotalCount
     </div>
 
-    @if (classrooms.Count > 0)
+    @if (Model.Result.Items.Count > 0)
     {
-        @foreach (var item in classrooms)
+        @foreach (var item in Model.Result.Items)
         {
-            <div class="entity-row classroom-row"
-         data-number="@item.Number.ToString().ToLowerInvariant()"
-         data-type="@item.Type.ToString().ToLowerInvariant()"
-         data-projector="@(item.HasProjector.ToString().ToLowerInvariant())"
-         data-inschedule="@((!item.NotUseInSchedule).ToString().ToLowerInvariant())">
+            <div class="entity-row">
                 <div class="entity-accent"></div>
 
                 <div class="entity-content">
@@ -95,75 +147,210 @@
                 <div class="entity-actions">
                     <div class="actions-stack">
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Classrooms"
-                   asp-action="Details"
-                   asp-route-id="@item.Id">
+                           asp-controller="Classrooms"
+                           asp-action="Details"
+                           asp-route-id="@item.Id">
                             Подробнее
                         </a>
 
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Classrooms"
-                   asp-action="Update"
-                   asp-route-id="@item.Id">
+                           asp-controller="Classrooms"
+                           asp-action="Update"
+                           asp-route-id="@item.Id">
                             Изменить
                         </a>
 
                         <a class="btn btn-sm btn-app-outline"
-                   asp-controller="Classrooms"
-                   asp-action="Delete"
-                   asp-route-id="@item.Id">
+                           asp-controller="Classrooms"
+                           asp-action="Delete"
+                           asp-route-id="@item.Id">
                             Удалить
                         </a>
                     </div>
                 </div>
             </div>
         }
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Result.Page из @Model.Result.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего аудиторий: @Model.Result.TotalCount
+                </div>
+
+                <nav class="app-pagination" aria-label="Пагинация">
+                    <ul class="pagination mb-0">
+
+                        @if (Model.Result.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В начало
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В начало</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="@(Model.Result.Page - 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Назад
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Назад</span>
+                            </li>
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            if (p == Model.Result.Page)
+                            {
+                                <li class="page-item active">
+                                    <span class="page-link">@p</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="List"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-type="@typeRouteValue"
+                                       asp-route-hasProjector="@projectorRouteValue"
+                                       asp-route-useInSchedule="@scheduleRouteValue"
+                                       asp-route-page="@p"
+                                       asp-route-pageSize="@Model.Result.PageSize">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        }
+
+                        @if (endPage < Model.Result.TotalPages)
+                        {
+                            @if (endPage < Model.Result.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    @Model.Result.TotalPages
+                                </a>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="@(Model.Result.Page + 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Вперёд
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.Page < Model.Result.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@typeRouteValue"
+                                   asp-route-hasProjector="@projectorRouteValue"
+                                   asp-route-useInSchedule="@scheduleRouteValue"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В конец
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В конец</span>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        }
     }
     else
     {
         <div class="alert alert-secondary m-3">
-            Аудитории отсутствуют.
+            По выбранным параметрам аудитории не найдены.
         </div>
     }
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('classroomSearchInput');
-            const typeFilter = document.getElementById('classroomTypeFilter');
-            const projectorFilter = document.getElementById('classroomProjectorFilter');
-            const scheduleFilter = document.getElementById('classroomScheduleFilter');
-            const rows = document.querySelectorAll('.classroom-row');
-
-            function applyClassroomFilters() {
-                const search = (searchInput?.value || '').trim().toLowerCase();
-                const type = (typeFilter?.value || '').trim().toLowerCase();
-                const projector = (projectorFilter?.value || '').trim().toLowerCase();
-                const inSchedule = (scheduleFilter?.value || '').trim().toLowerCase();
-
-                rows.forEach(row => {
-                    const rowNumber = row.dataset.number || '';
-                    const rowType = row.dataset.type || '';
-                    const rowProjector = row.dataset.projector || '';
-                    const rowInSchedule = row.dataset.inschedule || '';
-
-                    const matchesSearch = !search || rowNumber.includes(search);
-                    const matchesType = !type || rowType === type;
-                    const matchesProjector = !projector || rowProjector === projector;
-                    const matchesSchedule = !inSchedule || rowInSchedule === inSchedule;
-
-                    const visible = matchesSearch && matchesType && matchesProjector && matchesSchedule;
-                    row.style.display = visible ? '' : 'none';
-                });
-            }
-
-            [searchInput, typeFilter, projectorFilter, scheduleFilter].forEach(control => {
-                if (control) {
-                    control.addEventListener('input', applyClassroomFilters);
-                    control.addEventListener('change', applyClassroomFilters);
-                }
-            });
-        });
-    </script>
-}

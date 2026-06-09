@@ -19,6 +19,9 @@ namespace DepartmentDatabaseImplement.Implements
                 .Include(x => x.LecturerStudyPost)
                 .Include(x => x.LecturerDepartmentPost)
                 .AsNoTracking()
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .ThenBy(x => x.Patronymic)
                 .ToList()
                 .Select(MapToViewModel)
                 .ToList();
@@ -34,25 +37,55 @@ namespace DepartmentDatabaseImplement.Implements
                 .AsQueryable();
 
             if (model.Id.HasValue)
+            {
                 query = query.Where(x => x.Id == model.Id.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Search))
+            {
+                var pattern = $"%{model.Search.Trim()}%";
+
+                query = query.Where(x =>
+                    EF.Functions.ILike(x.LastName, pattern) ||
+                    EF.Functions.ILike(x.FirstName, pattern) ||
+                    EF.Functions.ILike(x.Patronymic, pattern) ||
+                    EF.Functions.ILike(x.Abbreviation, pattern) ||
+                    EF.Functions.ILike(x.Email, pattern) ||
+                    EF.Functions.ILike(x.MobileNumber, pattern) ||
+                    EF.Functions.ILike(x.HomeNumber, pattern) ||
+                    EF.Functions.ILike(x.Description, pattern));
+            }
 
             if (!string.IsNullOrWhiteSpace(model.FirstName))
+            {
                 query = query.Where(x => x.FirstName.Contains(model.FirstName));
+            }
 
             if (!string.IsNullOrWhiteSpace(model.LastName))
+            {
                 query = query.Where(x => x.LastName.Contains(model.LastName));
+            }
 
             if (!string.IsNullOrWhiteSpace(model.Patronymic))
+            {
                 query = query.Where(x => x.Patronymic.Contains(model.Patronymic));
+            }
 
             if (model.LecturerStudyPostId.HasValue)
+            {
                 query = query.Where(x => x.LecturerStudyPostId == model.LecturerStudyPostId.Value);
+            }
 
             if (model.LecturerDepartmentPostId.HasValue)
+            {
                 query = query.Where(x => x.LecturerDepartmentPostId == model.LecturerDepartmentPostId.Value);
+            }
 
             return query
                 .AsNoTracking()
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .ThenBy(x => x.Patronymic)
                 .ToList()
                 .Select(MapToViewModel)
                 .ToList();
