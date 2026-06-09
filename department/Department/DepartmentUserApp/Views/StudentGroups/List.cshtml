@@ -1,14 +1,8 @@
-@using System.Linq
-@using DepartmentContracts.ViewModels
+@model DepartmentUserApp.ViewModels.StudentGroups.StudentGroupListPageViewModel
 @using DepartmentDataModels.Enums
 
 @{
     ViewData["Title"] = "StudentGroups";
-
-    var groups = ViewBag.StudentGroupsList as List<StudentGroupViewModel> ?? new List<StudentGroupViewModel>();
-    var students = ViewBag.StudentsList as List<StudentViewModel> ?? new List<StudentViewModel>();
-    var disciplineStudentRecords = ViewBag.DisciplineStudentRecordsList as List<DisciplineStudentRecordViewModel>
-    ?? new List<DisciplineStudentRecordViewModel>();
 
     int GetMaxSemesterForCourse(AcademicCourse course) => course switch
     {
@@ -39,9 +33,6 @@
         return age < 0 ? 0 : age;
     }
 
-    // по вашему уточнению:
-    // неявка НЕ считается долгом
-    // повышенный риск: долг старше двух семестров
     bool IsHighRiskDebt(AcademicCourse course, Semesters debtSemester)
     {
         return GetDebtAgeInSemesters(course, debtSemester) > 2;
@@ -64,6 +55,16 @@
         StudentState.Завершил => "Выпустился",
         _ => state.ToString()
     };
+
+    var courseValues = Enum.GetValues<AcademicCourse>();
+    var courseRouteValue = Model.Course.HasValue
+        ? ((int)Model.Course.Value).ToString()
+        : null;
+
+    var startPage = Math.Max(1, Model.Result.Page - 2);
+    var endPage = Math.Min(Model.Result.TotalPages, Model.Result.Page + 2);
+
+    var expandStudents = !string.IsNullOrWhiteSpace(Model.StudentSearch) || Model.OnlyStudentsWithDebts;
 }
 
 <div class="list-shell">
@@ -92,108 +93,153 @@
         </div>
     }
 
-    <div class="p-3 pb-0">
+    <form method="get" class="p-3 border-bottom">
         <div class="row g-2 align-items-center">
             <div class="col-md-4">
-                <input id="groupNameSearchInput"
+                <input name="groupSearch"
+                       value="@Model.GroupSearch"
                        type="text"
                        class="form-control"
                        placeholder="Поиск по группе" />
             </div>
+
             <div class="col-md-4">
-                <input id="groupStudentSearchInput"
+                <input name="studentSearch"
+                       value="@Model.StudentSearch"
                        type="text"
                        class="form-control"
                        placeholder="Поиск по студенту" />
             </div>
+
+            <div class="col-md-3">
+                <select name="course" class="form-select">
+                    <option value="">Все курсы</option>
+                    @foreach (var courseValue in courseValues)
+                    {
+                        if (Model.Course == courseValue)
+                        {
+                            <option value="@((int)courseValue)" selected>@GetCourseName(courseValue)</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)courseValue)">@GetCourseName(courseValue)</option>
+                        }
+                    }
+                </select>
+            </div>
+
             <div class="col-md-auto">
-                <button id="groupSearchClear"
-                        type="button"
-                        class="btn btn-app-outline">
+                <button type="submit" class="btn btn-app-outline">Применить</button>
+            </div>
+
+            <div class="col-md-auto">
+                <a asp-controller="StudentGroups"
+                   asp-action="List"
+                   class="btn btn-app-outline">
                     Сбросить
-                </button>
+                </a>
             </div>
         </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-md-auto">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="onlyGroupsWithDebts"
+                           value="true"
+                           id="onlyGroupsWithDebts"
+                           @(Model.OnlyGroupsWithDebts ? "checked" : "") />
+                    <label class="form-check-label" for="onlyGroupsWithDebts">
+                        Только группы с долгами
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-auto">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="onlyStudentsWithDebts"
+                           value="true"
+                           id="onlyStudentsWithDebts"
+                           @(Model.OnlyStudentsWithDebts ? "checked" : "") />
+                    <label class="form-check-label" for="onlyStudentsWithDebts">
+                        Показывать только студентов с долгами
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-auto">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="onlyHighRisk"
+                           value="true"
+                           id="onlyHighRisk"
+                           @(Model.OnlyHighRisk ? "checked" : "") />
+                    <label class="form-check-label" for="onlyHighRisk">
+                        Только высокий риск отчисления
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="pageSize" value="@Model.Result.PageSize" />
+    </form>
+
+    <div class="px-3 pb-2 pt-3 text-muted">
+        Найдено групп: @Model.Result.TotalCount
     </div>
 
-    <div id="studentGroupsSearchEmpty"
-         class="alert alert-secondary m-3 d-none">
-        По заданным параметрам группы или студенты не найдены.
-    </div>
-
-    @if (groups.Count > 0)
+    @if (Model.Result.Items.Count > 0)
     {
-        @foreach (var item in groups)
+        @foreach (var item in Model.Result.Items)
         {
-            var groupStudents = students
-                .Where(x => x.StudentGroupId == item.Id)
-                .OrderBy(x => x.LastName)
-                .ThenBy(x => x.FirstName)
-                .ThenBy(x => x.Patronymic)
-                .ToList();
+            var group = item.Group;
+            var students = item.Students;
+            var collapseId = $"groupStudents_{group.Id}";
+            var buttonId = $"toggleBtn_{group.Id}";
 
-            var groupStudentIds = groupStudents
-            .Select(x => x.Id)
-            .ToHashSet();
-
-            var groupDebtRecords = disciplineStudentRecords
-            .Where(x =>
-            groupStudentIds.Contains(x.StudentId) &&
-            x.MarkType == MarkType.Неудовлетворительно)
-            .ToList();
-
-            var studentsWithDebts = groupStudents
-            .Select(student => new
-            {
-                Student = student,
-                Debts = groupDebtRecords
-            .Where(x => x.StudentId == student.Id)
-            .OrderBy(x => x.Semester)
-            .ToList()
-            })
-            .Where(x => x.Debts.Any())
-            .ToList();
-
-            var highRiskStudentsCount = studentsWithDebts
-            .Count(x => x.Debts.Any(d => IsHighRiskDebt(item.Course, d.Semester)));
-
-            var collapseId = $"groupStudents_{item.Id}";
-            var buttonId = $"toggleBtn_{item.Id}";
-
-            <div class="group-block"
-                 data-group-name="@((item.GroupName ?? string.Empty).ToLowerInvariant())">
+            <div class="group-block">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
                     <div class="entity-content">
                         <div class="entity-main">
-                            <h5 class="entity-title">@item.GroupName</h5>
+                            <h5 class="entity-title">@group.GroupName</h5>
 
                             <div class="entity-meta d-flex flex-column gap-1">
-                                <div><strong>Направление:</strong> @item.EducationDirection</div>
-                                <div><strong>Курс:</strong> @GetCourseName(item.Course)</div>
-                                <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
-                                @if (studentsWithDebts.Any())
+                                <div><strong>Направление:</strong> @group.EducationDirection</div>
+                                <div><strong>Курс:</strong> @GetCourseName(group.Course)</div>
+                                <div><strong>Количество студентов:</strong> @item.StudentCount</div>
+
+                                @if (!string.IsNullOrWhiteSpace(group.Curator))
+                                {
+                                    <div><strong>Куратор:</strong> @group.Curator</div>
+                                }
+
+                                @if (Model.OnlyStudentsWithDebts || !string.IsNullOrWhiteSpace(Model.StudentSearch))
+                                {
+                                    <div><strong>Показано студентов:</strong> @students.Count</div>
+                                }
+
+                                @if (item.StudentsWithDebtsCount > 0)
                                 {
                                     <div class="mt-2">
-                                        <div class="alert @(highRiskStudentsCount > 0 ? "alert-danger" : "alert-warning") py-2 mb-0">
+                                        <div class="alert @(item.HighRiskStudentsCount > 0 ? "alert-danger" : "alert-warning") py-2 mb-0">
                                             <strong>Внимание:</strong>
                                             в группе есть студенты с академическими задолженностями —
-                                            @studentsWithDebts.Count чел.
-                                            @if (highRiskStudentsCount > 0)
+                                            @item.StudentsWithDebtsCount чел.
+                                            @if (item.HighRiskStudentsCount > 0)
                                             {
                                                 <span>
-                                                    Из них у @highRiskStudentsCount чел. долги старше двух семестров.
+                                                    Из них у @item.HighRiskStudentsCount чел. долги старше двух семестров.
                                                     Возможен риск отчисления.
                                                 </span>
                                             }
                                         </div>
                                     </div>
-                                }
-
-                                @if (!string.IsNullOrWhiteSpace(item.Curator))
-                                {
-                                    <div><strong>Куратор:</strong> @item.Curator</div>
                                 }
                             </div>
                         </div>
@@ -204,7 +250,7 @@
                             <a class="btn btn-sm btn-app-outline"
                                asp-controller="StudentGroups"
                                asp-action="Details"
-                               asp-route-id="@item.Id">
+                               asp-route-id="@group.Id">
                                 Подробнее
                             </a>
 
@@ -213,31 +259,25 @@
                                     type="button"
                                     data-bs-toggle="collapse"
                                     data-bs-target="#@collapseId"
-                                    aria-expanded="false"
+                                    aria-expanded="@(expandStudents ? "true" : "false")"
                                     aria-controls="@collapseId">
-                                Показать студентов
+                                @(expandStudents ? "Скрыть студентов" : "Показать студентов")
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="collapse" id="@collapseId">
+                <div class="collapse @(expandStudents ? "show" : "")" id="@collapseId">
                     <div class="group-students-wrap">
-                        @if (groupStudents.Count > 0)
+                        @if (students.Count > 0)
                         {
-                            @foreach (var student in groupStudents)
+                            @foreach (var studentItem in students)
                             {
-                                var studentSearch = $"{student.LastName} {student.FirstName} {student.Patronymic}".ToLowerInvariant();
-                                var studentDebtRecords = groupDebtRecords
-                                .Where(x => x.StudentId == student.Id)
-                                .OrderBy(x => x.Semester)
-                                .ToList();
+                                var student = studentItem.Student;
+                                var studentDebtRecords = studentItem.Debts;
+                                var hasHighRiskDebt = studentItem.HasHighRiskDebt;
 
-                                var hasHighRiskDebt = studentDebtRecords
-                                .Any(x => IsHighRiskDebt(item.Course, x.Semester));
-
-                                <div class="group-student-item"
-                                     data-student-name="@studentSearch">
+                                <div class="group-student-item">
                                     <div class="group-student-info">
                                         <div class="group-student-title">
                                             @student.LastName @student.FirstName @student.Patronymic
@@ -273,13 +313,13 @@
                                                         <ul class="mb-0 mt-1 ps-3">
                                                             @foreach (var debt in studentDebtRecords)
                                                             {
-                                                                var ageInSemesters = GetDebtAgeInSemesters(item.Course, debt.Semester);
+                                                                var ageInSemesters = GetDebtAgeInSemesters(group.Course, debt.Semester);
 
                                                                 <li>
                                                                     @(string.IsNullOrWhiteSpace(debt.Discipline) ? "Неизвестная дисциплина" : debt.Discipline)
                                                                     — @GetSemesterName(debt.Semester)
 
-                                                                    @if (IsHighRiskDebt(item.Course, debt.Semester))
+                                                                    @if (IsHighRiskDebt(group.Course, debt.Semester))
                                                                     {
                                                                         <span class="text-danger">
                                                                             (долг старше двух семестров, возможен риск отчисления)
@@ -314,18 +354,208 @@
                         else
                         {
                             <div class="text-muted">
-                                В данной группе студенты отсутствуют.
+                                По выбранным фильтрам студенты не найдены.
                             </div>
                         }
                     </div>
                 </div>
             </div>
         }
+
+        @if (Model.Result.TotalPages > 1)
+        {
+            <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Result.Page из @Model.Result.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего групп: @Model.Result.TotalCount
+                </div>
+
+                <nav class="app-pagination" aria-label="Пагинация">
+                    <ul class="pagination mb-0">
+
+                        @if (Model.Result.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В начало
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В начало</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="@(Model.Result.Page - 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Назад
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Назад</span>
+                            </li>
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            if (p == Model.Result.Page)
+                            {
+                                <li class="page-item active">
+                                    <span class="page-link">@p</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="List"
+                                       asp-route-groupSearch="@Model.GroupSearch"
+                                       asp-route-studentSearch="@Model.StudentSearch"
+                                       asp-route-course="@courseRouteValue"
+                                       asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                       asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                       asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                       asp-route-page="@p"
+                                       asp-route-pageSize="@Model.Result.PageSize">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        }
+
+                        @if (endPage < Model.Result.TotalPages)
+                        {
+                            @if (endPage < Model.Result.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    @Model.Result.TotalPages
+                                </a>
+                            </li>
+                        }
+
+                        @if (Model.Result.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="@(Model.Result.Page + 1)"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    Вперёд
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.Page < Model.Result.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-course="@courseRouteValue"
+                                   asp-route-onlyGroupsWithDebts="@Model.OnlyGroupsWithDebts"
+                                   asp-route-onlyStudentsWithDebts="@Model.OnlyStudentsWithDebts"
+                                   asp-route-onlyHighRisk="@Model.OnlyHighRisk"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В конец
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В конец</span>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        }
     }
     else
     {
         <div class="alert alert-secondary m-3">
-            Данные отсутствуют. Выполните синхронизацию.
+            По выбранным параметрам группы не найдены.
         </div>
     }
 </div>
@@ -336,13 +566,13 @@
             border-top: 1px solid var(--sky);
         }
 
-        .group-block:first-of-type {
-            border-top: none;
-        }
+            .group-block:first-of-type {
+                border-top: none;
+            }
 
-        .group-block .entity-row {
-            border-top: none;
-        }
+            .group-block .entity-row {
+                border-top: none;
+            }
 
         .group-students-wrap {
             margin-left: 8px;
@@ -360,9 +590,9 @@
             border-bottom: 1px solid #e3eefb;
         }
 
-        .group-student-item:last-child {
-            border-bottom: none;
-        }
+            .group-student-item:last-child {
+                border-bottom: none;
+            }
 
         .group-student-info {
             flex: 1;
@@ -380,13 +610,6 @@
             flex-shrink: 0;
             padding-top: 2px;
         }
-
-        .group-student-item.student-match {
-            background: #eef6ff;
-            border-radius: 10px;
-            padding-left: 10px;
-            padding-right: 10px;
-        }
     </style>
 }
 
@@ -394,26 +617,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
-            const groupNameSearchInput = document.getElementById('groupNameSearchInput');
-            const groupStudentSearchInput = document.getElementById('groupStudentSearchInput');
-            const clearButton = document.getElementById('groupSearchClear');
-            const groupBlocks = document.querySelectorAll('.group-block');
-            const emptyResult = document.getElementById('studentGroupsSearchEmpty');
-
-            function getCollapseInstance(element) {
-                if (!window.bootstrap) return null;
-                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
-            }
-
-            function collapseAllGroups() {
-                groupBlocks.forEach(block => {
-                    const collapseElement = block.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    if (collapseInstance) {
-                        collapseInstance.hide();
-                    }
-                });
-            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -430,99 +633,6 @@
                     }
                 });
             });
-
-            function applyFilters() {
-                const groupQuery = (groupNameSearchInput?.value || '').trim().toLowerCase();
-                const studentQuery = (groupStudentSearchInput?.value || '').trim().toLowerCase();
-                let hasVisibleGroups = false;
-
-                groupBlocks.forEach(groupBlock => {
-                    const groupName = groupBlock.dataset.groupName || '';
-                    const collapseElement = groupBlock.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    const studentItems = groupBlock.querySelectorAll('.group-student-item');
-
-                    const groupMatches = !groupQuery || groupName.includes(groupQuery);
-                    let hasStudentMatch = false;
-
-                    studentItems.forEach(studentItem => {
-                        const studentName = studentItem.dataset.studentName || '';
-                        const studentMatches = !studentQuery || studentName.includes(studentQuery);
-
-                        studentItem.classList.toggle('student-match', !!studentQuery && studentMatches);
-
-                        if (studentMatches) {
-                            hasStudentMatch = true;
-                            studentItem.style.display = '';
-                        } else {
-                            studentItem.style.display = 'none';
-                        }
-                    });
-
-                    const groupVisible = groupMatches && (!studentQuery || hasStudentMatch);
-                    groupBlock.style.display = groupVisible ? '' : 'none';
-
-                    if (groupVisible) {
-                        hasVisibleGroups = true;
-                    }
-
-                    if (studentQuery && groupVisible && hasStudentMatch && collapseInstance) {
-                        collapseInstance.show();
-                    }
-
-                    if (studentQuery && (!groupVisible || !hasStudentMatch) && collapseInstance) {
-                        collapseInstance.hide();
-                    }
-
-                    if (!studentQuery) {
-                        studentItems.forEach(studentItem => {
-                            studentItem.style.display = '';
-                            studentItem.classList.remove('student-match');
-                        });
-                    }
-                });
-
-                if (emptyResult) {
-                    emptyResult.classList.toggle('d-none', hasVisibleGroups);
-                }
-            }
-
-            if (groupNameSearchInput) {
-                groupNameSearchInput.addEventListener('input', applyFilters);
-            }
-
-            if (groupStudentSearchInput) {
-                groupStudentSearchInput.addEventListener('input', applyFilters);
-            }
-
-            if (clearButton) {
-                clearButton.addEventListener('click', function () {
-                    if (groupNameSearchInput) groupNameSearchInput.value = '';
-                    if (groupStudentSearchInput) groupStudentSearchInput.value = '';
-
-                    groupBlocks.forEach(groupBlock => {
-                        groupBlock.style.display = '';
-
-                        const studentItems = groupBlock.querySelectorAll('.group-student-item');
-                        studentItems.forEach(studentItem => {
-                            studentItem.style.display = '';
-                            studentItem.classList.remove('student-match');
-                        });
-                    });
-
-                    collapseAllGroups();
-
-                    if (emptyResult) {
-                        emptyResult.classList.add('d-none');
-                    }
-
-                    if (groupNameSearchInput) {
-                        groupNameSearchInput.focus();
-                    }
-                });
-            }
         });
-
-
     </script>
 }
