@@ -873,11 +873,8 @@ namespace DepartmentOneCMockApi.Data
                 }
 
                 var academicPlan = AcademicPlans
-                    .Where(x =>
-                        x.EducationDirectionId == group.EducationDirectionId &&
-                        x.AcademicCourses == group.Course)
-                    .OrderByDescending(x => ParseYear(x.Year))
-                    .ThenByDescending(x => x.Id)
+                    .Where(x => x.EducationDirectionId == group.EducationDirectionId)
+                    .OrderBy(x => x.Id)
                     .FirstOrDefault();
 
                 if (academicPlan == null || academicPlan.AcademicPlanRecords == null)
@@ -885,21 +882,13 @@ namespace DepartmentOneCMockApi.Data
                     continue;
                 }
 
-                var maxSemester = group.Course switch
-                {
-                    AcademicCourse.Course_1 => 2,
-                    AcademicCourse.Course_2 => 4,
-                    AcademicCourse.Course_3 => 6,
-                    AcademicCourse.Course_4 => 8,
-                    _ => 0
-                };
+                var (fromSemester, toSemester) = GetSemesterRange(group.Course);
 
                 var planRecords = academicPlan.AcademicPlanRecords
                     .Where(x => x.DisciplineId.HasValue)
-                    .Where(x => x.Semester >= 1 && x.Semester <= maxSemester)
+                    .Where(x => x.Semester >= fromSemester && x.Semester <= toSemester)
                     .OrderBy(x => x.Semester)
                     .ThenBy(x => x.Index)
-                    .ThenBy(x => x.Id)
                     .ToList();
 
                 foreach (var planRecord in planRecords)
@@ -931,6 +920,19 @@ namespace DepartmentOneCMockApi.Data
 
             return result;
         }
+
+        private static (int FromSemester, int ToSemester) GetSemesterRange(AcademicCourse course)
+        {
+            return course switch
+            {
+                AcademicCourse.Course_1 => (1, 2),
+                AcademicCourse.Course_2 => (3, 4),
+                AcademicCourse.Course_3 => (5, 6),
+                AcademicCourse.Course_4 => (7, 8),
+                _ => (1, 8)
+            };
+        }
+
         private static int ParseYear(string? year)
         {
             return int.TryParse(year, out var value) ? value : 0;
@@ -963,13 +965,16 @@ namespace DepartmentOneCMockApi.Data
             var semester = planRecord.Semester;
             var disciplineId = planRecord.DisciplineId ?? 0;
 
-            if (student.Id % 17 == 0 && semester <= 2)
+            // немного старых долгов
+            if (student.Id % 29 == 0 && semester <= 2)
                 return MarkType.Неудовлетворительно;
 
-            if (student.Id % 11 == 0 && semester >= 3 && semester <= 4)
+            // немного текущих долгов
+            if (student.Id % 37 == 0 && semester >= 3 && semester <= 4)
                 return MarkType.Неудовлетворительно;
 
-            if (student.Id % 13 == 0 && semester == 2)
+            // немного неявок
+            if (student.Id % 41 == 0 && semester == 2)
                 return MarkType.Неявка;
 
             var marks = new[]
