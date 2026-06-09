@@ -1,8 +1,12 @@
 using DepartmentUserApp;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
+    .SetApplicationName("DepartmentUserApp");
 
 var app = builder.Build();
 var pathBase = builder.Configuration["PathBase"];

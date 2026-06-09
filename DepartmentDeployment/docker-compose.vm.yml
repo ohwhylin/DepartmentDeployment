@@ -45,6 +45,8 @@ services:
       PathBase: /polina/core
     depends_on:
       - core-api
+    volumes:
+    - core-web-dpkeys:/keys
     restart: unless-stopped
 
   gateway:
@@ -183,6 +185,7 @@ services:
 
 volumes:
   core-db-data:
+  core-web-dpkeys:
   mol-db-data:
   schedule-db-data:
   load-db-data:

@@ -12,6 +12,21 @@
         <div>
             <h2 class="list-title">Список дисциплин</h2>
         </div>
+
+        <div class="d-flex gap-2">
+            <a class="btn btn-app-outline"
+               asp-controller="Home"
+               asp-action="Index">
+                Назад
+            </a>
+
+            <form asp-controller="AcademicPlans" asp-action="Sync" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-app-primary">
+                    Синхронизировать данные
+                </button>
+            </form>
+        </div>
     </div>
 
     <form method="get" class="p-3 d-flex gap-2 flex-wrap">
