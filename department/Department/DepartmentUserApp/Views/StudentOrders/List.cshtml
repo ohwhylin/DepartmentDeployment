@@ -259,15 +259,17 @@
 
         @if (Model.Result.TotalPages > 1)
         {
-            <div class="p-3 pt-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div class="pager-summary">
-                    Показана страница @Model.Result.Page из @Model.Result.TotalPages
+            <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Result.Page из @Model.Result.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего приказов: @Model.Result.TotalCount
                 </div>
 
-                <nav aria-label="Пагинация">
-                    <ul class="pagination app-pagination mb-0">
+                <nav class="app-pagination" aria-label="Пагинация">
+                    <ul class="pagination mb-0">
                         <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link"
+                            <a class="page-link page-link--wide"
                                asp-action="List"
                                asp-route-studentSearch="@Model.StudentSearch"
                                asp-route-groupSearch="@Model.GroupSearch"
@@ -279,7 +281,7 @@
                         </li>
 
                         <li class="page-item @(Model.Result.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link"
+                            <a class="page-link page-link--nav"
                                asp-action="List"
                                asp-route-studentSearch="@Model.StudentSearch"
                                asp-route-groupSearch="@Model.GroupSearch"
@@ -306,7 +308,7 @@
                         }
 
                         <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
-                            <a class="page-link"
+                            <a class="page-link page-link--nav"
                                asp-action="List"
                                asp-route-studentSearch="@Model.StudentSearch"
                                asp-route-groupSearch="@Model.GroupSearch"
@@ -318,7 +320,7 @@
                         </li>
 
                         <li class="page-item @(Model.Result.HasNextPage ? "" : "disabled")">
-                            <a class="page-link"
+                            <a class="page-link page-link--wide"
                                asp-action="List"
                                asp-route-studentSearch="@Model.StudentSearch"
                                asp-route-groupSearch="@Model.GroupSearch"
@@ -408,36 +410,6 @@
                 vertical-align: middle;
             }
 
-        .app-pagination .page-link {
-            color: var(--galaxy);
-            border-color: var(--sky);
-            background: #fff;
-        }
-
-            .app-pagination .page-link:hover,
-            .app-pagination .page-link:focus {
-                color: var(--galaxy);
-                background: var(--sky);
-                border-color: var(--sky);
-                box-shadow: none;
-            }
-
-        .app-pagination .page-item.active .page-link {
-            background: var(--galaxy);
-            border-color: var(--galaxy);
-            color: #fff;
-        }
-
-        .app-pagination .page-item.disabled .page-link {
-            color: #8d99ae;
-            background: #fff;
-            border-color: var(--sky);
-        }
-
-        .pager-summary {
-            color: #6c757d;
-            font-size: .95rem;
-        }
     </style>
 }
 
