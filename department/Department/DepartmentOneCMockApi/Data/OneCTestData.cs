@@ -927,7 +927,11 @@ namespace DepartmentOneCMockApi.Data
                             Variant = variant,
                             SubGroup = ((student.Id - 1) % 2) + 1,
                             MarkType = mark,
-                            MarkDate = null
+                            MarkDate = GetDemoMarkDate(
+                                group.Course,
+                                planRecord.Semester,
+                                student.Id,
+                                planRecord.DisciplineId!.Value)
                         });
                     }
                 }
@@ -1045,6 +1049,55 @@ namespace DepartmentOneCMockApi.Data
     };
 
             return marks[(student.Id + disciplineId) % marks.Length];
+        }
+
+        private static int GetStudyStartYear(AcademicCourse course)
+        {
+            var today = DateTime.Today;
+            var currentAcademicYearStart = today.Month >= 9 ? today.Year : today.Year - 1;
+
+            return course switch
+            {
+                AcademicCourse.Course_1 => currentAcademicYearStart,
+                AcademicCourse.Course_2 => currentAcademicYearStart - 1,
+                AcademicCourse.Course_3 => currentAcademicYearStart - 2,
+                AcademicCourse.Course_4 => currentAcademicYearStart - 3,
+                _ => currentAcademicYearStart
+            };
+        }
+
+        private static DateTime GetDemoMarkDate(
+            AcademicCourse currentCourse,
+            int semester,
+            int studentId,
+            int disciplineId)
+        {
+            var studyStartYear = GetStudyStartYear(currentCourse);
+
+            // 1-2 семестр = 1 год обучения, 3-4 = 2 год и т.д.
+            var studyYearIndex = (semester - 1) / 2;
+            var academicYearStart = studyStartYear + studyYearIndex;
+
+            DateTime rangeStart;
+            DateTime rangeEnd;
+
+            if (semester == 1 || semester == 3 || semester == 5 || semester == 7)
+            {
+                // 29 декабря — 21 января
+                rangeStart = new DateTime(academicYearStart, 12, 29, 12, 0, 0, DateTimeKind.Utc);
+                rangeEnd = new DateTime(academicYearStart + 1, 1, 21, 12, 0, 0, DateTimeKind.Utc);
+            }
+            else
+            {
+                // 1 июня — 21 июня
+                rangeStart = new DateTime(academicYearStart + 1, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+                rangeEnd = new DateTime(academicYearStart + 1, 6, 21, 12, 0, 0, DateTimeKind.Utc);
+            }
+
+            var days = (rangeEnd - rangeStart).Days;
+            var offset = Math.Abs(HashCode.Combine(studentId, disciplineId, semester)) % (days + 1);
+
+            return rangeStart.AddDays(offset);
         }
 
         private static MarkType GetDemoMark(StudentMockModel student, AcademicPlanRecordMockModel planRecord)
