@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Подробнее о записи учебного плана";
+
+    string YesNo(int? value) => value.HasValue
+       ? (value.Value == 1 ? "Да" : "Нет")
+       : "—";
 }
 
 <div class="app-card">
@@ -77,21 +81,21 @@
                 Экзамен
             </dt>
             <dd class="col-sm-8">
-                @(Model.Exam.HasValue ? Model.Exam.ToString() : "—")
+                @YesNo(Model.Exam)
             </dd>
 
             <dt class="col-sm-4 text-muted">
                 Зачёт
             </dt>
             <dd class="col-sm-8">
-                @(Model.Pass.HasValue ? Model.Pass.ToString() : "—")
+                @YesNo(Model.Pass)
             </dd>
 
             <dt class="col-sm-4 text-muted">
                 Дифференцированный зачёт
             </dt>
             <dd class="col-sm-8">
-                @(Model.GradedPass.HasValue ? Model.GradedPass.ToString() : "—")
+                @YesNo(Model.GradedPass)
             </dd>
 
             <hr class="my-3" />
@@ -100,21 +104,21 @@
                 Курсовая работа
             </dt>
             <dd class="col-sm-8">
-                @(Model.CourseWork.HasValue ? Model.CourseWork.ToString() : "—")
+                @YesNo(Model.CourseWork)
             </dd>
 
             <dt class="col-sm-4 text-muted">
                 Курсовой проект
             </dt>
             <dd class="col-sm-8">
-                @(Model.CourseProject.HasValue ? Model.CourseProject.ToString() : "—")
+                @YesNo(Model.CourseWork)
             </dd>
 
             <dt class="col-sm-4 text-muted">
                 РГР
             </dt>
             <dd class="col-sm-8">
-                @(Model.Rgr.HasValue ? Model.Rgr.ToString() : "—")
+                @YesNo(Model.Rgr)
             </dd>
 
             <hr class="my-3" />

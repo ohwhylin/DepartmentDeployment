@@ -4,7 +4,7 @@
 @using DepartmentDataModels.Enums
 
 @{
-    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var returnUrl = $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}";
     ViewData["Title"] = "Сведения об успеваемости";
 
     var records = Model.Records ?? new List<DisciplineStudentRecordViewModel>();
