@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using DepartmentContracts.BindingModels;
 using DepartmentContracts.BusinessLogicsContracts;
 using DepartmentContracts.SearchModels;
@@ -13,11 +16,22 @@ namespace DepartmentRestApi.Controllers
     {
         private readonly ILogger _logger;
         private readonly IDisciplineStudentRecordLogic _disciplineStudentRecord;
+        private readonly IDisciplineLogic _discipline;
+        private readonly IStudentLogic _student;
+        private readonly IStudentGroupLogic _studentGroup;
 
-        public DisciplineStudentRecordsController(ILogger<DisciplineStudentRecordsController> logger, IDisciplineStudentRecordLogic disciplineStudentRecord)
+        public DisciplineStudentRecordsController(
+            ILogger<DisciplineStudentRecordsController> logger,
+            IDisciplineStudentRecordLogic disciplineStudentRecord,
+            IDisciplineLogic discipline,
+            IStudentLogic student,
+            IStudentGroupLogic studentGroup)
         {
             _logger = logger;
             _disciplineStudentRecord = disciplineStudentRecord;
+            _discipline = discipline;
+            _student = student;
+            _studentGroup = studentGroup;
         }
 
         [HttpGet]
@@ -31,6 +45,120 @@ namespace DepartmentRestApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during loading list of disciplineStudentRecords");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetDisciplineStudentRecordPage([FromQuery] DisciplineStudentRecordSearchModel model)
+        {
+            try
+            {
+                model ??= new DisciplineStudentRecordSearchModel();
+
+                if (model.Page < 1)
+                {
+                    model.Page = 1;
+                }
+
+                if (model.PageSize <= 0)
+                {
+                    model.PageSize = 5;
+                }
+
+                var allGroups = _studentGroup.ReadList(null) ?? new List<StudentGroupViewModel>();
+                var allStudents = _student.ReadList(null) ?? new List<StudentViewModel>();
+                var allRecords = _disciplineStudentRecord.ReadList(null) ?? new List<DisciplineStudentRecordViewModel>();
+                var allDisciplines = _discipline.ReadList(null) ?? new List<DisciplineViewModel>();
+
+                IEnumerable<StudentGroupViewModel> filteredGroups = allGroups;
+
+                if (!string.IsNullOrWhiteSpace(model.GroupSearch))
+                {
+                    var groupSearch = model.GroupSearch.Trim().ToLowerInvariant();
+
+                    filteredGroups = filteredGroups.Where(group =>
+                        (group.GroupName ?? string.Empty).ToLowerInvariant().Contains(groupSearch));
+                }
+
+                if (!string.IsNullOrWhiteSpace(model.StudentSearch))
+                {
+                    var studentSearch = model.StudentSearch.Trim().ToLowerInvariant();
+
+                    filteredGroups = filteredGroups.Where(group =>
+                        allStudents.Any(student =>
+                            student.StudentGroupId == group.Id &&
+                            $"{student.LastName} {student.FirstName} {student.Patronymic}"
+                                .ToLowerInvariant()
+                                .Contains(studentSearch)));
+                }
+
+                var pagedGroups = PagedResult<StudentGroupViewModel>.Create(
+                    filteredGroups
+                        .OrderBy(x => x.GroupName)
+                        .ToList(),
+                    model.Page,
+                    model.PageSize);
+
+                var selectedGroupIds = pagedGroups.Items
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var pageStudentsQuery = allStudents
+                    .Where(x => x.StudentGroupId.HasValue && selectedGroupIds.Contains(x.StudentGroupId.Value));
+
+                if (!string.IsNullOrWhiteSpace(model.StudentSearch))
+                {
+                    var studentSearch = model.StudentSearch.Trim().ToLowerInvariant();
+
+                    pageStudentsQuery = pageStudentsQuery.Where(student =>
+                        $"{student.LastName} {student.FirstName} {student.Patronymic}"
+                            .ToLowerInvariant()
+                            .Contains(studentSearch));
+                }
+
+                var pageStudents = pageStudentsQuery
+                    .OrderBy(x => x.LastName)
+                    .ThenBy(x => x.FirstName)
+                    .ThenBy(x => x.Patronymic)
+                    .ToList();
+
+                var pageStudentIds = pageStudents
+                    .Select(x => x.Id)
+                    .ToHashSet();
+
+                var pageRecords = allRecords
+                    .Where(x => pageStudentIds.Contains(x.StudentId))
+                    .OrderBy(x => x.StudentId)
+                    .ThenBy(x => x.DisciplineId)
+                    .ThenBy(x => x.Semester)
+                    .ToList();
+
+                var pageDisciplineIds = pageRecords
+                    .Select(x => x.DisciplineId)
+                    .Distinct()
+                    .ToHashSet();
+
+                var pageDisciplines = allDisciplines
+                    .Where(x => pageDisciplineIds.Contains(x.Id))
+                    .OrderBy(x => x.DisciplineName)
+                    .ToList();
+
+                var result = new DisciplineStudentRecordGroupPageViewModel
+                {
+                    GroupSearch = model.GroupSearch?.Trim() ?? string.Empty,
+                    StudentSearch = model.StudentSearch?.Trim() ?? string.Empty,
+                    Groups = pagedGroups,
+                    Students = pageStudents,
+                    Disciplines = pageDisciplines,
+                    Records = pageRecords
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during loading page of disciplineStudentRecords");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }

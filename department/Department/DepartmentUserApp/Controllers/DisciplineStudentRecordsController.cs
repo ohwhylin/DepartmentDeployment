@@ -9,24 +9,67 @@ namespace DepartmentUserApp.Controllers
     public class DisciplineStudentRecordsController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(string? groupSearch, string? studentSearch, int page = 1, int pageSize = 5)
         {
             try
             {
-                ViewBag.DisciplineStudentRecordsList = APIClient.GetRequest<List<DisciplineStudentRecordViewModel>>("api/core/DisciplineStudentRecords/GetDisciplineStudentRecordList");
-                ViewBag.DisciplinesList = APIClient.GetRequest<List<DisciplineViewModel>>("api/core/Disciplines/GetDisciplineList");
-                ViewBag.StudentsList = APIClient.GetRequest<List<StudentViewModel>>("api/core/Students/GetStudentList");
-                ViewBag.StudentGroupsList = APIClient.GetRequest<List<StudentGroupViewModel>>("api/core/StudentGroups/GetStudentGroupList");
-                return View();
+                if (page < 1)
+                {
+                    page = 1;
+                }
+
+                if (pageSize <= 0)
+                {
+                    pageSize = 5;
+                }
+
+                var queryParts = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(groupSearch))
+                {
+                    queryParts.Add($"GroupSearch={Uri.EscapeDataString(groupSearch.Trim())}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(studentSearch))
+                {
+                    queryParts.Add($"StudentSearch={Uri.EscapeDataString(studentSearch.Trim())}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var url = $"api/core/DisciplineStudentRecords/GetDisciplineStudentRecordPage?{string.Join("&", queryParts)}";
+
+                var model = APIClient.GetRequest<DisciplineStudentRecordGroupPageViewModel>(url)
+                    ?? new DisciplineStudentRecordGroupPageViewModel
+                    {
+                        GroupSearch = groupSearch?.Trim() ?? string.Empty,
+                        StudentSearch = studentSearch?.Trim() ?? string.Empty,
+                        Groups = new PagedResult<StudentGroupViewModel>
+                        {
+                            Page = 1,
+                            PageSize = pageSize,
+                            TotalCount = 0
+                        }
+                    };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.DisciplineStudentRecordsList = new List<DisciplineStudentRecordViewModel>();
-                ViewBag.DisciplinesList = new List<DisciplineViewModel>();
-                ViewBag.StudentsList = new List<StudentViewModel>();
-                ViewBag.StudentGroupsList = new List<StudentGroupViewModel>();
-                return View();
+
+                return View(new DisciplineStudentRecordGroupPageViewModel
+                {
+                    GroupSearch = groupSearch?.Trim() ?? string.Empty,
+                    StudentSearch = studentSearch?.Trim() ?? string.Empty,
+                    Groups = new PagedResult<StudentGroupViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    }
+                });
             }
         }
 

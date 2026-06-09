@@ -1,3 +1,4 @@
+@model DepartmentContracts.ViewModels.DisciplineStudentRecordGroupPageViewModel
 @using System.Linq
 @using DepartmentContracts.ViewModels
 @using DepartmentDataModels.Enums
@@ -5,10 +6,10 @@
 @{
     ViewData["Title"] = "Сведения об успеваемости";
 
-    var records = ViewBag.DisciplineStudentRecordsList as List<DisciplineStudentRecordViewModel> ?? new List<DisciplineStudentRecordViewModel>();
-    var disciplines = ViewBag.DisciplinesList as List<DisciplineViewModel> ?? new List<DisciplineViewModel>();
-    var students = ViewBag.StudentsList as List<StudentViewModel> ?? new List<StudentViewModel>();
-    var groups = ViewBag.StudentGroupsList as List<StudentGroupViewModel> ?? new List<StudentGroupViewModel>();
+    var records = Model.Records ?? new List<DisciplineStudentRecordViewModel>();
+    var disciplines = Model.Disciplines ?? new List<DisciplineViewModel>();
+    var students = Model.Students ?? new List<StudentViewModel>();
+    var groups = Model.Groups?.Items ?? new List<StudentGroupViewModel>();
 
     string GetCourseName(AcademicCourse course) => course switch
     {
@@ -57,6 +58,9 @@
             ? markDate.Value.ToString("dd.MM.yyyy")
             : "—";
     }
+
+    var startPage = Math.Max(1, Model.Groups.Page - 2);
+    var endPage = Math.Min(Model.Groups.TotalPages, Model.Groups.Page + 2);
 }
 
 <div class="list-shell">
@@ -85,33 +89,36 @@
         </div>
     }
 
-    <div class="p-3 pb-0">
+    <form method="get" class="p-3 pb-0">
         <div class="row g-2 align-items-center">
             <div class="col-md-4">
-                <input id="groupSearchInput"
+                <input name="groupSearch"
                        type="text"
                        class="form-control"
-                       placeholder="Поиск по группе" />
+                       placeholder="Поиск по группе"
+                       value="@Model.GroupSearch" />
             </div>
             <div class="col-md-4">
-                <input id="studentSearchInput"
+                <input name="studentSearch"
                        type="text"
                        class="form-control"
-                       placeholder="Поиск по студенту" />
+                       placeholder="Поиск по студенту"
+                       value="@Model.StudentSearch" />
             </div>
-            <div class="col-md-auto">
-                <button id="marksSearchClear"
-                        type="button"
-                        class="btn btn-app-outline">
+            <div class="col-md-auto d-flex gap-2">
+                <input type="hidden" name="pageSize" value="@Model.Groups.PageSize" />
+                <button type="submit" class="btn btn-app-outline">Применить</button>
+                <a asp-controller="DisciplineStudentRecords"
+                   asp-action="List"
+                   class="btn btn-app-outline">
                     Сбросить
-                </button>
+                </a>
             </div>
         </div>
-    </div>
+    </form>
 
-    <div id="marksSearchEmpty"
-         class="alert alert-secondary m-3 d-none">
-        По заданным параметрам ничего не найдено.
+    <div class="px-3 pb-2 text-muted">
+        Найдено групп: @Model.Groups.TotalCount
     </div>
 
     @if (groups.Count > 0)
@@ -153,8 +160,7 @@
             var collapseId = $"groupMarks_{group.Id}";
             var buttonId = $"toggleBtn_{group.Id}";
 
-            <div class="group-block"
-         data-group-name="@((group.GroupName ?? string.Empty).ToLowerInvariant())">
+            <div class="group-block">
                 <div class="entity-row">
                     <div class="entity-accent"></div>
 
@@ -166,6 +172,7 @@
                                 <div><strong>Курс:</strong> @GetCourseName(group.Course)</div>
                                 <div><strong>Количество студентов:</strong> @groupStudents.Count</div>
                                 <div><strong>Количество дисциплин:</strong> @groupDisciplines.Count</div>
+
                                 @if (groupDebtStudentsCount > 0)
                                 {
                                     <div class="mt-2">
@@ -176,6 +183,7 @@
                                         </div>
                                     </div>
                                 }
+
                                 @if (!string.IsNullOrWhiteSpace(group.Curator))
                                 {
                                     <div><strong>Куратор:</strong> @group.Curator</div>
@@ -187,19 +195,19 @@
                     <div class="entity-actions">
                         <div class="actions-stack">
                             <a class="btn btn-sm btn-app-outline"
-                       asp-controller="StudentGroups"
-                       asp-action="Details"
-                       asp-route-id="@group.Id">
+                               asp-controller="StudentGroups"
+                               asp-action="Details"
+                               asp-route-id="@group.Id">
                                 Подробнее
                             </a>
 
                             <button id="@buttonId"
-                            class="btn btn-sm btn-app-outline"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#@collapseId"
-                            aria-expanded="false"
-                            aria-controls="@collapseId">
+                                    class="btn btn-sm btn-app-outline"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#@collapseId"
+                                    aria-expanded="false"
+                                    aria-controls="@collapseId">
                                 Показать таблицу
                             </button>
                         </div>
@@ -238,10 +246,7 @@
                                     <tbody>
                                         @foreach (var student in groupStudents)
                                         {
-                                            var studentSearch = $"{student.LastName} {student.FirstName} {student.Patronymic}".ToLowerInvariant();
-
-                                            <tr class="student-record-row"
-                                data-student-name="@studentSearch">
+                                            <tr class="student-record-row">
                                                 <td class="student-col">
                                                     <div class="student-cell">
                                                         <div class="student-name">
@@ -302,11 +307,173 @@
                 </div>
             </div>
         }
+
+        @if (Model.Groups.TotalPages > 1)
+        {
+            <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Groups.Page из @Model.Groups.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего групп: @Model.Groups.TotalCount
+                </div>
+
+                <nav class="app-pagination" aria-label="Пагинация">
+                    <ul class="pagination mb-0">
+
+                        @if (Model.Groups.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    В начало
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В начало</span>
+                            </li>
+                        }
+
+                        @if (Model.Groups.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="@(Model.Groups.Page - 1)"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    Назад
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Назад</span>
+                            </li>
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            if (p == Model.Groups.Page)
+                            {
+                                <li class="page-item active">
+                                    <span class="page-link">@p</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-action="List"
+                                       asp-route-groupSearch="@Model.GroupSearch"
+                                       asp-route-studentSearch="@Model.StudentSearch"
+                                       asp-route-page="@p"
+                                       asp-route-pageSize="@Model.Groups.PageSize">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        }
+
+                        @if (endPage < Model.Groups.TotalPages)
+                        {
+                            @if (endPage < Model.Groups.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="@Model.Groups.TotalPages"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    @Model.Groups.TotalPages
+                                </a>
+                            </li>
+                        }
+
+                        @if (Model.Groups.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--nav"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="@(Model.Groups.Page + 1)"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    Вперёд
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
+                        @if (Model.Groups.Page < Model.Groups.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-groupSearch="@Model.GroupSearch"
+                                   asp-route-studentSearch="@Model.StudentSearch"
+                                   asp-route-page="@Model.Groups.TotalPages"
+                                   asp-route-pageSize="@Model.Groups.PageSize">
+                                    В конец
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В конец</span>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        }
     }
     else
     {
         <div class="alert alert-secondary m-3">
-            Данные отсутствуют. Выполните синхронизацию.
+            По выбранным параметрам группы не найдены.
         </div>
     }
 </div>
@@ -425,10 +592,6 @@
             color: #6c757d;
         }
 
-        .student-record-row.student-match td {
-            background: #eef6ff;
-        }
-
         .debt-mark-link {
             background: #fff3cd;
             border-color: #f1aeb5;
@@ -444,30 +607,10 @@
     </style>
 }
 
-    @section Scripts {
+@section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const collapseElements = document.querySelectorAll('.collapse');
-            const groupSearchInput = document.getElementById('groupSearchInput');
-            const studentSearchInput = document.getElementById('studentSearchInput');
-            const clearButton = document.getElementById('marksSearchClear');
-            const groupBlocks = document.querySelectorAll('.group-block');
-            const emptyResult = document.getElementById('marksSearchEmpty');
-
-            function getCollapseInstance(element) {
-                if (!window.bootstrap) return null;
-                return bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
-            }
-
-            function collapseAllGroups() {
-                groupBlocks.forEach(block => {
-                    const collapseElement = block.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    if (collapseInstance) {
-                        collapseInstance.hide();
-                    }
-                });
-            }
 
             collapseElements.forEach(function (collapseElement) {
                 collapseElement.addEventListener('shown.bs.collapse', function () {
@@ -484,97 +627,6 @@
                     }
                 });
             });
-
-            function filterGroups() {
-                const groupQuery = (groupSearchInput?.value || '').trim().toLowerCase();
-                const studentQuery = (studentSearchInput?.value || '').trim().toLowerCase();
-                let hasVisibleGroups = false;
-
-                groupBlocks.forEach(block => {
-                    const groupName = block.dataset.groupName || '';
-                    const collapseElement = block.querySelector('.collapse');
-                    const collapseInstance = getCollapseInstance(collapseElement);
-                    const studentRows = block.querySelectorAll('.student-record-row');
-
-                    const groupMatches = !groupQuery || groupName.includes(groupQuery);
-                    let hasStudentMatch = false;
-
-                    studentRows.forEach(row => {
-                        const studentName = row.dataset.studentName || '';
-                        const studentMatches = !studentQuery || studentName.includes(studentQuery);
-
-                        row.classList.toggle('student-match', !!studentQuery && studentMatches);
-
-                        if (studentMatches) {
-                            hasStudentMatch = true;
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-
-                    const groupVisible = groupMatches && (!studentQuery || hasStudentMatch);
-                    block.style.display = groupVisible ? '' : 'none';
-
-                    if (groupVisible) {
-                        hasVisibleGroups = true;
-                    }
-
-                    if (studentQuery && groupVisible && hasStudentMatch && collapseInstance) {
-                        collapseInstance.show();
-                    }
-
-                    if (studentQuery && (!groupVisible || !hasStudentMatch) && collapseInstance) {
-                        collapseInstance.hide();
-                    }
-
-                    if (!studentQuery) {
-                        studentRows.forEach(row => {
-                            row.style.display = '';
-                            row.classList.remove('student-match');
-                        });
-                    }
-                });
-
-                if (emptyResult) {
-                    emptyResult.classList.toggle('d-none', hasVisibleGroups);
-                }
-            }
-
-            if (groupSearchInput) {
-                groupSearchInput.addEventListener('input', filterGroups);
-            }
-
-            if (studentSearchInput) {
-                studentSearchInput.addEventListener('input', filterGroups);
-            }
-
-            if (clearButton) {
-                clearButton.addEventListener('click', function () {
-                    if (groupSearchInput) groupSearchInput.value = '';
-                    if (studentSearchInput) studentSearchInput.value = '';
-
-                    groupBlocks.forEach(block => {
-                        block.style.display = '';
-
-                        const studentRows = block.querySelectorAll('.student-record-row');
-                        studentRows.forEach(row => {
-                            row.style.display = '';
-                            row.classList.remove('student-match');
-                        });
-                    });
-
-                    collapseAllGroups();
-
-                    if (emptyResult) {
-                        emptyResult.classList.add('d-none');
-                    }
-
-                    if (groupSearchInput) {
-                        groupSearchInput.focus();
-                    }
-                });
-            }
         });
     </script>
 }

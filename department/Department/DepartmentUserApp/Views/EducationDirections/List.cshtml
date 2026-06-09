@@ -122,8 +122,34 @@
         @if (Model.Result.TotalPages > 1)
         {
             <div class="app-pagination-wrap">
+                <div class="app-pagination-meta">
+                    Страница @Model.Result.Page из @Model.Result.TotalPages
+                    <span class="mx-2">•</span>
+                    Всего направлений: @Model.Result.TotalCount
+                </div>
+
                 <nav class="app-pagination" aria-label="Пагинация">
                     <ul class="pagination mb-0">
+
+                        @if (Model.Result.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-qualification="@qualificationRouteValue"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В начало
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В начало</span>
+                            </li>
+                        }
 
                         @if (Model.Result.HasPreviousPage)
                         {
@@ -143,6 +169,27 @@
                             <li class="page-item disabled">
                                 <span class="page-link page-link--nav">Назад</span>
                             </li>
+                        }
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-qualification="@qualificationRouteValue"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
                         }
 
                         @for (var p = startPage; p <= endPage; p++)
@@ -168,6 +215,27 @@
                             }
                         }
 
+                        @if (endPage < Model.Result.TotalPages)
+                        {
+                            @if (endPage < Model.Result.TotalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-qualification="@qualificationRouteValue"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    @Model.Result.TotalPages
+                                </a>
+                            </li>
+                        }
+
                         @if (Model.Result.HasNextPage)
                         {
                             <li class="page-item">
@@ -185,6 +253,26 @@
                         {
                             <li class="page-item disabled">
                                 <span class="page-link page-link--nav">Вперёд</span>
+                            </li>
+                        }
+
+                        @if (Model.Result.Page < Model.Result.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link--wide"
+                                   asp-action="List"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-qualification="@qualificationRouteValue"
+                                   asp-route-page="@Model.Result.TotalPages"
+                                   asp-route-pageSize="@Model.Result.PageSize">
+                                    В конец
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link page-link--wide">В конец</span>
                             </li>
                         }
 
