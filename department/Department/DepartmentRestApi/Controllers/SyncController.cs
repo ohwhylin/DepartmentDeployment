@@ -134,7 +134,10 @@ namespace DepartmentRestApi.Controllers
                 return StatusCode(500, new
                 {
                     error = "Internal server error",
-                    details = ex.Message
+                    details = ex.Message,
+                    inner = ex.InnerException?.Message,
+                    inner2 = ex.InnerException?.InnerException?.Message,
+                    inner3 = ex.InnerException?.InnerException?.InnerException?.Message
                 });
             }
         }
