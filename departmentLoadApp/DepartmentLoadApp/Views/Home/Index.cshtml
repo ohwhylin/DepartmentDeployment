@@ -112,7 +112,6 @@
         document.getElementById("syncCoreButton")?.addEventListener("click", function () {
             const button = this;
             const message = document.getElementById("syncCoreMessage");
-            const syncUrl = '@Url.Content("~/api/sync/all")';
 
             button.disabled = true;
             button.textContent = "Синхронизация...";
@@ -120,7 +119,7 @@
             message.className = "mt-3 alert alert-info";
             message.textContent = "Выполняется синхронизация с ядром...";
 
-            fetch(syncUrl, {
+            fetch("/api/sync/all", {
                 method: "POST",
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"

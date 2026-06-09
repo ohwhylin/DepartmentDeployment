@@ -6,8 +6,6 @@ using DepartmentLoadApp.Integration.CoreSync.Interfaces;
 using DepartmentLoadApp.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.DataProtection;
-using System.IO;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,10 +45,6 @@ builder.Services.AddScoped<AdditionalWorkCalculationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
-    .SetApplicationName("DepartmentLoadApp");
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -87,6 +81,7 @@ if (!string.IsNullOrWhiteSpace(pathBase))
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
 app.MapControllerRoute(

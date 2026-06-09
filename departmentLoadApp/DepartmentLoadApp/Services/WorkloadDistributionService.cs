@@ -553,6 +553,30 @@ namespace DepartmentLoadApp.Services
                 lecturerId);
         }
 
+        public async Task<WorkloadDistributionOperationResult> ClearAssignmentsForYearAsync(
+    int selectedYearStart)
+        {
+            var academicYear = AcademicYearResolver.BuildAcademicYear(
+                AcademicYearResolver.NormalizeStartYear(selectedYearStart));
+
+            var assignments = await _context.LecturerLoadAssignments
+                .Where(x => x.AcademicYear == academicYear)
+                .ToListAsync();
+
+            if (assignments.Count == 0)
+            {
+                return WorkloadDistributionOperationResult.Ok(
+                    $"За {academicYear} учебный год распределений для очистки нет.");
+            }
+
+            _context.LecturerLoadAssignments.RemoveRange(assignments);
+
+            await _context.SaveChangesAsync();
+
+            return WorkloadDistributionOperationResult.Ok(
+                $"Распределения за {academicYear} учебный год очищены. Удалено назначений: {assignments.Count}.");
+        }
+
         public async Task<WorkloadDistributionOperationResult> DeleteAssignmentAsync(
             int selectedYearStart,
             int assignmentId)
@@ -580,6 +604,554 @@ namespace DepartmentLoadApp.Services
             return WorkloadDistributionOperationResult.Ok(
                 "Назначение удалено.",
                 lecturerId);
+        }
+
+        public async Task<AutoDistributionResultViewModel> AutoDistributeByHistoryAsync(int selectedYearStart)
+        {
+            var targetYearStart = AcademicYearResolver.NormalizeStartYear(selectedYearStart);
+            var targetAcademicYear = AcademicYearResolver.BuildAcademicYear(targetYearStart);
+
+            var historyAcademicYears = new List<string>
+    {
+        AcademicYearResolver.BuildAcademicYear(targetYearStart - 1),
+        AcademicYearResolver.BuildAcademicYear(targetYearStart - 2)
+    };
+
+            var result = new AutoDistributionResultViewModel
+            {
+                IsSuccess = true,
+                TargetAcademicYear = targetAcademicYear,
+                HistoryAcademicYears = historyAcademicYears
+            };
+
+            await EnsureAcademicYearPlansAsync(targetAcademicYear);
+
+            var currentAssignments = await _context.LecturerLoadAssignments
+                .AsNoTracking()
+                .Where(x => x.AcademicYear == targetAcademicYear)
+                .ToListAsync();
+
+            var currentItems = await BuildDistributableItemsAsync(targetAcademicYear, currentAssignments);
+
+            var currentRows = await _context.WorkloadRows
+                .AsNoTracking()
+                .Where(x => x.AcademicYear == targetAcademicYear)
+                .ToListAsync();
+
+            var currentRowsById = currentRows.ToDictionary(x => x.Id);
+
+            var lectureHistory = await BuildLectureHistoryAsync(historyAcademicYears);
+
+            if (lectureHistory.Count == 0)
+            {
+                result.IsSuccess = false;
+                result.Message = "Не найдена история распределения лекций за прошлые годы.";
+
+                return result;
+            }
+
+            var currentPlans = await _context.LecturerAcademicYearPlans
+                .Include(x => x.Lecturer)
+                .Include(x => x.LecturerStudyPost)
+                .Where(x => x.AcademicYear == targetAcademicYear)
+                .ToListAsync();
+
+            var currentPlansByLecturerId = currentPlans
+                .GroupBy(x => x.LecturerId)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            var assignedHoursByPlanId = currentAssignments
+                .GroupBy(x => x.LecturerAcademicYearPlanId)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.Sum(a => a.AssignedHours));
+
+            var addedAssignments = new List<LecturerLoadAssignment>();
+            var createdInfos = new List<AutoCreatedAssignmentInfo>();
+
+            var disciplineGroups = currentItems
+                .Where(x => x.SourceType == LoadAssignmentSourceType.Discipline)
+                .Where(x => IsAutoDistributionElement(x.LoadElementType))
+                .Where(x => x.RemainingHours > 0)
+                .GroupBy(x => BuildCurrentAutoFlowKey(x, currentRowsById))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Key))
+                .OrderBy(x => x.First().Title)
+                .ToList();
+
+            foreach (var disciplineGroup in disciplineGroups)
+            {
+                if (!lectureHistory.TryGetValue(disciplineGroup.Key, out var historyCandidates)
+                    || historyCandidates.Count == 0)
+                {
+                    continue;
+                }
+
+                var candidate = historyCandidates
+                    .FirstOrDefault(x => currentPlansByLecturerId.ContainsKey(x.LecturerId));
+
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                var plan = currentPlansByLecturerId[candidate.LecturerId];
+
+                if (IsAssistant(plan.LecturerStudyPost?.StudyPostTitle))
+                {
+                    continue;
+                }
+
+                var lecturerName = GetLecturerDisplayName(plan.Lecturer);
+
+                foreach (var item in disciplineGroup
+                             .OrderBy(x => GetAutoElementSortOrder(x.LoadElementType))
+                             .ThenBy(x => x.UnitName))
+                {
+                    if (item.RemainingHours <= 0)
+                    {
+                        continue;
+                    }
+
+                    var itemKey = BuildItemKey(item);
+
+                    var alreadyAssignedToThisLecturer = currentAssignments
+                        .Concat(addedAssignments)
+                        .Any(x =>
+                            x.LecturerAcademicYearPlanId == plan.Id &&
+                            BuildAssignmentKey(x) == itemKey);
+
+                    if (alreadyAssignedToThisLecturer)
+                    {
+                        continue;
+                    }
+
+                    var lecturerAssignedHours = assignedHoursByPlanId.GetValueOrDefault(plan.Id);
+                    var lecturerLimitHours = CalculateLimitHours(plan.LecturerStudyPost?.Hours ?? 0, plan.Rate);
+                    var lecturerFreeHours = lecturerLimitHours - lecturerAssignedHours;
+
+                    if (lecturerFreeHours < item.RemainingHours)
+                    {
+                        continue;
+                    }
+
+                    var assignment = new LecturerLoadAssignment
+                    {
+                        AcademicYear = targetAcademicYear,
+                        LecturerAcademicYearPlanId = plan.Id,
+                        SourceType = item.SourceType,
+                        SourceRowId = item.SourceRowId,
+                        SourceAcademicPlanRecordId = item.SourceAcademicPlanRecordId,
+                        LoadElementType = item.LoadElementType,
+                        DistributionUnitType = item.DistributionUnitType,
+                        StudentGroupId = item.StudentGroupId,
+                        ContingentSubgroupId = item.ContingentSubgroupId,
+                        UnitName = item.UnitName,
+                        StudentsCount = item.StudentsCount,
+                        AssignedHours = item.RemainingHours
+                    };
+
+                    _context.LecturerLoadAssignments.Add(assignment);
+                    addedAssignments.Add(assignment);
+
+                    assignedHoursByPlanId[plan.Id] = lecturerAssignedHours + item.RemainingHours;
+
+                    createdInfos.Add(new AutoCreatedAssignmentInfo
+                    {
+                        Assignment = assignment,
+                        LecturerId = plan.LecturerId,
+                        LecturerName = lecturerName,
+                        GroupKey = disciplineGroup.Key,
+                        DisciplineName = item.Title,
+                        Subtitle = item.Subtitle,
+                        SemesterName = item.SemesterName,
+                        ElementName = item.ElementDisplayName,
+                        UnitName = item.UnitName,
+                        Hours = item.RemainingHours
+                    });
+
+                    item.AssignedHours += item.RemainingHours;
+                    item.RemainingHours = 0;
+                }
+            }
+
+            if (addedAssignments.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            result.CreatedAssignmentsCount = addedAssignments.Count;
+            result.Groups = createdInfos
+                .GroupBy(x => new
+                {
+                    x.LecturerId,
+                    x.LecturerName,
+                    x.DisciplineName,
+                    x.GroupKey
+                })
+                .OrderBy(x => x.Key.LecturerName)
+                .ThenBy(x => x.Key.DisciplineName)
+                .Select(x => new AutoDistributionGroupViewModel
+                {
+                    LecturerId = x.Key.LecturerId,
+                    LecturerName = x.Key.LecturerName,
+                    DisciplineName = x.Key.DisciplineName,
+                    Subtitle = BuildAutoDistributionGroupSubtitle(x),
+                    TotalHours = x.Sum(a => a.Hours),
+                    Assignments = x
+                        .OrderBy(a => GetAutoElementNameSortOrder(a.ElementName))
+                        .ThenBy(a => a.UnitName)
+                        .Select(a => new AutoDistributionAssignmentViewModel
+                        {
+                            AssignmentId = a.Assignment.Id,
+                            ElementName = a.ElementName,
+                            UnitName = a.UnitName,
+                            Hours = a.Hours
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            result.Message = addedAssignments.Count > 0
+                ? $"Автоматически распределено назначений: {addedAssignments.Count}."
+                : "Автораспределение выполнено, но новых назначений не создано.";
+
+            return result;
+        }
+
+        private async Task<Dictionary<string, List<LectureHistoryCandidate>>> BuildLectureHistoryAsync(
+            List<string> historyAcademicYears)
+        {
+            var historyAssignments = await _context.LecturerLoadAssignments
+                .AsNoTracking()
+                .Include(x => x.LecturerAcademicYearPlan)
+                .ThenInclude(x => x!.Lecturer)
+                .Where(x => historyAcademicYears.Contains(x.AcademicYear))
+                .Where(x => x.SourceType == LoadAssignmentSourceType.Discipline)
+                .Where(x => x.LoadElementType == LoadAssignmentElementType.Lecture)
+                .ToListAsync();
+
+            if (historyAssignments.Count == 0)
+            {
+                return new Dictionary<string, List<LectureHistoryCandidate>>();
+            }
+
+            var sourceRowIds = historyAssignments
+                .Select(x => x.SourceRowId)
+                .Where(x => x > 0)
+                .Distinct()
+                .ToList();
+
+            var sourceAcademicPlanRecordIds = historyAssignments
+                .Select(x => x.SourceAcademicPlanRecordId)
+                .Where(x => x > 0)
+                .Distinct()
+                .ToList();
+
+            var historyRows = await _context.WorkloadRows
+                .AsNoTracking()
+                .Where(x => historyAcademicYears.Contains(x.AcademicYear))
+                .Where(x =>
+                    sourceRowIds.Contains(x.Id) ||
+                    sourceAcademicPlanRecordIds.Contains(x.AcademicPlanRecordId))
+                .ToListAsync();
+
+            var rowsById = historyRows
+                .GroupBy(x => x.Id)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            var rowsByAcademicPlanRecordId = historyRows
+                .Where(x => x.AcademicPlanRecordId > 0)
+                .GroupBy(x => BuildHistoryAcademicPlanRecordKey(x.AcademicYear, x.AcademicPlanRecordId))
+                .ToDictionary(x => x.Key, x => x.First());
+
+            var candidates = new List<LectureHistoryCandidate>();
+
+            foreach (var assignment in historyAssignments)
+            {
+                if (assignment.LecturerAcademicYearPlan == null)
+                {
+                    continue;
+                }
+
+                WorkloadRow? row = null;
+
+                if (assignment.SourceRowId > 0)
+                {
+                    rowsById.TryGetValue(assignment.SourceRowId, out row);
+                }
+
+                if (row == null && assignment.SourceAcademicPlanRecordId > 0)
+                {
+                    rowsByAcademicPlanRecordId.TryGetValue(
+                        BuildHistoryAcademicPlanRecordKey(
+                            assignment.AcademicYear,
+                            assignment.SourceAcademicPlanRecordId),
+                        out row);
+                }
+
+                if (row == null)
+                {
+                    continue;
+                }
+
+                candidates.Add(new LectureHistoryCandidate
+                {
+                    Key = BuildAutoFlowKey(row),
+                    LecturerId = assignment.LecturerAcademicYearPlan.LecturerId,
+                    AcademicYear = assignment.AcademicYear,
+                    AcademicYearStart = ExtractAcademicYearStart(assignment.AcademicYear),
+                    Hours = assignment.AssignedHours
+                });
+            }
+
+            return candidates
+                .GroupBy(x => x.Key)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x
+                        .OrderByDescending(c => c.AcademicYearStart)
+                        .ThenByDescending(c => c.Hours)
+                        .ToList());
+        }
+
+        private static string BuildCurrentAutoFlowKey(
+    DistributableLoadItem item,
+    Dictionary<int, WorkloadRow> currentRowsById)
+        {
+            if (currentRowsById.TryGetValue(item.SourceRowId, out var row))
+            {
+                return BuildAutoFlowKey(row);
+            }
+
+            return BuildAutoFlowKey(
+                item.Title,
+                ExtractCourseNumberFromSubtitle(item.Subtitle),
+                item.SemesterName);
+        }
+
+        private static string BuildAutoFlowKey(WorkloadRow row)
+        {
+            return BuildAutoFlowKey(
+                row.DisciplineName,
+                row.Course,
+                row.SemesterName);
+        }
+
+        private static string BuildAutoFlowKey(
+            string? disciplineName,
+            int course,
+            string? semesterName)
+        {
+            return string.Join("|", new[]
+            {
+        NormalizeAutoKeyPart(disciplineName),
+        course.ToString(),
+        NormalizeAutoKeyPart(semesterName)
+    });
+        }
+
+        private static int ExtractCourseNumberFromSubtitle(string? subtitle)
+        {
+            if (string.IsNullOrWhiteSpace(subtitle))
+            {
+                return 0;
+            }
+
+            var coursePart = ExtractCoursePart(subtitle);
+
+            var digits = new string(coursePart
+                .Where(char.IsDigit)
+                .ToArray());
+
+            return int.TryParse(digits, out var course)
+                ? course
+                : 0;
+        }
+
+        private static string BuildAutoDistributionGroupSubtitle(
+            IEnumerable<AutoCreatedAssignmentInfo> infos)
+        {
+            var list = infos.ToList();
+
+            if (list.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var directions = list
+                .SelectMany(x => ExtractDirectionParts(x.Subtitle))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .ToList();
+
+            var coursePart = list
+                .Select(x => ExtractCoursePart(x.Subtitle))
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+            var semesterName = list
+                .Select(x => x.SemesterName)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+            return string.Join(" · ", new[]
+            {
+        directions.Count > 0 ? string.Join(", ", directions) : null,
+        coursePart,
+        semesterName
+    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        }
+
+        private static string BuildCurrentAutoDisciplineKey(
+            DistributableLoadItem item,
+            Dictionary<int, WorkloadRow> currentRowsById)
+        {
+            if (currentRowsById.TryGetValue(item.SourceRowId, out var row))
+            {
+                return BuildAutoDisciplineKey(
+                    row.DisciplineName,
+                    row.DirectionCode,
+                    row.SemesterName);
+            }
+
+            return BuildAutoDisciplineKey(
+                item.Title,
+                ExtractDirectionCodeFromSubtitle(item.Subtitle),
+                item.SemesterName);
+        }
+
+        private static bool IsAutoDistributionElement(LoadAssignmentElementType elementType)
+        {
+            return elementType == LoadAssignmentElementType.Lecture
+                   || elementType == LoadAssignmentElementType.Consultation
+                   || elementType == LoadAssignmentElementType.Exam
+                   || elementType == LoadAssignmentElementType.Credit
+                   || elementType == LoadAssignmentElementType.CourseWork
+                   || elementType == LoadAssignmentElementType.CourseProject
+                   || elementType == LoadAssignmentElementType.Rgr;
+        }
+
+        private static int GetAutoElementSortOrder(LoadAssignmentElementType elementType)
+        {
+            return elementType switch
+            {
+                LoadAssignmentElementType.Lecture => 1,
+                LoadAssignmentElementType.Consultation => 2,
+                LoadAssignmentElementType.Exam => 3,
+                LoadAssignmentElementType.Credit => 4,
+                LoadAssignmentElementType.CourseWork => 5,
+                LoadAssignmentElementType.CourseProject => 6,
+                LoadAssignmentElementType.Rgr => 7,
+                _ => 100
+            };
+        }
+
+        private static int GetAutoElementNameSortOrder(string elementName)
+        {
+            var value = NormalizeAutoKeyPart(elementName);
+
+            return value switch
+            {
+                "лекции" => 1,
+                "консультации" => 2,
+                "экзамен" => 3,
+                "зачет" => 4,
+                "курсовая работа" => 5,
+                "курсовой проект" => 6,
+                "ргр" => 7,
+                _ => 100
+            };
+        }
+
+        private static string BuildAutoDisciplineKey(
+            string? disciplineName,
+            string? directionCode,
+            string? semesterName)
+        {
+            return string.Join("|", new[]
+            {
+        NormalizeAutoKeyPart(disciplineName),
+        NormalizeAutoKeyPart(directionCode),
+        NormalizeAutoKeyPart(semesterName)
+    });
+        }
+
+        private static string NormalizeAutoKeyPart(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : value.Trim().ToLowerInvariant().Replace("ё", "е");
+        }
+
+        private static string ExtractDirectionCodeFromSubtitle(string? subtitle)
+        {
+            if (string.IsNullOrWhiteSpace(subtitle))
+            {
+                return string.Empty;
+            }
+
+            return subtitle
+                .Split('·', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault()
+                ?.Trim() ?? string.Empty;
+        }
+
+        private static int ExtractAcademicYearStart(string academicYear)
+        {
+            if (string.IsNullOrWhiteSpace(academicYear))
+            {
+                return 0;
+            }
+
+            var firstPart = academicYear
+                .Split('-', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+
+            return int.TryParse(firstPart, out var year)
+                ? year
+                : 0;
+        }
+
+        private static string BuildHistoryAcademicPlanRecordKey(
+            string academicYear,
+            int academicPlanRecordId)
+        {
+            return $"{academicYear}_{academicPlanRecordId}";
+        }
+
+        private sealed class LectureHistoryCandidate
+        {
+            public string Key { get; set; } = string.Empty;
+
+            public int LecturerId { get; set; }
+
+            public string AcademicYear { get; set; } = string.Empty;
+
+            public int AcademicYearStart { get; set; }
+
+            public decimal Hours { get; set; }
+        }
+
+        private sealed class AutoCreatedAssignmentInfo
+        {
+            public LecturerLoadAssignment Assignment { get; set; } = null!;
+
+            public int LecturerId { get; set; }
+
+            public string LecturerName { get; set; } = string.Empty;
+
+            public string GroupKey { get; set; } = string.Empty;
+
+            public string DisciplineName { get; set; } = string.Empty;
+
+            public string Subtitle { get; set; } = string.Empty;
+
+            public string SemesterName { get; set; } = string.Empty;
+
+            public string ElementName { get; set; } = string.Empty;
+
+            public string UnitName { get; set; } = string.Empty;
+
+            public decimal Hours { get; set; }
         }
 
         private async Task<List<DistributableLoadItem>> BuildDistributableItemsAsync(
@@ -695,6 +1267,14 @@ namespace DepartmentLoadApp.Services
                     LoadAssignmentElementType.CourseProject,
                     "Курсовой проект",
                     row.CourseProjectHours);
+
+                AddControlGroupItems(
+                    result,
+                    row,
+                    rowGroups,
+                    LoadAssignmentElementType.Rgr,
+                    "РГР",
+                    row.RgrHours);
             }
 
             var practiceRows = await _context.PracticeWorkloadRows
@@ -1102,8 +1682,8 @@ namespace DepartmentLoadApp.Services
         }
 
         private static List<(StudentGroupDistributionItem Group, decimal Hours)> SplitHoursByGroups(
-            decimal totalHours,
-            List<StudentGroupDistributionItem> groups)
+     decimal totalHours,
+     List<StudentGroupDistributionItem> groups)
         {
             var result = new List<(StudentGroupDistributionItem Group, decimal Hours)>();
 
@@ -1112,17 +1692,19 @@ namespace DepartmentLoadApp.Services
                 return result;
             }
 
-            var baseHours = Math.Floor((totalHours / groups.Count) * 100m) / 100m;
-            var usedHours = 0m;
+            var roundedTotalHours = (int)RoundHours(totalHours);
+
+            if (roundedTotalHours <= 0)
+            {
+                return result;
+            }
+
+            var baseHours = roundedTotalHours / groups.Count;
+            var remainder = roundedTotalHours % groups.Count;
 
             for (var i = 0; i < groups.Count; i++)
             {
-                var hours = i == groups.Count - 1
-                    ? totalHours - usedHours
-                    : baseHours;
-
-                hours = RoundHours(hours);
-                usedHours += hours;
+                var hours = baseHours + (i < remainder ? 1 : 0);
 
                 if (hours <= 0)
                 {
@@ -1134,25 +1716,23 @@ namespace DepartmentLoadApp.Services
 
             return result;
         }
-
         private static decimal CalculateSingleUnitHours(
-            decimal planHours,
-            decimal totalHours,
-            int unitsCount)
+     decimal planHours,
+     decimal totalHours,
+     int unitsCount)
         {
-            if (unitsCount <= 0)
-            {
-                return RoundHours(totalHours);
-            }
-
             if (planHours > 0)
             {
                 return RoundHours(planHours);
             }
 
+            if (unitsCount <= 0)
+            {
+                return RoundHours(totalHours);
+            }
+
             return RoundHours(totalHours / unitsCount);
         }
-
         private static List<WorkloadDistributionSemesterGroupViewModel> BuildSemesterGroups(
       List<DistributableLoadItem> items)
         {
@@ -1247,7 +1827,7 @@ namespace DepartmentLoadApp.Services
 
         private static decimal RoundHours(decimal value)
         {
-            return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+            return Math.Round(value, 0, MidpointRounding.AwayFromZero);
         }
 
         private static bool IsAssistant(string? studyPostTitle)
@@ -1661,7 +2241,6 @@ namespace DepartmentLoadApp.Services
             public int? ContingentSubgroupId { get; set; }
         }
     }
-
     public sealed class WorkloadDistributionOperationResult
     {
         public bool Success { get; private set; }
@@ -1694,5 +2273,4 @@ namespace DepartmentLoadApp.Services
             };
         }
     }
-
 }

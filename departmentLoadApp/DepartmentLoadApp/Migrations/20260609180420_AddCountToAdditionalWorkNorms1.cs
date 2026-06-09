@@ -4,7 +4,7 @@
 
 namespace DepartmentLoadApp.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class AddCountToAdditionalWorkNorms1 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

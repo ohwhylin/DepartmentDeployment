@@ -1,7 +1,10 @@
 ﻿@model DepartmentLoadApp.ViewModels.WorkloadDistribution.WorkloadDistributionPageViewModel
+@using DepartmentLoadApp.ViewModels.WorkloadDistribution
 
 @{
     ViewData["Title"] = "Распределение нагрузки";
+
+    var autoDistributionResult = ViewData["AutoDistributionResult"] as AutoDistributionResultViewModel;
 }
 
 <style>
@@ -162,6 +165,15 @@
         font-size: 0.95rem;
         padding-top: 6px;
     }
+
+        .distribution-worktype-title .btn-link {
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+            .distribution-worktype-title .btn-link:hover {
+                text-decoration: underline;
+            }
 
     .distribution-chip-list {
         display: flex;
@@ -328,6 +340,97 @@
         line-height: 1.35;
     }
 
+    .auto-distribution-modal .modal-body {
+        background: #f8f9fa;
+    }
+
+    .auto-distribution-item {
+        border: 1px solid #e2e6ea;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        background: #ffffff;
+    }
+
+        .auto-distribution-item .accordion-button {
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+            .auto-distribution-item .accordion-button:not(.collapsed) {
+                background: #f3f7ff;
+            }
+
+    .auto-distribution-total {
+        min-width: 64px;
+        font-size: 0.9rem;
+    }
+
+    .auto-distribution-work-row {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 8px 0;
+        border-bottom: 1px solid #eef0f2;
+    }
+
+        .auto-distribution-work-row:last-child {
+            border-bottom: 0;
+        }
+
+    .auto-distribution-work-title {
+        font-weight: 600;
+        padding-top: 5px;
+    }
+
+    .auto-distribution-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .auto-distribution-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #cfe2ff;
+        background: #eef5ff;
+        color: #1f3f68;
+        border-radius: 999px;
+        padding: 5px 8px 5px 12px;
+        font-size: 0.92rem;
+    }
+
+    .auto-distribution-pill-text {
+        white-space: nowrap;
+    }
+
+    .auto-distribution-delete-form {
+        display: inline-flex;
+        margin: 0;
+    }
+
+    .auto-distribution-pill-delete {
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #dc3545;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        font-weight: 700;
+        padding: 0;
+    }
+
+        .auto-distribution-pill-delete:hover {
+            background: #dc3545;
+            color: #ffffff;
+        }
+
     @@media (max-width: 991.98px) {
         .distribution-toolbar {
             grid-template-columns: 1fr;
@@ -363,6 +466,15 @@
         .distribution-view-additional-row {
             grid-template-columns: 1fr;
         }
+
+        .auto-distribution-work-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+
+        .auto-distribution-pill-text {
+            white-space: normal;
+        }
     }
 </style>
 
@@ -370,6 +482,43 @@
 
 <div class="distribution-current-year-line">
     Текущий учебный год: @Model.SelectedYear
+</div>
+
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <form asp-action="AutoDistribute" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="SelectedYearStart" value="@Model.SelectedYearStart" />
+        <input type="hidden" name="SelectedLecturerId" value="@Model.SelectedLecturerId" />
+
+        <button type="submit" class="btn btn-success">
+            Распределить автоматически
+        </button>
+    </form>
+
+    <form asp-action="ClearDistribution"
+          method="post"
+          onsubmit="return confirm('Удалить все распределения за текущий учебный год?');">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="SelectedYearStart" value="@Model.SelectedYearStart" />
+        <input type="hidden" name="SelectedLecturerId" value="@Model.SelectedLecturerId" />
+
+        <button type="submit" class="btn btn-outline-danger">
+            Очистить распределения
+        </button>
+    </form>
+
+    @if (autoDistributionResult != null)
+    {
+        <button type="button"
+                class="btn btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#autoDistributionResultModal">
+            Показать результат автораспределения
+        </button>
+    }
 </div>
 
 <div class="distribution-toolbar">
@@ -402,17 +551,17 @@
     </div>
 </div>
 
-@if (TempData["SuccessMessage"] != null)
+@if (TempData["SuccessMessage"] != null || ViewData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">
-        @TempData["SuccessMessage"]
+        @(TempData["SuccessMessage"] ?? ViewData["SuccessMessage"])
     </div>
 }
 
-@if (TempData["ErrorMessage"] != null)
+@if (TempData["ErrorMessage"] != null || ViewData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
+        @(TempData["ErrorMessage"] ?? ViewData["ErrorMessage"])
     </div>
 }
 
@@ -514,10 +663,7 @@ else
             .ToList();
 
             var autumnSubjectGroups = BuildAssignedSubjectGroups(autumnAssignments);
-
-            var springSubjectGroups = BuildAssignedSubjectGroups(
-            springAssignments.Concat(otherAssignments));
-
+            var springSubjectGroups = BuildAssignedSubjectGroups(springAssignments.Concat(otherAssignments));
             var giaSubjectGroups = BuildAssignedSubjectGroups(giaAssignments);
 
             var additionalWorkTypeGroups = additionalAssignments
@@ -767,8 +913,7 @@ else
                                                     </button>
                                                 </h2>
 
-                                                <div id="@semesterId"
-                                                     class="accordion-collapse collapse">
+                                                <div id="@semesterId" class="accordion-collapse collapse">
                                                     <div class="accordion-body">
                                                         <div class="accordion" id="disciplineAccordion_@lecturer.LecturerId@semesterIndex">
                                                             @for (var disciplineIndex = 0; disciplineIndex < semester.Disciplines.Count; disciplineIndex++)
@@ -789,20 +934,24 @@ else
                                                                         </button>
                                                                     </h2>
 
-                                                                    <div id="@disciplineId"
-                                                                         class="accordion-collapse collapse">
+                                                                    <div id="@disciplineId" class="accordion-collapse collapse">
                                                                         <div class="accordion-body">
                                                                             @foreach (var workType in discipline.WorkTypes)
                                                                             {
-                                                                                <div class="distribution-worktype-row">
+                                                                                <div class="distribution-worktype-row js-worktype-load-block">
                                                                                     <div class="distribution-worktype-title">
-                                                                                        @workType.ElementDisplayName:
+                                                                                        <div>@workType.ElementDisplayName:</div>
+
+                                                                                        <button type="button"
+                                                                                                class="btn btn-link btn-sm p-0 mt-1 js-select-current-worktype">
+                                                                                            Выбрать все
+                                                                                        </button>
                                                                                     </div>
 
                                                                                     <div class="distribution-chip-list">
                                                                                         @foreach (var item in workType.Items)
                                                                                         {
-                                                                                            <label class="distribution-chip js-load-chip">
+                                                                                            <label class="distribution-chip distribution-available-chip js-load-chip">
                                                                                                 <input type="checkbox"
                                                                                                        name="SelectedItemKeys"
                                                                                                        value="@item.ItemKey"
@@ -811,8 +960,11 @@ else
 
                                                                                                 <span class="distribution-chip-main">
                                                                                                     <span class="distribution-chip-title">
-                                                                                                        @item.UnitName
+                                                                                                        @(string.IsNullOrWhiteSpace(item.UnitName)
+                                                                                                            ? item.ElementDisplayName
+                                                                                                            : item.UnitName)
                                                                                                     </span>
+
                                                                                                     <span class="distribution-chip-meta">
                                                                                                         @item.RemainingHours.ToString("0.##") ч.
                                                                                                         @if (item.StudentsCount > 0)
@@ -850,8 +1002,7 @@ else
                                                     </button>
                                                 </h2>
 
-                                                <div id="@giaCollapseId"
-                                                     class="accordion-collapse collapse">
+                                                <div id="@giaCollapseId" class="accordion-collapse collapse">
                                                     <div class="accordion-body">
                                                         @{
                                                             var giaIndex = 0;
@@ -915,8 +1066,7 @@ else
                                                     </button>
                                                 </h2>
 
-                                                <div id="@additionalCollapseId"
-                                                     class="accordion-collapse collapse">
+                                                <div id="@additionalCollapseId" class="accordion-collapse collapse">
                                                     <div class="accordion-body">
                                                         <div class="distribution-additional-list">
                                                             @foreach (var item in lecturer.AdditionalWorkItems)
@@ -957,9 +1107,7 @@ else
 
                                                                         @if (isPostgraduate)
                                                                         {
-                                                                            <label class="form-label">
-                                                                                Назначить аспирантов
-                                                                            </label>
+                                                                            <label class="form-label">Назначить аспирантов</label>
 
                                                                             <input type="number"
                                                                                    name="AdditionalWorks[@additionalIndex].StudentsCount"
@@ -975,9 +1123,7 @@ else
                                                                         }
                                                                         else
                                                                         {
-                                                                            <label class="form-label">
-                                                                                Назначить часов
-                                                                            </label>
+                                                                            <label class="form-label">Назначить часов</label>
 
                                                                             <input type="number"
                                                                                    name="AdditionalWorks[@additionalIndex].Hours"
@@ -994,10 +1140,7 @@ else
                                                                     </div>
 
                                                                     <div>
-                                                                        <div class="distribution-additional-hours-label">
-                                                                            Часы
-                                                                        </div>
-
+                                                                        <div class="distribution-additional-hours-label">Часы</div>
                                                                         <div class="distribution-additional-hours-value">
                                                                             <span class="js-additional-row-hours">0</span> ч.
                                                                         </div>
@@ -1397,7 +1540,7 @@ else
 
                                             @if (additionalAssignments.Any())
                                             {
-                                                <div class="distribution-view-additional-list">
+                                                <div class="distribution-view-additional-list js-view-subjects">
                                                     @foreach (var workType in additionalWorkTypeGroups)
                                                     {
                                                         <div class="distribution-view-additional-row js-view-worktype-row">
@@ -1466,6 +1609,137 @@ else
     </div>
 }
 
+@if (autoDistributionResult != null)
+{
+    <div class="modal fade" id="autoDistributionResultModal" tabindex="-1" aria-labelledby="autoDistributionResultModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content auto-distribution-modal">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="autoDistributionResultModalLabel">
+                            Автоматически распределено
+                        </h5>
+                        <div class="text-muted small">
+                            Учебный год: @autoDistributionResult.TargetAcademicYear
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (!autoDistributionResult.Groups.Any())
+                    {
+                        <div class="alert alert-info mb-0">
+                            Новых назначений не создано.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light border mb-3">
+                            Создано назначений: <strong>@autoDistributionResult.CreatedAssignmentsCount</strong>.
+                            История проверялась за годы:
+                            <strong>@string.Join(", ", autoDistributionResult.HistoryAcademicYears)</strong>.
+                        </div>
+
+                        <div class="accordion" id="autoDistributionAccordion">
+                            @for (var groupIndex = 0; groupIndex < autoDistributionResult.Groups.Count; groupIndex++)
+                            {
+                                var group = autoDistributionResult.Groups[groupIndex];
+                                var collapseId = $"autoDistributionGroup_{groupIndex}";
+                                var workTypeGroups = group.Assignments
+                                .GroupBy(x => x.ElementName)
+                                .OrderBy(x => GetAutoDistributionElementSortOrder(x.Key))
+                                .ThenBy(x => x.Key)
+                                .ToList();
+
+                                <div class="accordion-item auto-distribution-item js-auto-distribution-group"
+                                     data-total-hours="@group.TotalHours.ToString("0.####").Replace(",", ".")">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#@collapseId"
+                                                aria-expanded="false"
+                                                aria-controls="@collapseId">
+                                            <div class="d-flex justify-content-between align-items-center w-100 gap-3 pe-3">
+                                                <div>
+                                                    <div class="fw-semibold">
+                                                        @group.LecturerName — @group.DisciplineName
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        @group.Subtitle
+                                                    </div>
+                                                </div>
+
+                                                <span class="badge bg-primary rounded-pill auto-distribution-total js-auto-group-total">
+                                                    @group.TotalHours.ToString("0") ч.
+                                                </span>
+                                            </div>
+                                        </button>
+                                    </h2>
+
+                                    <div id="@collapseId"
+                                         class="accordion-collapse collapse"
+                                         data-bs-parent="#autoDistributionAccordion">
+                                        <div class="accordion-body">
+                                            @foreach (var workTypeGroup in workTypeGroups)
+                                            {
+                                                <div class="auto-distribution-work-row js-auto-worktype-row">
+                                                    <div class="auto-distribution-work-title">
+                                                        @workTypeGroup.Key:
+                                                    </div>
+
+                                                    <div class="auto-distribution-pills">
+                                                        @foreach (var assignment in workTypeGroup.OrderBy(x => x.UnitName))
+                                                        {
+                                                            <div class="auto-distribution-pill js-auto-assignment-row"
+                                                                 data-hours="@assignment.Hours.ToString("0.####").Replace(",", ".")">
+                                                                <span class="auto-distribution-pill-text">
+                                                                    @FormatAutoDistributionUnitName(assignment.UnitName)
+                                                                    · @assignment.Hours.ToString("0") ч.
+                                                                </span>
+
+                                                                <form asp-action="DeleteAssignment"
+                                                                      method="post"
+                                                                      class="auto-distribution-delete-form js-auto-delete-assignment-form"
+                                                                      data-lecturer-id="@group.LecturerId"
+                                                                      data-hours="@assignment.Hours.ToString("0.####").Replace(",", ".")">
+                                                                    @Html.AntiForgeryToken()
+
+                                                                    <input type="hidden" name="SelectedYearStart" value="@Model.SelectedYearStart" />
+                                                                    <input type="hidden" name="SelectedLecturerId" value="@group.LecturerId" />
+                                                                    <input type="hidden" name="AssignmentId" value="@assignment.AssignmentId" />
+
+                                                                    <button type="submit"
+                                                                            class="auto-distribution-pill-delete"
+                                                                            title="Удалить">
+                                                                        ×
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @section Scripts {
     <script>
         function parseNumber(value) {
@@ -1486,6 +1760,19 @@ else
             return String(rounded).replace(".", ",");
         }
 
+        function setCheckboxChecked(checkbox, checked) {
+            if (!checkbox || checkbox.disabled) {
+                return;
+            }
+
+            if (checkbox.checked === checked) {
+                return;
+            }
+
+            checkbox.checked = checked;
+            checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
         function updateChipState(modal) {
             modal.querySelectorAll(".js-load-chip").forEach(function (chip) {
                 const checkbox = chip.querySelector(".js-load-item-checkbox");
@@ -1494,11 +1781,7 @@ else
                     return;
                 }
 
-                if (checkbox.checked) {
-                    chip.classList.add("selected");
-                } else {
-                    chip.classList.remove("selected");
-                }
+                chip.classList.toggle("selected", checkbox.checked);
             });
         }
 
@@ -1516,7 +1799,7 @@ else
                 const rowHours = Math.round(students * hoursPerStudent);
 
                 const row = input.closest(".distribution-gia-row");
-                const rowHoursElement = row.querySelector(".js-gia-row-hours");
+                const rowHoursElement = row ? row.querySelector(".js-gia-row-hours") : null;
 
                 if (rowHoursElement) {
                     rowHoursElement.textContent = formatNumber(rowHours);
@@ -1531,7 +1814,7 @@ else
                 const rowHours = Math.round(students * hoursPerStudent);
 
                 const row = input.closest(".distribution-gia-row");
-                const rowHoursElement = row.querySelector(".js-additional-row-hours");
+                const rowHoursElement = row ? row.querySelector(".js-additional-row-hours") : null;
 
                 if (rowHoursElement) {
                     rowHoursElement.textContent = formatNumber(rowHours);
@@ -1544,7 +1827,7 @@ else
                 const rowHours = parseNumber(input.value);
 
                 const row = input.closest(".distribution-gia-row");
-                const rowHoursElement = row.querySelector(".js-additional-row-hours");
+                const rowHoursElement = row ? row.querySelector(".js-additional-row-hours") : null;
 
                 if (rowHoursElement) {
                     rowHoursElement.textContent = formatNumber(rowHours);
@@ -1580,6 +1863,24 @@ else
 
             updateChipState(modal);
         }
+
+        document.addEventListener("click", function (event) {
+            const button = event.target.closest(".js-select-current-worktype");
+
+            if (!button) {
+                return;
+            }
+
+            const workTypeBlock = button.closest(".js-worktype-load-block");
+
+            if (!workTypeBlock) {
+                return;
+            }
+
+            workTypeBlock.querySelectorAll(".js-load-item-checkbox").forEach(function (checkbox) {
+                setCheckboxChecked(checkbox, true);
+            });
+        });
 
         document.addEventListener("change", function (event) {
             if (!event.target.classList.contains("js-load-item-checkbox")
@@ -1790,6 +2091,28 @@ else
             }
         }
 
+        async function deleteAssignment(form) {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Ошибка удаления нагрузки.");
+            }
+
+            const data = await response.json();
+
+            if (!data || data.success !== true) {
+                throw new Error(data && data.message ? data.message : "Ошибка удаления нагрузки.");
+            }
+
+            return data;
+        }
+
         document.addEventListener("submit", function (event) {
             const form = event.target.closest(".js-delete-assignment-form");
 
@@ -1815,25 +2138,8 @@ else
                 submitButton.disabled = true;
             }
 
-            fetch(form.action, {
-                method: "POST",
-                body: new FormData(form),
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-                .then(function (response) {
-                    if (!response.ok) {
-                        throw new Error("Ошибка удаления нагрузки.");
-                    }
-
-                    return response.json();
-                })
-                .then(function (data) {
-                    if (!data || data.success !== true) {
-                        throw new Error(data && data.message ? data.message : "Ошибка удаления нагрузки.");
-                    }
-
+            deleteAssignment(form)
+                .then(function () {
                     updatePageHoursAfterDelete(hours);
                     updateLecturerHoursAfterDelete(lecturerId, hours);
                     updateAddModalAfterDelete(lecturerId, hours);
@@ -1864,6 +2170,76 @@ else
 
                     if (submitButton) {
                         submitButton.disabled = false;
+                    }
+
+                    alert(error.message || "Не удалось удалить нагрузку. Обновите страницу и попробуйте ещё раз.");
+                });
+        });
+
+        document.addEventListener("submit", function (event) {
+            const form = event.target.closest(".js-auto-delete-assignment-form");
+
+            if (!form) {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (form.dataset.deleting === "true") {
+                return;
+            }
+
+            const lecturerId = form.dataset.lecturerId;
+            const hours = parseNumber(form.dataset.hours);
+            const button = form.querySelector("button[type='submit']");
+            const pill = form.closest(".js-auto-assignment-row");
+            const workTypeRow = form.closest(".js-auto-worktype-row");
+            const autoGroup = form.closest(".js-auto-distribution-group");
+
+            form.dataset.deleting = "true";
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = "…";
+            }
+
+            deleteAssignment(form)
+                .then(function () {
+                    updatePageHoursAfterDelete(hours);
+                    updateLecturerHoursAfterDelete(lecturerId, hours);
+                    updateAddModalAfterDelete(lecturerId, hours);
+
+                    if (pill) {
+                        pill.remove();
+                    }
+
+                    if (workTypeRow && workTypeRow.querySelectorAll(".js-auto-assignment-row").length === 0) {
+                        workTypeRow.remove();
+                    }
+
+                    if (autoGroup) {
+                        const oldTotal = parseNumber(autoGroup.dataset.totalHours);
+                        const newTotal = Math.max(0, oldTotal - hours);
+                        autoGroup.dataset.totalHours = String(newTotal);
+
+                        const totalElement = autoGroup.querySelector(".js-auto-group-total");
+                        if (totalElement) {
+                            totalElement.textContent = `${formatNumber(newTotal)} ч.`;
+                        }
+
+                        if (autoGroup.querySelectorAll(".js-auto-assignment-row").length === 0) {
+                            autoGroup.remove();
+                        }
+                    }
+
+                    applyLecturerFiltersAndSort();
+                })
+                .catch(function (error) {
+                    form.dataset.deleting = "false";
+
+                    if (button) {
+                        button.disabled = false;
+                        button.textContent = "×";
                     }
 
                     alert(error.message || "Не удалось удалить нагрузку. Обновите страницу и попробуйте ещё раз.");
@@ -1957,9 +2333,91 @@ else
 
         applyLecturerFiltersAndSort();
     </script>
+
+    @if (autoDistributionResult != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const modalElement = document.getElementById("autoDistributionResultModal");
+
+                if (!modalElement || !window.bootstrap) {
+                    return;
+                }
+
+                function cleanupModalBackdrop() {
+                    document.querySelectorAll(".modal-backdrop").forEach(function (backdrop) {
+                        backdrop.remove();
+                    });
+
+                    document.body.classList.remove("modal-open");
+                    document.body.style.removeProperty("overflow");
+                    document.body.style.removeProperty("padding-right");
+                }
+
+                modalElement.addEventListener("hidden.bs.modal", function () {
+                    cleanupModalBackdrop();
+                });
+
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement, {
+                    backdrop: true,
+                    keyboard: true
+                });
+
+                modal.show();
+
+                document.querySelectorAll('[data-bs-target="#autoDistributionResultModal"]').forEach(function (button) {
+                    button.addEventListener("click", function () {
+                        cleanupModalBackdrop();
+
+                        const modalForOpen = bootstrap.Modal.getOrCreateInstance(modalElement, {
+                            backdrop: true,
+                            keyboard: true
+                        });
+
+                        modalForOpen.show();
+                    });
+                });
+            });
+        </script>
+    }
 }
 
 @functions {
+    private static int GetAutoDistributionElementSortOrder(string? elementName)
+    {
+        if (string.IsNullOrWhiteSpace(elementName))
+        {
+            return 100;
+        }
+
+        var value = elementName.Trim().ToLowerInvariant().Replace("ё", "е");
+
+        return value switch
+        {
+            "лекции" => 1,
+            "консультации" => 2,
+            "экзамен" => 3,
+            "зачет" => 4,
+            "курсовая работа" => 5,
+            "курсовой проект" => 6,
+            "ргр" => 7,
+            _ => 100
+        };
+    }
+
+    private static string FormatAutoDistributionUnitName(string? unitName)
+    {
+        if (string.IsNullOrWhiteSpace(unitName))
+        {
+            return "нагрузка";
+        }
+
+        return unitName
+            .Replace("гр. ", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("поток ", "поток ", StringComparison.OrdinalIgnoreCase)
+            .Trim();
+    }
+
     private static bool IsGiaAssignment(string? sourceTypeDisplayName)
     {
         return !string.IsNullOrWhiteSpace(sourceTypeDisplayName)

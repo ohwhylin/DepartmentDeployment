@@ -81,6 +81,9 @@ namespace DepartmentLoadApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Hours")
                         .HasColumnType("numeric(10,2)");
 
@@ -737,6 +740,9 @@ namespace DepartmentLoadApp.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WeeksCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("WorkName")
