@@ -16,13 +16,13 @@ builder.Services.AddHttpClient<IScheduleApiClient, ScheduleApiClient>(client =>
 
     if (string.IsNullOrWhiteSpace(baseUrl))
     {
-        throw new InvalidOperationException("Не настроен ApiSettings:ScheduleServiceUrl");
+        throw new InvalidOperationException("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ApiSettings:ScheduleServiceUrl");
     }
 
     client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/");
 
-    // Синхронизация расписания может идти дольше 100 секунд,
-    // потому что обрабатываются все группы университета
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 100 пїЅпїЅпїЅпїЅпїЅпїЅ,
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     client.Timeout = TimeSpan.FromMinutes(10);
 });
 
@@ -33,12 +33,12 @@ builder.Services.AddHttpClient<IMolApiClient, MolApiClient>(client =>
 
     if (string.IsNullOrWhiteSpace(baseUrl))
     {
-        throw new InvalidOperationException("Не настроен ApiSettings:MolServiceUrl");
+        throw new InvalidOperationException("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ApiSettings:MolServiceUrl");
     }
 
     client.BaseAddress = new Uri(baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/");
 
-    // На всякий случай, если список аудиторий/оборудования будет грузиться дольше обычного
+    // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     client.Timeout = TimeSpan.FromMinutes(3);
 });
 
