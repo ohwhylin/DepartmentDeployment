@@ -312,6 +312,8 @@
 
 @section Scripts {
     <script>
+        const lessonsGroupsUrl = '@Url.Action("LessonsGroups", "Schedule")';
+
         const pairs = [
             { no: 1, time: "08:30-09:50" },
             { no: 2, time: "10:00-11:20" },
@@ -373,15 +375,15 @@
         }
 
         elPrev.addEventListener("click", () => {
-            window.location.href = `/Schedule/LessonsGroups?date=${addDays(elDate.value, -1)}`;
+            window.location.href = `${lessonsGroupsUrl}?date=${encodeURIComponent(addDays(elDate.value, -1))}`;
         });
 
         elNext.addEventListener("click", () => {
-            window.location.href = `/Schedule/LessonsGroups?date=${addDays(elDate.value, 1)}`;
+            window.location.href = `${lessonsGroupsUrl}?date=${encodeURIComponent(addDays(elDate.value, 1))}`;
         });
 
         elDate.addEventListener("change", () => {
-            window.location.href = `/Schedule/LessonsGroups?date=${elDate.value}`;
+            window.location.href = `${lessonsGroupsUrl}?date=${encodeURIComponent(elDate.value)}`;
         });
 
         [elGroup, elRoom, elTeacher].forEach(x => x.addEventListener("change", render));

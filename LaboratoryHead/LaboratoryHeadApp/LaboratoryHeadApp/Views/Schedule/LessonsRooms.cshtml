@@ -405,6 +405,9 @@
 
 @section Scripts {
     <script>
+        const lessonsRoomsUrl = '@Url.Action("LessonsRooms", "Schedule")';
+        const editReservationUrlTemplate = '@Url.Action("Edit", "ClassroomReservation", new { id = "__id__" })';
+
         const pairs = [
             { no: 1, time: "08:30-09:50" },
             { no: 2, time: "10:00-11:20" },
@@ -474,15 +477,15 @@
         }
 
         elPrev.addEventListener("click", () => {
-            window.location.href = `/Schedule/LessonsRooms?date=${addDays(elDate.value, -1)}`;
+            window.location.href = `${lessonsRoomsUrl}?date=${encodeURIComponent(addDays(elDate.value, -1))}`;
         });
 
         elNext.addEventListener("click", () => {
-            window.location.href = `/Schedule/LessonsRooms?date=${addDays(elDate.value, 1)}`;
+            window.location.href = `${lessonsRoomsUrl}?date=${encodeURIComponent(addDays(elDate.value, 1))}`;
         });
 
         elDate.addEventListener("change", () => {
-            window.location.href = `/Schedule/LessonsRooms?date=${elDate.value}`;
+            window.location.href = `${lessonsRoomsUrl}?date=${encodeURIComponent(elDate.value)}`;
         });
 
         [elRoom, elTeacher, elGroup].forEach(x => x.addEventListener("change", render));
@@ -565,7 +568,7 @@
                         ${lesson.subgroup ? `<div><strong>Комментарий:</strong> ${escapeHtml(lesson.subgroup)}</div>` : ""}
                     `;
 
-            editLink.href = `/ClassroomReservation/Edit/${lesson.id}`;
+            editLink.href = editReservationUrlTemplate.replace("__id__", lesson.id);
             deleteId.value = lesson.id ?? "";
             deleteDate.value = elDate.value;
 
