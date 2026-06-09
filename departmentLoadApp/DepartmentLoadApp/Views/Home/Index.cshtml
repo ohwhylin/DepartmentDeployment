@@ -107,6 +107,115 @@
     </div>
 </div>
 
+@{
+    ViewData["Title"] = "Главная страница";
+}
+
+<div class="department-home-hero-card mb-4">
+    <div class="department-home-hero-header">
+        <h1 class="department-home-hero-title">Главная страница</h1>
+    </div>
+
+    <div class="department-home-hero-body">
+        <p class="department-home-hero-text">
+            Добро пожаловать в модуль расчета нагрузки преподавателей кафедры.
+        </p>
+        <p class="department-home-hero-subtext">
+            Здесь доступны основные действия для расчёта учебной нагрузки,
+            распределения часов и формирования индивидуальных планов преподавателей.
+        </p>
+    </div>
+</div>
+
+<div class="department-home-hero-card mb-4">
+    <div class="department-home-hero-header">
+        <h2 class="department-home-section-title">Синхронизация с ядром</h2>
+    </div>
+
+    <div class="department-home-hero-body">
+        <p class="department-home-hero-subtext mb-3">
+            Загрузка и обновление данных из основного модуля кафедрального портала:
+            направления, преподаватели, группы, учебные планы и записи учебных планов.
+        </p>
+
+        <button type="button"
+                class="btn department-dashboard-btn"
+                id="syncCoreButton">
+            Синхронизировать с ядром
+        </button>
+
+        <div id="syncCoreMessage" class="mt-3 d-none"></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-4 col-lg-4 col-md-6">
+        <div class="department-dashboard-card">
+            <div class="department-dashboard-card-header">
+                Расчет нагрузки
+            </div>
+
+            <div class="department-dashboard-card-body">
+
+                <div class="department-dashboard-card-text">
+                    Автоматический расчет учебной нагрузки по дисциплинам,
+                    практикам, ГИА и дополнительной работе.
+                </div>
+
+                <a asp-controller="WorkloadCalculation"
+                   asp-action="Index"
+                   class="btn department-dashboard-btn">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+        <div class="department-dashboard-card">
+            <div class="department-dashboard-card-header">
+                Распределение
+            </div>
+
+            <div class="department-dashboard-card-body">
+
+                <div class="department-dashboard-card-text">
+                    Распределение рассчитанных часов между преподавателями кафедры
+                    с учетом ставок и лимитов.
+                </div>
+
+                <a asp-controller="WorkloadDistribution"
+                   asp-action="Index"
+                   class="btn department-dashboard-btn">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6">
+        <div class="department-dashboard-card">
+            <div class="department-dashboard-card-header">
+                Индивидуальные планы
+            </div>
+
+            <div class="department-dashboard-card-body">
+
+                <div class="department-dashboard-card-text">
+                    Просмотр и выгрузка индивидуальных планов преподавателей
+                    на основе распределённой нагрузки.
+                </div>
+
+                <a asp-controller="IndividualPlans"
+                   asp-action="Index"
+                   class="btn department-dashboard-btn">
+                    Перейти
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.getElementById("syncCoreButton")?.addEventListener("click", function () {
