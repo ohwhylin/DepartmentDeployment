@@ -857,6 +857,91 @@ namespace DepartmentOneCMockApi.Data
 
         public static List<DisciplineStudentRecordMockModel> DisciplineStudentRecords => GenerateDisciplineStudentRecords();
 
+        private static int GetMaxSemester(AcademicCourse course) => course switch
+        {
+            AcademicCourse.Course_1 => 2,
+            AcademicCourse.Course_2 => 4,
+            AcademicCourse.Course_3 => 6,
+            AcademicCourse.Course_4 => 8,
+            _ => 0
+        };
+
+        private static int GetStudyStartYear(AcademicCourse course)
+        {
+            var today = DateTime.Today;
+            var currentAcademicYearStart = today.Month >= 9 ? today.Year : today.Year - 1;
+
+            return course switch
+            {
+                AcademicCourse.Course_1 => currentAcademicYearStart,
+                AcademicCourse.Course_2 => currentAcademicYearStart - 1,
+                AcademicCourse.Course_3 => currentAcademicYearStart - 2,
+                AcademicCourse.Course_4 => currentAcademicYearStart - 3,
+                _ => currentAcademicYearStart
+            };
+        }
+
+        private static DateTime GetDemoMarkDate(AcademicCourse currentCourse, int semester, int studentId)
+        {
+            var startYear = GetStudyStartYear(currentCourse);
+
+            // 1-2 семестр -> 1 год обучения
+            // 3-4 -> 2 год обучения и т.д.
+            var studyYearIndex = (semester - 1) / 2;
+            var academicYearStart = startYear + studyYearIndex;
+
+            // нечетный семестр -> зимняя сессия
+            // четный семестр -> летняя сессия
+            var baseDate = semester % 2 == 1
+                ? new DateTime(academicYearStart + 1, 1, 20)
+                : new DateTime(academicYearStart + 1, 6, 20);
+
+            return baseDate.AddDays(studentId % 7);
+        }
+
+        private static MarkType GetDemoMark(
+            StudentMockModel student,
+            AcademicPlanRecordMockModel planRecord,
+            AcademicCourse currentCourse)
+        {
+            var semester = planRecord.Semester;
+            var disciplineId = planRecord.DisciplineId ?? 0;
+            var currentMaxSemester = GetMaxSemester(currentCourse);
+
+            // Старые долги: у части студентов 3-4 курса сохраняются долги за 1-2 семестр
+            if ((int)currentCourse >= (int)AcademicCourse.Course_3 &&
+                student.Id % 29 == 0 &&
+                semester <= 2)
+            {
+                return MarkType.Неудовлетворительно;
+            }
+
+            // Новые долги: у части студентов есть долги по последним двум семестрам их текущего обучения
+            if ((int)currentCourse >= (int)AcademicCourse.Course_2 &&
+                student.Id % 37 == 0 &&
+                semester >= Math.Max(1, currentMaxSemester - 1))
+            {
+                return MarkType.Неудовлетворительно;
+            }
+
+            // Небольшое количество неявок
+            if (student.Id % 41 == 0 && semester % 2 == 0)
+            {
+                return MarkType.Неявка;
+            }
+
+            var marks = new[]
+            {
+        MarkType.Отлично,
+        MarkType.Хорошо,
+        MarkType.Удовлетворительно,
+        MarkType.Хорошо,
+        MarkType.Отлично
+    };
+
+            return marks[(student.Id + disciplineId) % marks.Length];
+        }
+
         private static List<DisciplineStudentRecordMockModel> GenerateDisciplineStudentRecords()
         {
             var result = new List<DisciplineStudentRecordMockModel>();
@@ -872,6 +957,8 @@ namespace DepartmentOneCMockApi.Data
                     continue;
                 }
 
+                // План ищем только по направлению.
+                // У вас один план используется на все 4 года, а курс определяется по семестрам.
                 var academicPlan = AcademicPlans
                     .Where(x => x.EducationDirectionId == group.EducationDirectionId)
                     .OrderBy(x => x.Id)
@@ -882,11 +969,13 @@ namespace DepartmentOneCMockApi.Data
                     continue;
                 }
 
-                var (fromSemester, toSemester) = GetSemesterRange(group.Course);
+                // Для 4 курса создаем историю за 1-8 семестр,
+                // для 3 курса — за 1-6 и т.д.
+                var maxSemester = GetMaxSemester(group.Course);
 
                 var planRecords = academicPlan.AcademicPlanRecords
                     .Where(x => x.DisciplineId.HasValue)
-                    .Where(x => x.Semester >= fromSemester && x.Semester <= toSemester)
+                    .Where(x => x.Semester >= 1 && x.Semester <= maxSemester)
                     .OrderBy(x => x.Semester)
                     .ThenBy(x => x.Index)
                     .ToList();
@@ -901,8 +990,8 @@ namespace DepartmentOneCMockApi.Data
 
                     var semester = (Semesters)planRecord.Semester;
 
-                    var mark = GetDemoMark(student, planRecord);
-                    var markDate = GetDemoMarkDate(student, planRecord.Semester);
+                    var mark = GetDemoMark(student, planRecord, group.Course);
+                    var markDate = GetDemoMarkDate(group.Course, planRecord.Semester, student.Id);
 
                     result.Add(new DisciplineStudentRecordMockModel
                     {
