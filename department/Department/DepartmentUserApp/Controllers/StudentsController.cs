@@ -27,7 +27,7 @@ namespace DepartmentUserApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Details(int id)
+        public IActionResult Details(int id, string? returnUrl = null)
         {
             try
             {
@@ -46,19 +46,24 @@ namespace DepartmentUserApp.Controllers
                     return RedirectToAction("List");
                 }
 
+                ViewBag.ReturnUrl =
+                    !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+                        ? returnUrl
+                        : null;
+
                 ViewBag.StudentMovementHistory =
                     APIClient.GetRequest<List<StudentMovementHistoryViewModel>>(
                         $"api/core/StudentOrderBlockStudents/GetStudentMovementHistory?studentId={id}");
 
                 ViewBag.StudentDisciplineRecords =
-                (APIClient.GetRequest<List<DisciplineStudentRecordViewModel>>(
-                    "api/core/DisciplineStudentRecords/GetDisciplineStudentRecordList")
-                 ?? new List<DisciplineStudentRecordViewModel>())
-                .Where(x => x.StudentId == id)
-                .OrderBy(x => x.Semester)
-                .ThenBy(x => x.Discipline)
-                .ThenBy(x => x.Variant)
-                .ToList();
+                    (APIClient.GetRequest<List<DisciplineStudentRecordViewModel>>(
+                        "api/core/DisciplineStudentRecords/GetDisciplineStudentRecordList")
+                     ?? new List<DisciplineStudentRecordViewModel>())
+                    .Where(x => x.StudentId == id)
+                    .OrderBy(x => x.Semester)
+                    .ThenBy(x => x.Discipline)
+                    .ThenBy(x => x.Variant)
+                    .ToList();
 
                 return View(item);
             }

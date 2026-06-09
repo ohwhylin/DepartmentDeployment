@@ -3,6 +3,7 @@
 @using DepartmentContracts.ViewModels
 
 @{
+    var returnUrl = ViewBag.ReturnUrl as string;
     ViewData["Title"] = "Подробнее о студенте";
 
     var movementHistory = ViewBag.StudentMovementHistory as List<StudentMovementHistoryViewModel>
@@ -64,7 +65,14 @@
         <h2 class="app-card-title">Подробнее о студенте</h2>
         <div class="d-flex gap-2">
             @*<a class="btn btn-sm btn-light" asp-controller="Students" asp-action="Update" asp-route-id="@Model.Id">Изменить</a>*@
-            <a class="btn btn-sm btn-light" asp-controller="StudentGroups" asp-action="List">К списку</a>
+            @if (!string.IsNullOrWhiteSpace(returnUrl))
+            {
+                <a class="btn btn-sm btn-light" href="@returnUrl">К списку</a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-light" asp-controller="StudentGroups" asp-action="List">К списку</a>
+            }
         </div>
     </div>
 

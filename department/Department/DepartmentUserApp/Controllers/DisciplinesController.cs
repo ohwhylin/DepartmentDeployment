@@ -218,5 +218,22 @@ namespace DepartmentUserApp.Controllers
                 return RedirectToAction("Delete");
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Sync()
+        {
+            try
+            {
+                APIClient.PostRequest("api/core/Sync/academic-plans");
+                TempData["Success"] = "Синхронизация дисциплин выполнена успешно.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(List));
+        }
     }
 }

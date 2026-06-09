@@ -2,6 +2,7 @@
 @using DepartmentDataModels.Enums
 
 @{
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
     ViewData["Title"] = "Сведения о приказах";
 
     string GetOrderTypeName(StudentOrderType type) => type switch
@@ -38,6 +39,12 @@
             <h2 class="list-title">Список приказов</h2>
         </div>
         <div class="d-flex gap-2">
+            <a class="btn btn-app-outline"
+               asp-controller="Home"
+               asp-action="Index">
+                Назад
+            </a>
+
             <form asp-controller="StudentOrders" asp-action="Sync" method="post" class="d-inline">
                 <button type="submit" class="btn btn-app-primary">Синхронизировать данные</button>
             </form>
@@ -218,7 +225,22 @@
                                                     @foreach (var blockStudent in currentBlockStudents)
                                                     {
                                                         <tr>
-                                                            <td>@(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)</td>
+                                                            <td>
+                                                                @if (blockStudent.StudentId > 0)
+                                                                {
+                                                                    <a class="btn-link p-0 text-decoration-none"
+                                                                       asp-controller="Students"
+                                                                       asp-action="Details"
+                                                                       asp-route-id="@blockStudent.StudentId"
+                                                                       asp-route-returnUrl="@returnUrl">
+                                                                        @(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)
+                                                                    </a>
+                                                                }
+                                                                else
+                                                                {
+                                                                    @(string.IsNullOrWhiteSpace(blockStudent.Student) ? "—" : blockStudent.Student)
+                                                                }
+                                                            </td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupFrom) ? "—" : blockStudent.StudentGroupFrom)</td>
                                                             <td>@(string.IsNullOrWhiteSpace(blockStudent.StudentGroupTo) ? "—" : blockStudent.StudentGroupTo)</td>
                                                             <td class="text-end">
