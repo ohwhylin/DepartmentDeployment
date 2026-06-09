@@ -466,32 +466,6 @@ namespace DepartmentOneCMockApi.Data
             return source.Select(x => x.Clone()).ToList();
         }
 
-        private static void Move(List<PlanSeed> plan, string index, int newSemester)
-        {
-            var item = plan.First(x => x.Index == index);
-            item.Semester = newSemester;
-        }
-
-        private static void SetHours(List<PlanSeed> plan, string index, int lectures, int laboratoryHours, int practicalHours)
-        {
-            var item = plan.First(x => x.Index == index);
-            item.Lectures = lectures;
-            item.LaboratoryHours = laboratoryHours;
-            item.PracticalHours = practicalHours;
-            item.AcademicHours = lectures + laboratoryHours + practicalHours;
-        }
-
-        private static void Remove(List<PlanSeed> plan, string index)
-        {
-            var item = plan.FirstOrDefault(x => x.Index == index);
-            if (item != null)
-                plan.Remove(item);
-        }
-
-        private static void Add(List<PlanSeed> plan, PlanSeed item)
-        {
-            plan.Add(item);
-        }
 
         private static AcademicPlanMockModel BuildPlan(
     int planId,
@@ -509,7 +483,7 @@ namespace DepartmentOneCMockApi.Data
                 {
                     Id = _recordId++,
                     AcademicPlanId = planId,
-                    DisciplineId = GetOrCreateDisciplineId(seed.Name),
+                    DisciplineId = _disciplineId++,
 
                     DisciplineBlockId = block.blockId,
                     DisciplineBlockTitle = block.blockTitle,
@@ -566,28 +540,39 @@ namespace DepartmentOneCMockApi.Data
                 D("Б1.О.13", "Введение в программную инженерию", 1, 2, 16, 0, 16, pass: 1),
                 D("Б1.О.22", "Информационные системы и технологии", 1, 2, 16, 32, 0, exam: 1),
                 D("Б1.О.23", "Теоретические основы информатики", 1, 2, 16, 0, 16, pass: 1, rgr: 1),
+                D("Б1.В.07", "Программирование на Java", 1, 2, 16, 32, 0, exam: 1),
 
-                D("Б1.О.14", "Организация ЭВМ и системы", 2, 2, 16, 32, 0, exam: 1),
                 P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
+                D("Б1.О.33", "Алгоритмы и структуры данных", 2, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.12", "Дискретная математика", 2, 2, 16, 32, 0, exam: 1),
 
+                D("Б1.О.14", "Организация ЭВМ и системы", 3, 2, 16, 32, 0, exam: 1),
                 D("Б1.О.15", "Базы данных", 3, 2, 16, 32, 0, exam: 1, courseProject: 1),
-                D("Б1.О.16", "Системы управления базами данных", 3, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.21", "Технологии программирования", 3, 3, 16, 64, 0, exam: 1, courseWork: 1),
+                D("Б1.В.05", "Интернет-программирование", 3, 2, 16, 32, 0, exam: 1),
 
-                D("Б1.О.20", "Методы моделирования", 4, 2, 16, 0, 16, pass: 1),
-                D("Б1.О.21", "Технологии программирования", 4, 3, 16, 64, 0, exam: 1, courseWork: 1),
+                D("Б1.О.16", "Системы управления базами данных", 4, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.21", "Технологии программирования", 4, 3, 16, 64, 0, exam: 1),
+                D("Б1.В.05", "Интернет-программирование", 4, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.05", "Операционные системы", 4, 2, 16, 32, 0, pass: 1),
 
-                D("Б1.О.33", "Алгоритмы и структуры данных", 5, 2, 16, 32, 0, exam: 1),
-                D("Б1.В.01", "Проектирование и архитектура программных систем", 5, 2, 16, 32, 0, pass: 1, courseProject: 1),
+                D("Б1.О.20", "Методы моделирования", 5, 2, 16, 0, 16, pass: 1),
                 D("Б1.В.03", "Методы искусственного интеллекта", 5, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.19", "Системный анализ", 5, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.25", "Вычислительная математика", 5, 2, 16, 32, 0, exam: 1),
 
-                D("Б1.В.05", "Интернет-программирование", 6, 2, 16, 32, 0, exam: 1),
-                D("Б1.В.07", "Программирование на Java", 6, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.01", "Проектирование и архитектура программных систем", 6, 2, 16, 32, 0, pass: 1, courseProject: 1),
+                D("Б1.В.03", "Методы искусственного интеллекта", 6, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.12", "Тестирование программного обеспечения", 6, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.25", "Вычислительная математика", 5, 2, 16, 32, 0, exam: 1),
 
-                D("Б1.В.12", "Тестирование программного обеспечения", 7, 2, 16, 32, 0, exam: 1),
                 D("Б1.В.13", "Конструирование программного обеспечения", 7, 2, 16, 32, 0, exam: 1, courseWork: 1),
+                D("Б1.В.35", "Системы искусственного интеллекта", 7, 2, 16, 32, 0, exam: 1, courseProject: 1),
+                D("Б1.В.17", "Информационная безопасность", 7, 2, 16, 32, 0, exam: 1),
                 P("Б2.О.02(П)", "Научно-исследовательская работа", 7, 3, 108),
 
                 P("Б1.О.24", "Проектный практикум", 8, 3, 108),
+                D("Б1.О.18", "Управление проектом", 8, 2, 8, 16, 0, pass: 1, rgr: 1),
                 P("Б2.О.03(П)", "Технологическая (проектно-технологическая) практика", 8, 3, 108),
                 P("Б2.В.01(П)", "Преддипломная практика", 8, 3, 108),
                 P("Б3.01", "Подготовка к сдаче и сдача государственного экзамена", 8, 3, 108),
@@ -602,65 +587,22 @@ namespace DepartmentOneCMockApi.Data
 
         private static List<PlanSeed> Plan090304_2023_2027()
         {
-            var plan = Copy(Base090304());
-
-            Move(plan, "Б1.В.05", 5);
-            Move(plan, "Б1.В.03", 6);
-
-            SetHours(plan, "Б1.О.22", 16, 64, 0);
-            SetHours(plan, "Б1.О.21", 16, 32, 0);
-            SetHours(plan, "Б1.В.07", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090304());
         }
 
         private static List<PlanSeed> Plan090304_2024_2028()
         {
-            var plan = Copy(Base090304());
-
-            Move(plan, "Б1.О.20", 3);
-            Move(plan, "Б1.О.16", 4);
-            Move(plan, "Б1.В.12", 6);
-            Move(plan, "Б1.В.07", 7);
-
-            SetHours(plan, "Б1.О.15", 16, 64, 0);
-            SetHours(plan, "Б1.В.12", 16, 32, 0);
-            SetHours(plan, "Б1.В.13", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090304());
         }
 
         private static List<PlanSeed> Plan090304_2025_2029()
         {
-            var plan = Copy(Base090304());
-
-            Remove(plan, "Б1.В.07");
-            Add(plan, D("Б1.В.14", "Разработка веб-приложений", 6, 2, 16, 32, 0, exam: 1));
-
-            Move(plan, "Б1.В.03", 6);
-            Move(plan, "Б1.В.05", 5);
-
-            SetHours(plan, "Б1.О.14", 16, 64, 0);
-            SetHours(plan, "Б1.В.01", 16, 64, 0);
-            SetHours(plan, "Б1.В.03", 16, 32, 0);
-
-            return plan;
+            return Copy(Base090304());
         }
 
         private static List<PlanSeed> Plan090304_2026_2030()
         {
-            var plan = Copy(Base090304());
-
-            Move(plan, "Б1.В.01", 4);
-            Move(plan, "Б1.О.33", 6);
-            Move(plan, "Б1.В.05", 5);
-            Move(plan, "Б1.В.03", 6);
-
-            SetHours(plan, "Б1.О.33", 16, 64, 0);
-            SetHours(plan, "Б1.О.20", 16, 0, 16);
-            SetHours(plan, "Б1.В.13", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090304());
         }
 
         private static List<AcademicPlanMockModel> Build090304Plans()
@@ -686,30 +628,37 @@ namespace DepartmentOneCMockApi.Data
                 D("Б1.О.01", "Программирование", 1, 2, 16, 32, 0, exam: 1),
                 D("Б1.О.02", "Основы алгоритмизации и программирования", 1, 2, 16, 0, 16, pass: 1),
                 D("Б1.О.03", "Основы информационных технологий", 1, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.23", "Теоретические основы информатики", 1, 2, 16, 0, 16, pass: 1, rgr: 1),
 
                 D("Б1.О.16", "Основы прикладной информатики", 2, 2, 16, 0, 16, pass: 1, rgr: 1),
-                D("Б1.О.17", "Организация вычислительных машин и систем", 2, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.33", "Алгоритмы и структуры данных", 2, 2, 16, 32, 0, exam: 1),
                 P("Б2.О.01(У)", "Ознакомительная практика", 2, 3, 108),
 
-                D("Б1.О.18", "Базы данных", 3, 2, 16, 32, 0, exam: 1, courseProject: 1),
-                D("Б1.О.19", "Системы управления базами данных", 3, 2, 16, 32, 0, pass: 1),
-                D("Б1.О.28", "Алгоритмы и структуры данных", 3, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.15", "Базы данных", 3, 2, 16, 32, 0, exam: 1, courseProject: 1),
+                D("Б1.О.17", "Организация вычислительных машин и систем", 2, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.27", "Основы технологии программирования", 2, 2, 16, 32, 0, exam: 1),
+                D("Б1.О.23", "Операционные системы", 3, 2, 16, 32, 0, exam: 1),
 
-                D("Б1.О.22", "Методы моделирования", 4, 2, 16, 0, 16, pass: 1, courseWork: 1),
-                D("Б1.О.23", "Операционные системы", 4, 2, 16, 32, 0, exam: 1),
-                D("Б1.О.24", "Проектирование информационных систем", 4, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.22", "Методы моделирования", 4, 2, 16, 0, 16, pass: 1),
+                D("Б1.О.16", "Системы управления базами данных", 4, 2, 16, 32, 0, pass: 1),
+                D("Б1.О.23", "Разработка профессиональных приложений", 4, 2, 16, 32, 0, exam: 1, courseWork: 1),
+                D("Б1.О.29", "Основы компьютерной графики", 4, 2, 16, 32, 0, pass: 1),
 
-                D("Б1.В.01", "Интернет-программирование", 5, 2, 16, 32, 0, exam: 1),
-                D("Б1.В.02", "Построение информационных систем", 5, 2, 16, 32, 0, pass: 1),
                 D("Б1.В.03", "Методы искусственного интеллекта", 5, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.19", "Системный анализ", 5, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.01", "Проектирование и архитектура программных систем", 6, 2, 16, 32, 0, pass: 1, courseProject: 1),
 
                 D("Б1.В.07", "Экспертные системы", 6, 2, 16, 32, 0, exam: 1),
-                D("Б1.В.08", "Сетевые технологии в экономике", 6, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.08", "Право интеллектуальной собственности", 6, 2, 16, 32, 0, pass: 1),
+                D("Б1.В.24", "Исследование операций и методы оптимизации", 6, 2, 16, 32, 0, pass: 1),
 
-                D("Б1.В.ДВ.03.01", "Теория и практика экономических информационных систем", 7, 2, 16, 32, 0, pass: 1),
-                D("Б1.В.ДВ.03.02", "Сервис-ориентированное программирование", 7, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.35", "Системы искусственного интеллекта", 7, 2, 16, 32, 0, exam: 1, courseProject: 1),
+                D("Б1.В.17", "Информационная безопасность", 7, 2, 16, 32, 0, exam: 1),
+                D("Б1.В.36", "Прикладные программные решения", 7, 2, 16, 32, 0, exam: 1),
                 P("Б2.О.02(П)", "Научно-исследовательская работа", 7, 3, 108),
 
+                P("Б1.О.24", "Проектный практикум", 8, 3, 108),
+                D("Б1.О.18", "Управление проектом", 8, 2, 8, 16, 0, pass: 1, rgr: 1),
                 P("Б2.О.03(П)", "Технологическая (проектно-технологическая) практика", 8, 3, 108),
                 P("Б2.В.01(П)", "Преддипломная практика", 8, 3, 108),
                 P("Б3.01", "Подготовка к сдаче и сдача государственного экзамена", 8, 3, 108),
@@ -724,54 +673,22 @@ namespace DepartmentOneCMockApi.Data
 
         private static List<PlanSeed> Plan090303_2023_2027()
         {
-            var plan = Copy(Base090303());
-
-            Move(plan, "Б1.В.03", 6);
-            Move(plan, "Б1.В.08", 5);
-
-            SetHours(plan, "Б1.О.17", 16, 64, 0);
-            SetHours(plan, "Б1.В.01", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090303());
         }
 
         private static List<PlanSeed> Plan090303_2024_2028()
         {
-            var plan = Copy(Base090303());
-
-            Move(plan, "Б1.О.22", 3);
-            Move(plan, "Б1.О.19", 4);
-
-            SetHours(plan, "Б1.О.18", 16, 64, 0);
-            SetHours(plan, "Б1.В.07", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090303());
         }
 
         private static List<PlanSeed> Plan090303_2025_2029()
         {
-            var plan = Copy(Base090303());
-
-            Move(plan, "Б1.В.01", 6);
-            Move(plan, "Б1.В.07", 5);
-
-            SetHours(plan, "Б1.О.24", 16, 64, 0);
-            SetHours(plan, "Б1.В.03", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090303());
         }
 
         private static List<PlanSeed> Plan090303_2026_2030()
         {
-            var plan = Copy(Base090303());
-
-            Move(plan, "Б1.О.28", 4);
-            Move(plan, "Б1.О.22", 5);
-
-            SetHours(plan, "Б1.О.16", 16, 0, 16);
-            SetHours(plan, "Б1.В.ДВ.03.02", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090303());
         }
 
         private static List<AcademicPlanMockModel> Build090303Plans()
@@ -818,53 +735,22 @@ namespace DepartmentOneCMockApi.Data
 
         private static List<PlanSeed> Plan090404_2023_2025()
         {
-            var plan = Copy(Base090404());
-
-            Move(plan, "Б1.О.05", 2);
-            Move(plan, "Б1.О.08", 1);
-
-            SetHours(plan, "Б1.О.09", 16, 32, 0);
-            SetHours(plan, "Б1.В.01", 16, 32, 0);
-
-            return plan;
+            return Copy(Base090404());
         }
 
         private static List<PlanSeed> Plan090404_2024_2026()
         {
-            var plan = Copy(Base090404());
-
-            Move(plan, "Б1.В.03", 4);
-            Remove(plan, "Б1.В.ДВ.01.01");
-            Add(plan, D("Б1.В.02", "Анализ многомерных данных", 3, 2, 16, 32, 0, pass: 1));
-            Add(plan, D("Б1.В.ДВ.02.01", "Интеллектуальные САПР", 4, 2, 16, 64, 0, pass: 1));
-
-            return plan;
+            return Copy(Base090404());
         }
 
         private static List<PlanSeed> Plan090404_2025_2027()
         {
-            var plan = Copy(Base090404());
-
-            Remove(plan, "Б1.В.ДВ.01.01");
-            Add(plan, D("Б1.В.ДВ.02.02", "Математическое моделирование информационных систем", 4, 2, 16, 64, 0, pass: 1));
-
-            SetHours(plan, "Б1.О.05", 16, 64, 0);
-            SetHours(plan, "Б1.В.03", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090404());
         }
 
         private static List<PlanSeed> Plan090404_2026_2028()
         {
-            var plan = Copy(Base090404());
-
-            Move(plan, "Б1.В.01", 2);
-            Move(plan, "Б1.О.09", 3);
-
-            SetHours(plan, "Б1.В.01", 16, 64, 0);
-            SetHours(plan, "Б1.О.08", 16, 32, 0);
-
-            return plan;
+            return Copy(Base090404());
         }
 
         private static List<AcademicPlanMockModel> Build090404Plans()
@@ -910,49 +796,22 @@ namespace DepartmentOneCMockApi.Data
 
         private static List<PlanSeed> Plan090403_2023_2025()
         {
-            var plan = Copy(Base090403());
-
-            Add(plan, D("Б1.О.04", "Управление проектами в области искусственного интеллекта", 1, 2, 16, 32, 0, pass: 1));
-            Move(plan, "Б1.О.08", 2);
-
-            return plan;
+            return Copy(Base090403());
         }
 
         private static List<PlanSeed> Plan090403_2024_2026()
         {
-            var plan = Copy(Base090403());
-
-            Remove(plan, "Б1.В.ДВ.01.01");
-            Add(plan, D("Б1.В.ДВ.01.02", "Обработка больших данных в бизнес-аналитике", 4, 2, 16, 64, 0, pass: 1));
-
-            SetHours(plan, "Б1.О.09", 16, 32, 0);
-            SetHours(plan, "Б1.В.01", 16, 32, 0);
-
-            return plan;
+            return Copy(Base090403());
         }
 
         private static List<PlanSeed> Plan090403_2025_2027()
         {
-            var plan = Copy(Base090403());
-
-            Move(plan, "Б1.В.03", 4);
-            Add(plan, D("Б1.В.ДВ.02.02", "Интеллектуальные информационные системы на основе хранилищ данных", 3, 2, 16, 64, 0, pass: 1));
-
-            return plan;
+            return Copy(Base090403());
         }
 
         private static List<PlanSeed> Plan090403_2026_2028()
         {
-            var plan = Copy(Base090403());
-
-            Move(plan, "Б1.О.05", 2);
-            Remove(plan, "Б1.В.ДВ.01.01");
-            Add(plan, D("Б1.В.ДВ.02.01", "Интеллектуальные информационные системы", 4, 2, 16, 64, 0, pass: 1));
-
-            SetHours(plan, "Б1.О.05", 16, 64, 0);
-            SetHours(plan, "Б1.В.03", 16, 64, 0);
-
-            return plan;
+            return Copy(Base090403());
         }
 
         private static List<AcademicPlanMockModel> Build090403Plans()
@@ -971,7 +830,6 @@ namespace DepartmentOneCMockApi.Data
         {
             _recordId = 1;
             _disciplineId = 1;
-            _disciplineIds.Clear();
 
             var result = new List<AcademicPlanMockModel>();
             result.AddRange(Build090304Plans());
@@ -980,32 +838,6 @@ namespace DepartmentOneCMockApi.Data
             result.AddRange(Build090403Plans());
 
             return result;
-        }
-
-        private static readonly Dictionary<string, int> _disciplineIds =
-    new(StringComparer.OrdinalIgnoreCase);
-
-        private static string NormalizeDisciplineKey(string value)
-        {
-            return string.Join(
-                " ",
-                value.Trim()
-                     .Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                .ToLowerInvariant();
-        }
-
-        private static int GetOrCreateDisciplineId(string disciplineName)
-        {
-            var key = NormalizeDisciplineKey(disciplineName);
-
-            if (_disciplineIds.TryGetValue(key, out var existingId))
-            {
-                return existingId;
-            }
-
-            var newId = _disciplineId++;
-            _disciplineIds[key] = newId;
-            return newId;
         }
 
         public static List<AcademicPlanMockModel> AcademicPlans => BuildAllAcademicPlans();
