@@ -1,29 +1,71 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DepartmentContracts.BindingModels;
+using DepartmentContracts.ViewModels;
+using DepartmentUserApp.ViewModels.LecturerDepartmentPosts;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using DepartmentContracts.BindingModels;
-using DepartmentContracts.ViewModels;
 
 namespace DepartmentUserApp.Controllers
 {
     public class LecturerDepartmentPostsController : Controller
     {
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(string? search, int page = 1, int pageSize = 10)
         {
             try
             {
-                ViewBag.LecturerDepartmentPostsList =
-                    APIClient.GetRequest<List<LecturerDepartmentPostViewModel>>(
-                        "api/core/LecturerDepartmentPosts/GetLecturerDepartmentPostList");
+                if (page < 1)
+                {
+                    page = 1;
+                }
 
-                return View();
+                if (pageSize <= 0)
+                {
+                    pageSize = 10;
+                }
+
+                var queryParts = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    queryParts.Add($"Search={Uri.EscapeDataString(search.Trim())}");
+                }
+
+                queryParts.Add($"Page={page}");
+                queryParts.Add($"PageSize={pageSize}");
+
+                var url = $"api/core/LecturerDepartmentPosts/GetLecturerDepartmentPostPage?{string.Join("&", queryParts)}";
+
+                var result = APIClient.GetRequest<PagedResult<LecturerDepartmentPostViewModel>>(url)
+                    ?? new PagedResult<LecturerDepartmentPostViewModel>
+                    {
+                        Page = page,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    };
+
+                var model = new LecturerDepartmentPostListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Result = result
+                };
+
+                return View(model);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
-                ViewBag.LecturerDepartmentPostsList = new List<LecturerDepartmentPostViewModel>();
-                return View();
+
+                return View(new LecturerDepartmentPostListPageViewModel
+                {
+                    Search = search?.Trim() ?? string.Empty,
+                    Result = new PagedResult<LecturerDepartmentPostViewModel>
+                    {
+                        Page = 1,
+                        PageSize = pageSize,
+                        TotalCount = 0
+                    }
+                });
             }
         }
 
