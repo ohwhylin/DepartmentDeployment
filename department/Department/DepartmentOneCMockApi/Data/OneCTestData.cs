@@ -333,7 +333,7 @@ namespace DepartmentOneCMockApi.Data
                         LastName = lastName,
                         Patronymic = patronymic,
                         Email = $"student{studentId}@university.local",
-                        StudentState = StudentState.Учится,
+                        StudentState = ResolveGeneratedStudentState(group, i),
                         Description = string.Empty,
                         IsSteward = i == 0
                     });
@@ -1139,6 +1139,61 @@ namespace DepartmentOneCMockApi.Data
             public int? GroupToId { get; init; }
             public string DocumentKey { get; init; } = string.Empty;
         }
+        private enum StudentOrderScenario
+        {
+            None,
+            TransferGroup,
+            AcademicLeaveOnly,
+            AcademicLeaveAndReturn,
+            DismissedForBadPerformance,
+            DismissedByOwnWish,
+            DismissedAndRestored,
+            Completed
+        }
+
+        private static StudentOrderScenario GetOrderScenario(StudentGroupMockModel group, int studentIndexInGroup)
+        {
+            return (group.Id, studentIndexInGroup) switch
+            {
+                (6, 3) => StudentOrderScenario.TransferGroup,              // ПИбд-22
+                (9, 4) => StudentOrderScenario.TransferGroup,              // ПИбд-31
+
+                (17, 1) => StudentOrderScenario.AcademicLeaveOnly,          // ИСЭбд-21
+                (19, 2) => StudentOrderScenario.AcademicLeaveAndReturn,     // ИСЭбд-31
+
+                (10, 2) => StudentOrderScenario.DismissedForBadPerformance, // ПИбд-32
+                (18, 0) => StudentOrderScenario.DismissedByOwnWish,         // ИСЭбд-22
+
+                (13, 1) => StudentOrderScenario.DismissedAndRestored,       // ПИбд-42
+                (20, 1) => StudentOrderScenario.Completed,                  // ИСЭбд-41
+
+                _ => StudentOrderScenario.None
+            };
+        }
+
+        private static int GetStudentIndexInGroup(StudentMockModel student)
+        {
+            return Students
+                .Where(x => x.StudentGroupId == student.StudentGroupId)
+                .OrderBy(x => x.Id)
+                .Select((x, index) => new { x.Id, Index = index })
+                .First(x => x.Id == student.Id)
+                .Index;
+        }
+
+        private static StudentState ResolveGeneratedStudentState(StudentGroupMockModel group, int studentIndexInGroup)
+        {
+            var scenario = GetOrderScenario(group, studentIndexInGroup);
+
+            return scenario switch
+            {
+                StudentOrderScenario.AcademicLeaveOnly => StudentState.Академ,
+                StudentOrderScenario.DismissedForBadPerformance => StudentState.Отчислен,
+                StudentOrderScenario.DismissedByOwnWish => StudentState.Отчислен,
+                StudentOrderScenario.Completed => StudentState.Завершил,
+                _ => StudentState.Учится
+            };
+        }
 
         private static DateTime GetEnrollmentDateByCourse(int course)
         {
@@ -1166,10 +1221,12 @@ namespace DepartmentOneCMockApi.Data
         }
 
         private static List<StudentOrderEvent> BuildStudentTimeline(
-            StudentMockModel student,
-            StudentGroupMockModel currentGroup)
+    StudentMockModel student,
+    StudentGroupMockModel currentGroup)
         {
             var enrollmentDate = GetEnrollmentDateByCourse((int)currentGroup.Course);
+            var studentIndexInGroup = GetStudentIndexInGroup(student);
+            var scenario = GetOrderScenario(currentGroup, studentIndexInGroup);
 
             var events = new List<StudentOrderEvent>
     {
@@ -1184,57 +1241,165 @@ namespace DepartmentOneCMockApi.Data
         }
     };
 
-            if (student.Id % 9 == 0)
+            switch (scenario)
             {
-                var targetGroupId = FindTransferTargetGroupId(currentGroup);
-
-                if (targetGroupId != currentGroup.Id)
-                {
-                    var transferDate = enrollmentDate.AddYears(1).AddMonths(5);
-
-                    events.Add(new StudentOrderEvent
+                case StudentOrderScenario.TransferGroup:
                     {
-                        StudentId = student.Id,
-                        Type = StudentOrderType.ПереводВГруппу,
-                        Date = transferDate,
-                        EducationDirectionId = currentGroup.EducationDirectionId,
-                        GroupFromId = currentGroup.Id,
-                        GroupToId = targetGroupId,
-                        DocumentKey = $"MOVE-{transferDate:yyyyMMdd}"
-                    });
-                }
-            }
+                        var targetGroupId = FindTransferTargetGroupId(currentGroup);
+                        if (targetGroupId != currentGroup.Id)
+                        {
+                            var transferDate = enrollmentDate.AddMonths(17).AddDays(student.Id % 3);
 
-            if (student.StudentState == StudentState.Академ)
-            {
-                var academicDate = enrollmentDate.AddYears(1).AddMonths(5);
+                            events.Add(new StudentOrderEvent
+                            {
+                                StudentId = student.Id,
+                                Type = StudentOrderType.ПереводВГруппу,
+                                Date = transferDate,
+                                EducationDirectionId = currentGroup.EducationDirectionId,
+                                GroupFromId = currentGroup.Id,
+                                GroupToId = targetGroupId,
+                                DocumentKey = $"TRANSFER-GROUP-{transferDate:yyyyMMdd}"
+                            });
+                        }
 
-                events.Add(new StudentOrderEvent
-                {
-                    StudentId = student.Id,
-                    Type = StudentOrderType.ВАкадем,
-                    Date = academicDate,
-                    EducationDirectionId = currentGroup.EducationDirectionId,
-                    GroupFromId = currentGroup.Id,
-                    GroupToId = null,
-                    DocumentKey = $"MOVE-{academicDate:yyyyMMdd}"
-                });
-            }
+                        break;
+                    }
 
-            if (student.StudentState == StudentState.Отчислен)
-            {
-                var dismissalDate = enrollmentDate.AddYears(2).AddMonths(6);
+                case StudentOrderScenario.AcademicLeaveOnly:
+                    {
+                        var academicDate = enrollmentDate.AddMonths(17).AddDays(student.Id % 3);
 
-                events.Add(new StudentOrderEvent
-                {
-                    StudentId = student.Id,
-                    Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
-                    Date = dismissalDate,
-                    EducationDirectionId = currentGroup.EducationDirectionId,
-                    GroupFromId = currentGroup.Id,
-                    GroupToId = null,
-                    DocumentKey = $"MOVE-{dismissalDate:yyyyMMdd}"
-                });
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ВАкадем,
+                            Date = academicDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = currentGroup.Id,
+                            GroupToId = null,
+                            DocumentKey = $"ACADEMIC-LEAVE-{academicDate:yyyyMMdd}"
+                        });
+
+                        break;
+                    }
+
+                case StudentOrderScenario.AcademicLeaveAndReturn:
+                    {
+                        var academicDate = enrollmentDate.AddMonths(17).AddDays(student.Id % 3);
+                        var returnDate = academicDate.AddMonths(10).AddDays(2);
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ВАкадем,
+                            Date = academicDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = currentGroup.Id,
+                            GroupToId = null,
+                            DocumentKey = $"ACADEMIC-LEAVE-{academicDate:yyyyMMdd}"
+                        });
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ИзАкадема,
+                            Date = returnDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = null,
+                            GroupToId = currentGroup.Id,
+                            DocumentKey = $"ACADEMIC-RETURN-{returnDate:yyyyMMdd}"
+                        });
+
+                        break;
+                    }
+
+                case StudentOrderScenario.DismissedForBadPerformance:
+                    {
+                        var dismissalDate = enrollmentDate.AddMonths(28).AddDays(student.Id % 4);
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
+                            Date = dismissalDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = currentGroup.Id,
+                            GroupToId = null,
+                            DocumentKey = $"DISMISS-BAD-{dismissalDate:yyyyMMdd}"
+                        });
+
+                        break;
+                    }
+
+                case StudentOrderScenario.DismissedByOwnWish:
+                    {
+                        var dismissalDate = enrollmentDate.AddMonths(20).AddDays(student.Id % 4);
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ОтчислитьПоСобственному,
+                            Date = dismissalDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = currentGroup.Id,
+                            GroupToId = null,
+                            DocumentKey = $"DISMISS-OWN-{dismissalDate:yyyyMMdd}"
+                        });
+
+                        break;
+                    }
+
+                case StudentOrderScenario.DismissedAndRestored:
+                    {
+                        var dismissalDate = enrollmentDate.AddMonths(19).AddDays(student.Id % 4);
+                        var restoreDate = dismissalDate.AddMonths(7).AddDays(3);
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.ОтчислитьЗаНеуспевамость,
+                            Date = dismissalDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = currentGroup.Id,
+                            GroupToId = null,
+                            DocumentKey = $"DISMISS-BAD-{dismissalDate:yyyyMMdd}"
+                        });
+
+                        events.Add(new StudentOrderEvent
+                        {
+                            StudentId = student.Id,
+                            Type = StudentOrderType.Восстановить,
+                            Date = restoreDate,
+                            EducationDirectionId = currentGroup.EducationDirectionId,
+                            GroupFromId = null,
+                            GroupToId = currentGroup.Id,
+                            DocumentKey = $"RESTORE-{restoreDate:yyyyMMdd}"
+                        });
+
+                        break;
+                    }
+
+                case StudentOrderScenario.Completed:
+                    {
+                        if (currentGroup.Course == AcademicCourse.Course_4)
+                        {
+                            var completionDate = new DateTime(enrollmentDate.Year + 4, 6, 30)
+                                .AddDays(student.Id % 3);
+
+                            events.Add(new StudentOrderEvent
+                            {
+                                StudentId = student.Id,
+                                Type = StudentOrderType.ОтчислитьПоЗавершению,
+                                Date = completionDate,
+                                EducationDirectionId = currentGroup.EducationDirectionId,
+                                GroupFromId = currentGroup.Id,
+                                GroupToId = null,
+                                DocumentKey = $"COMPLETE-{completionDate:yyyyMMdd}"
+                            });
+                        }
+
+                        break;
+                    }
             }
 
             return events
@@ -1271,10 +1436,11 @@ namespace DepartmentOneCMockApi.Data
                 StudentOrderType.Зачисление => "к",
                 StudentOrderType.ПереводВГруппу => "п",
                 StudentOrderType.ВАкадем => "а",
-                StudentOrderType.ИзАкадема => "лс",
+                StudentOrderType.ИзАкадема => "иа",
                 StudentOrderType.Восстановить => "в",
-                StudentOrderType.ОтчислитьЗаНеуспевамость => "лс",
-                StudentOrderType.ОтчислитьПоСобственному => "лс",
+                StudentOrderType.ОтчислитьЗаНеуспевамость => "ну",
+                StudentOrderType.ОтчислитьПоСобственному => "сж",
+                StudentOrderType.ОтчислитьПоЗавершению => "ок",
                 StudentOrderType.Движение => "комб",
                 _ => "лс"
             };
