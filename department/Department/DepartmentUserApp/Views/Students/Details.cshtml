@@ -240,7 +240,6 @@
                         <tr>
                             <th>Дисциплина</th>
                             <th>Семестр</th>
-                            <th>Вариант</th>
                             <th>Оценка</th>
                             <th>Дата выставления</th>
                             <th></th>
@@ -252,7 +251,6 @@
                             <tr>
                                 <td>@(string.IsNullOrWhiteSpace(item.Discipline) ? "—" : item.Discipline)</td>
                                 <td>@GetSemesterName(item.Semester)</td>
-                                <td>@(string.IsNullOrWhiteSpace(item.Variant) ? "—" : item.Variant)</td>
                                 <td>@GetMarkName(item.MarkType)</td>
                                 <td>@FormatMarkDate(item.MarkDate)</td>
                                 <td>
