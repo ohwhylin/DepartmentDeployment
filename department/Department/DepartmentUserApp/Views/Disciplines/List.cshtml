@@ -55,6 +55,13 @@
         </div>
     }
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="p-3 pt-0">
+            <div class="alert alert-success mb-0">@TempData["Success"]</div>
+        </div>
+    }
+
     <div class="px-3 pb-2 text-muted">
         Найдено дисциплин: @Model.Result.TotalCount
     </div>
