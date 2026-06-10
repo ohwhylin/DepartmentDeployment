@@ -1,4 +1,5 @@
-@model DepartmentUserApp.ViewModels.Disciplines.DisciplineListPageViewModel
+@using DepartmentContracts.ViewModels.Disciplines
+@model DisciplineListPageViewModel
 
 @{
     ViewData["Title"] = "Disciplines";
@@ -85,7 +86,7 @@
                         <a class="btn btn-sm btn-app-outline"
                            asp-controller="Disciplines"
                            asp-action="Details"
-                           asp-route-id="@item.PrimaryId">
+                           asp-route-id="@item.Id">
                             Подробнее
                         </a>
                     </div>

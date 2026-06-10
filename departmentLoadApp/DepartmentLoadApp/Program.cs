@@ -72,11 +72,7 @@ app.UseRequestLocalization(localizationOptions);
 var pathBase = builder.Configuration["PathBase"];
 if (!string.IsNullOrWhiteSpace(pathBase))
 {
-    app.Use((context, next) =>
-    {
-        context.Request.PathBase = pathBase;
-        return next();
-    });
+    app.UsePathBase(pathBase);
 }
 
 app.UseHttpsRedirection();
