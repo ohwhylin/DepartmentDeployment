@@ -133,12 +133,12 @@
                 <h5 class="app-card-title">Синхронизация данных</h5>
             </div>
             <div class="p-3 d-flex flex-column gap-2">
-                <form asp-controller="Home" asp-action="QuickSync" method="post" class="d-inline">
+                <!-- <form asp-controller="Home" asp-action="QuickSync" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-app-primary w-100">
                         Быстрая синхронизация
                     </button>
-                </form>
+                </form> -->
 
                 <form asp-controller="AcademicPlans" asp-action="Sync" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
@@ -182,9 +182,9 @@
                     Открыть приказы
                 </a>
 
-                <a class="btn btn-app-outline w-100" asp-controller="Disciplines" asp-action="List">
+                <!-- <a class="btn btn-app-outline w-100" asp-controller="Disciplines" asp-action="List">
                     Открыть дисциплины
-                </a>
+                </a> -->
             </div>
         </div>
     </div>
