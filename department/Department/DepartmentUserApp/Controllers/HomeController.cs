@@ -100,6 +100,11 @@ namespace DepartmentUserApp.Controllers
                 ViewBag.GroupsWithDebtsCount = groupsWithDebts.Count;
                 ViewBag.HighRiskDebtStudentCount = highRiskDebtStudents.Count;
                 ViewBag.LongDebtRecordCount = longDebtRecordCount;
+
+                ViewBag.DebtStudentPercent = GetPercent(studentsWithDebts.Count, students.Count);
+                ViewBag.GroupsWithDebtsPercent = GetPercent(groupsWithDebts.Count, studentGroups.Count);
+                ViewBag.AbsentPercent = GetPercent(ViewBag.AbsentCount, disciplineStudentRecords.Count);
+                ViewBag.UnsatisfactoryPercent = GetPercent(ViewBag.UnsatisfactoryCount, disciplineStudentRecords.Count);
             }
             catch (Exception ex)
             {
@@ -123,6 +128,11 @@ namespace DepartmentUserApp.Controllers
                 ViewBag.GroupsWithDebtsCount = 0;
                 ViewBag.HighRiskDebtStudentCount = 0;
                 ViewBag.LongDebtRecordCount = 0;
+
+                ViewBag.DebtStudentPercent = 0.0;
+                ViewBag.GroupsWithDebtsPercent = 0.0;
+                ViewBag.AbsentPercent = 0.0;
+                ViewBag.UnsatisfactoryPercent = 0.0;
             }
 
             return View();
@@ -148,6 +158,16 @@ namespace DepartmentUserApp.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private static double GetPercent(int part, int total)
+        {
+            if (total <= 0)
+            {
+                return 0;
+            }
+
+            return Math.Round(part * 100.0 / total, 1);
         }
 
         private static int GetMaxSemesterForCourse(AcademicCourse course) => course switch

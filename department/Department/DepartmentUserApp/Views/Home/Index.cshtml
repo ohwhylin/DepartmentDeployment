@@ -24,70 +24,8 @@
         <p class="mb-2">
             Добро пожаловать в модуль кафедрального портала.
         </p>
-        <div class="hint mb-3">
-            Здесь отображается краткая сводка по данным, показателям успеваемости и быстрым действиям.
-        </div>
-
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Студенты</div>
-                    <div class="fs-4 fw-bold">@ViewBag.StudentCount</div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Преподаватели</div>
-                    <div class="fs-4 fw-bold">@ViewBag.LecturerCount</div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">В академическом отпуске</div>
-                    <div class="fs-4 fw-bold">@ViewBag.AcademicLeaveCount</div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Неявки</div>
-                    <div class="fs-4 fw-bold">@ViewBag.AbsentCount</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="app-card mb-4">
-    <div class="app-card-header">
-        <h5 class="app-card-title">Быстрые действия</h5>
-    </div>
-    <div class="p-3">
-        <div class="d-flex flex-wrap gap-2 mb-2">
-            <form asp-controller="Home" asp-action="QuickSync" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-app-primary">
-                    Быстрая синхронизация
-                </button>
-            </form>
-
-            <a class="btn btn-app-outline" asp-controller="StudentGroups" asp-action="List">
-                Открыть группы
-            </a>
-
-            <a class="btn btn-app-outline" asp-controller="DisciplineStudentRecords" asp-action="List">
-                Открыть успеваемость
-            </a>
-
-            <a class="btn btn-app-outline" asp-controller="StudentOrders" asp-action="List">
-                Открыть приказы
-            </a>
-        </div>
-
         <div class="hint">
-            Быстрая синхронизация запускает обновление учебных планов, групп, студентов, успеваемости и приказов.
+            На главной странице доступны переходы к основным разделам системы, дополнительным модулям и операциям синхронизации данных.
         </div>
     </div>
 </div>
@@ -129,159 +67,124 @@
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Преподаватели</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.LecturerCount</div>
-                <div class="hint mb-3">Количество преподавателей</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="Lecturers" asp-action="List">
-                    Перейти
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Группы</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.StudentGroupCount</div>
-                <div class="hint mb-3">Количество учебных групп</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="StudentGroups" asp-action="List">
-                    Перейти
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Дисциплины</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.DisciplineCount</div>
-                <div class="hint mb-3">Количество дисциплин</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="Disciplines" asp-action="List">
-                    Перейти
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Успеваемость</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.DisciplineStudentRecordCount</div>
-                <div class="hint mb-3">Количество записей успеваемости</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="DisciplineStudentRecords" asp-action="List">
-                    Перейти
-                </a>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<div class="row g-3 mb-4">
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100 border-danger-subtle">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Студенты с долгами</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.DebtStudentCount</div>
-                <div class="hint mb-3">Есть неудовлетворительные оценки</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="StudentGroups" asp-action="List">
-                    Проверить
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100 border-danger-subtle">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Риск отчисления</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.HighRiskDebtStudentCount</div>
-                <div class="hint mb-3">Долги старше двух семестров</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="StudentGroups" asp-action="List">
-                    Проверить
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100 border-warning-subtle">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Группы с долгами</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.GroupsWithDebtsCount</div>
-                <div class="hint mb-3">Есть студенты с задолженностями</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="StudentGroups" asp-action="List">
-                    Открыть
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="app-card h-100">
-            <div class="app-card-header">
-                <h5 class="app-card-title">Приказы</h5>
-            </div>
-            <div class="p-3">
-                <div class="display-6 fw-bold">@ViewBag.StudentOrderCount</div>
-                <div class="hint mb-3">Количество приказов</div>
-                <a class="btn btn-app-outline btn-sm" asp-controller="StudentOrders" asp-action="List">
-                    Перейти
-                </a>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<div class="app-card mb-3">
+<div class="app-card mb-4">
     <div class="app-card-header">
-        <h5 class="app-card-title">Сводка по рискам</h5>
+        <h5 class="app-card-title">Статистика</h5>
     </div>
     <div class="p-3">
         <div class="row g-3">
-            <div class="col-md-4">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Неудовлетворительные оценки</div>
-                    <div class="fs-4 fw-bold">@ViewBag.UnsatisfactoryCount</div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="app-card h-100 border-danger-subtle">
+                    <div class="p-3">
+                        <div class="text-muted small">Студенты с долгами</div>
+                        <div class="display-6 fw-bold">@ViewBag.DebtStudentCount</div>
+                        <div class="hint">
+                            @ViewBag.DebtStudentPercent% от общего числа студентов
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Долги старше двух семестров</div>
-                    <div class="fs-4 fw-bold">@ViewBag.LongDebtRecordCount</div>
+            <div class="col-md-6 col-xl-3">
+                <div class="app-card h-100 border-warning-subtle">
+                    <div class="p-3">
+                        <div class="text-muted small">Группы с долгами</div>
+                        <div class="display-6 fw-bold">@ViewBag.GroupsWithDebtsCount</div>
+                        <div class="hint">
+                            @ViewBag.GroupsWithDebtsPercent% от общего числа групп
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="border rounded p-3 h-100">
-                    <div class="text-muted small">Учебные планы</div>
-                    <div class="fs-4 fw-bold">@ViewBag.AcademicPlanCount</div>
+            <div class="col-md-6 col-xl-3">
+                <div class="app-card h-100 border-warning-subtle">
+                    <div class="p-3">
+                        <div class="text-muted small">Неявки</div>
+                        <div class="display-6 fw-bold">@ViewBag.AbsentCount</div>
+                        <div class="hint">
+                            @ViewBag.AbsentPercent% от всех записей успеваемости
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="app-card h-100 border-danger-subtle">
+                    <div class="p-3">
+                        <div class="text-muted small">Неудовлетворительные оценки</div>
+                        <div class="display-6 fw-bold">@ViewBag.UnsatisfactoryCount</div>
+                        <div class="hint">
+                            @ViewBag.UnsatisfactoryPercent% от всех записей успеваемости
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Синхронизация данных</h5>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                <form asp-controller="Home" asp-action="QuickSync" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-app-primary w-100">
+                        Быстрая синхронизация
+                    </button>
+                </form>
+
+                <form asp-controller="AcademicPlans" asp-action="Sync" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-app-outline w-100">
+                        Синхронизировать учебные планы
+                    </button>
+                </form>
+
+                <form asp-controller="DisciplineStudentRecords" asp-action="Sync" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-app-outline w-100">
+                        Синхронизировать успеваемость
+                    </button>
+                </form>
+
+                <form asp-controller="StudentOrders" asp-action="Sync" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-app-outline w-100">
+                        Синхронизировать приказы
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="app-card h-100">
+            <div class="app-card-header">
+                <h5 class="app-card-title">Быстрые переходы</h5>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                <a class="btn btn-app-outline w-100" asp-controller="StudentGroups" asp-action="List">
+                    Открыть группы
+                </a>
+
+                <a class="btn btn-app-outline w-100" asp-controller="DisciplineStudentRecords" asp-action="List">
+                    Открыть успеваемость
+                </a>
+
+                <a class="btn btn-app-outline w-100" asp-controller="StudentOrders" asp-action="List">
+                    Открыть приказы
+                </a>
+
+                <a class="btn btn-app-outline w-100" asp-controller="Disciplines" asp-action="List">
+                    Открыть дисциплины
+                </a>
             </div>
         </div>
     </div>

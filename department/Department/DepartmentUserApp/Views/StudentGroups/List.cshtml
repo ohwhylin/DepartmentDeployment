@@ -323,20 +323,7 @@
 
                                                                 <li>
                                                                     @(string.IsNullOrWhiteSpace(debt.Discipline) ? "Неизвестная дисциплина" : debt.Discipline)
-                                                                    — @GetSemesterName(debt.Semester)
-
-                                                                    @if (IsHighRiskDebt(group.Course, debt.Semester))
-                                                                    {
-                                                                        <span class="text-danger">
-                                                                            (долг старше двух семестров, возможен риск отчисления)
-                                                                        </span>
-                                                                    }
-                                                                    else if (ageInSemesters > 0)
-                                                                    {
-                                                                        <span class="text-muted">
-                                                                            (долг сохраняется @ageInSemesters сем.)
-                                                                        </span>
-                                                                    }
+                                                                    - @GetSemesterName(debt.Semester)
                                                                 </li>
                                                             }
                                                         </ul>
